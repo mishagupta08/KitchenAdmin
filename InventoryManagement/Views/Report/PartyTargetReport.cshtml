@@ -1,0 +1,276 @@
+﻿@model InventoryManagement.Entity.Common.PartyTargetMaster
+@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "Party Target Master";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+}
+
+<script type="text/javascript">
+    var FromDate;
+    var ToDate;
+
+    $(document).ready(function () {
+        $(".preloader").hide();
+
+        $("#FrmDate").datetimepicker({
+            format: 'DD-MM-YYYY',
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            var selectedDate = e.date._d;
+            if (selectedDate != undefined && selectedDate != null && selectedDate != "") {
+                var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+                var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+                var lengthOfDate = ((selectedDate.getDate()).toString()).length;
+                var twoDigitdate = (lengthOfDate > 1) ? (selectedDate.getDate()) : '0' + (selectedDate.getDate());
+
+                var newFromDate = twoDigitdate + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+
+                FromDate = newFromDate;
+            }
+            else {
+                FromDate = "";
+            }
+        });
+
+        $("#ToDate").datetimepicker({
+            format: 'DD-MM-YYYY',
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            var selectedDate = e.date._d;
+            if (selectedDate != undefined && selectedDate != null && selectedDate != "") {
+                var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+                var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+                var lengthOfDate = ((selectedDate.getDate()).toString()).length;
+                var twoDigitdate = (lengthOfDate > 1) ? (selectedDate.getDate()) : '0' + (selectedDate.getDate());
+                var newFromDate = twoDigitdate + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+                ToDate = newFromDate;
+            }
+            else {
+                ToDate = "";
+            }
+        });
+
+        $("form[name=form_target]").unbind("submit");
+        $("form[name=form_target]").bind('submit', function (e) {
+            var DateError = false;
+            if (FromDate != "" && FromDate != null && ToDate != null && ToDate != "") {
+                var d1 = toDate(FromDate);
+                var d2 = toDate(ToDate);
+                if (d1 > d2) {
+                    DateError = true;
+                    $(".preloader").hide();
+                    OpenDialog("dialogMessage", "From Date should be less than ToDate!", "false");
+                }
+                else {
+                    DateError = false;
+                }
+            }
+            else {
+
+                if (FromDate != "" && FromDate != null)
+                {
+                    DateError = true;
+                    $(".preloader").hide();
+                    OpenDialog("dialogMessage", "Please Select From date.", "false");
+                }
+
+                if (ToDate != "" && ToDate != null) {
+                    DateError = true;
+                    $(".preloader").hide();
+                    OpenDialog("dialogMessage", "Please select To date.", "false");
+                }
+            }
+
+            if (DateError == false) {
+                $("#SavePartyTargetForm").attr("disabled", true);
+
+
+                var formdata = new FormData($("#form_target")[0]);
+                $(".preloader").show();
+                $.ajax({
+                    url: '@Url.Action("GetPartyTargetReport", "Report")',
+                    type: 'POST',
+                    data: formdata,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    success: function (objResponse) {
+                        $("#SavePartyTargetForm").removeAttr("disabled");
+                        if (objResponse != null) {
+                            if (objResponse.ResponseStatus == "OK") {
+                                $('#form_target')[0].reset();
+                                FromDate = "";
+                                ToDate = "";
+                                OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                            }
+                            else {
+                                OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                            }
+                        }
+
+                        $(".preloader").hide();
+                        return false;
+                    },
+                    error: function (xhr, data) {
+                        //  return false;
+                        $(".preloader").hide();
+                        console.log(xhr);
+                        console.log("Error:", data);
+                    }
+                });
+            }
+
+                return false;
+            });
+
+    });
+
+    function OpenDialog(dialogId, Message, isConfirmation) {
+        $("#" + dialogId).empty();
+        $("#" + dialogId).append('<p>' + Message + '</p>');
+        if (isConfirmation == "true") {
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "Yes",
+                    id: "btnYes" + dialogId,
+                    click: function () {
+                        IsYes = true;
+                        $("#" + dialogId).dialog("close");
+                    }
+                },
+                {
+                    text: "No",
+                    id: "btnNo" + dialogId,
+                    click: function () {
+                        IsYes = false;
+                        $("#" + dialogId).dialog("close");
+                    }
+                }
+                ]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+        else {
+
+
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "OK",
+                    id: "btn" + dialogId,
+                    click: function () {
+                        $("#" + dialogId).dialog("close");
+                    }
+                }]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+
+    }
+
+    function toDate(dateStr) {
+        var parts = dateStr.split("-");
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+</script>
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Report</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Party Target Report</h2>
+
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <form id="form_target" name="form_target" onsubmit="return false">                       
+
+                        <div class="col-lg-12">
+
+                            <div class="row" style="margin-top:1%">
+                                <label class="col-lg-2">From Date<span style="color:red">*</span></label>
+                                <div class="col-lg-6">
+                                    @Html.TextBoxFor(m => m.FrmDate, new { name = "FrmDate", id = "FrmDate", tabindex = "1", @class = "form-control col-md-7 col-xs-12" })
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-12">
+
+                            <div class="row" style="margin-top:1%">
+                                <label class="col-lg-2">To Date<span style="color:red">*</span></label>
+                                <div class="col-lg-6">
+                                    @Html.TextBoxFor(m => m.ToDate, new { name = "ToDate", id = "ToDate", tabindex = "2", @class = "form-control col-md-7 col-xs-12" })
+                                </div>
+                            </div>
+
+                        </div>                       
+
+                        <br />
+                        <div class="col-lg-12" style="margin-top:1%">
+                            <div class="col-lg-6 col-md-offset-2">
+
+                                @*<button class="btn btn-primary" type="reset" onclick="reset()">Reset</button>*@
+                                <input type="submit" id="SavePartyTargetForm" class="btn btn-success" tabindex="0" value="Get Report">                                
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <br />
+                            <div>
+                                <b><span id="StockTypeLabel"></span></b>
+                            </div>
+                            <br />
+                            <div class="form-group">
+                                <br />@*<br /><br /><center><div class="loader" style="display:none"></div></center>*@
+                                <table class="table bootstrap-datatable" id="grid"></table>
+                                <center><span style="display:none" id="noRecord">No Stock Found</span></center>
+
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+
+</div>

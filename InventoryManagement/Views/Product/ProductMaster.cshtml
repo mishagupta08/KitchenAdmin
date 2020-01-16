@@ -1,0 +1,930 @@
+﻿@model InventoryManagement.Entity.Common.ProductDetails
+@{
+    ViewBag.Title = "ProductMaster";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var ActionValue = Model.IsAdd;
+    List<SelectListItem> listItems = new List<SelectListItem>();
+    listItems.Add(new SelectListItem
+    {
+        Text = "Yes",
+        Value = "Y",
+        Selected=true
+    });
+    listItems.Add(new SelectListItem
+    {
+        Text = "No",
+        Value = "N",
+        Selected = true
+    });
+
+    string CVCaption = System.Configuration.ConfigurationManager.AppSettings["CVCaption"];
+    string BVCaption = System.Configuration.ConfigurationManager.AppSettings["BVCaption"];
+    string PVCaption = System.Configuration.ConfigurationManager.AppSettings["PVCaption"];
+    string RPCaption = System.Configuration.ConfigurationManager.AppSettings["RPCaption"];
+
+}
+<style>
+    .input-readonly{
+        background-color:#EBEBE4;
+
+    }
+</style>
+<script type="text/javascript">
+    var ErrorFlag = true;
+    var SizeOfImage;
+    var ListOfSubCategories;
+    $(document).ready(function () {
+        $(".preloader").hide();
+        GetListOfSubCategories();
+        var fullDate = new Date();
+
+        //console.log(fullDate);
+        //Thu May 19 2011 17:25:38 GMT+1000 {}
+
+        //convert month to 2 digits
+        var lengthOfMonth = ((fullDate.getMonth() + 1).toString()).length;
+        var twoDigitMonth = (lengthOfMonth > 1) ? (fullDate.getMonth() + 1) : '0' + (fullDate.getMonth() + 1);
+
+        var currentDate = fullDate.getDate() + "-" + twoDigitMonth + "-" + fullDate.getFullYear();
+        function GetListOfSubCategories(){
+            var link = '@Url.Action("GetActiveListOfSubCat", "Product")';
+
+            $.ajax({
+                type: 'POST',
+                url: link,
+                success: function (resultData) {
+                    ListOfSubCategories = resultData;
+                }
+            });
+        }
+        $('#MfgDatePickerWidget').datetimepicker({
+
+
+            format: 'DD-MM-YYYY'
+            ,
+            // todayHighlight:true,
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        },function(start, end, label) {
+            var years = moment().diff(start, 'years');
+            alert("You are " + years + " years old.");
+        });
+        $('#MfgDatePickerWidget').val(currentDate);
+
+        $('#ExpDatePickerWidget').datetimepicker({
+
+            format: 'DD-MM-YYYY'
+           ,
+            // todayHighlight:true,
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        });
+        $('#ExpDatePickerWidget').val(currentDate);
+        $("#BarcodeType").bind('change', function () {
+            var SelectedVal=$("#BarcodeType").val();
+            if(SelectedVal=="System Generated"){
+                $("#Barcode").prop("readonly",true);
+                $("#Barcode").addClass("input-readonly");
+            }
+            else{
+                $("#Barcode").prop("readonly",'');
+                $("#Barcode").removeClass("input-readonly");
+            }
+        });
+        //binds to onchange event of your input field
+        $('#upload').bind('change', function() {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#ProductImage').attr('src', e.target.result);
+                }
+
+                reader.readAsDataURL(this.files[0]);
+                console.log("Size of file:", this.files[0].size);
+                SizeOfImage = this.files[0].size;
+            }
+            //this.files[0].size gets the size of your file.
+        });
+        $("#IsExpirable").bind('change', function () {
+            var SelectedVal = $("#IsExpirable").val();
+            if (SelectedVal == "Y") {
+                $("#ExpDatePickerWidget").prop("readonly", '');
+                $("#ExpDatePickerWidget").removeClass("input-readonly");
+            }
+            else {
+                $("#ExpDatePickerWidget").prop("readonly", true);
+                $("#ExpDatePickerWidget").addClass("input-readonly");
+            }
+        });
+        $("form[name=productForm]").unbind("submit");
+        $("form[name=productForm]").bind('submit', function (e) {
+            $("#SaveProductMasterBtn").attr("disabled",true);
+            e.preventDefault();
+            e.stopPropagation();
+            var FlagCheck = CheckDuplicate();
+            if (FlagCheck) {
+                var sizeInMb = parseInt(parseInt(parseInt(SizeOfImage) / 1024) / 1024);
+                if (sizeInMb > 4) {
+                    ErrorFlag = false;
+                }
+                else {
+                    ErrorFlag = true;
+                }
+                var ActionName = '@ActionValue';
+                var link = "";
+                if (ActionName == "Add") {
+                    link = '@Url.Action("SaveProductMaster", "Product")';
+                }
+                else if (ActionName == "Edit") {
+                    link = '@Url.Action("EditProductMaster", "Product")';
+                }
+                else {
+                    link = '@Url.Action("DeleteProductMaster", "Product")';
+                }
+                if (ErrorFlag) {
+                    var formdata = new FormData($(this)[0]);
+                    console.log("form data = > " + formdata);
+                    $.ajax({
+                        url: link,
+                        type: 'POST',
+                        data: formdata,
+                        processData: false,
+                        contentType: false,
+                        dataType: "json",
+                        success: function (objResponse) {
+                            $("#SaveProductMasterBtn").removeAttr("disabled");
+                            if (objResponse != null) {
+                                if (objResponse.ResponseStatus == "OK" || ActionName == "Edit" || ActionName=="Delete") {
+                                    OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+
+                                    window.location.href = '@Url.Action("ProductList", "Product")';
+                                }
+                            }
+                        },
+                        error: function (xhr, data) {
+                            //  return false;
+                            console.log(xhr);
+                            console.log("Error:", data);
+                        }
+                    });
+                }
+                else {
+                    $("#SaveProductMasterBtn").removeAttr("disabled");
+                    OpenDialog("dialogMessage", "Product Image should not exceed 4 MB", "false");
+                    reset();
+                }
+            }
+            else {
+                $("#SaveProductMasterBtn").removeAttr("disabled");
+                OpenDialog("dialogMessage", "Product Name is duplicate. Please Enter Another", "false");
+                $("#ProductName").val("");
+            }
+            return false;
+        });
+
+        $("#categoryId").change(function () {
+            var CategoryId = $("#categoryId").val();
+            $("#hiddenCategoryId").val(CategoryId);
+            // ListOfSubCategories
+            FillSubCategoryDropDown(CategoryId);
+
+        });
+
+        $("#subcategoryId").change(function () {
+            var SubCategoryId = $("#subcategoryId").val();
+            $("#hiddenSubCategoryId").val(SubCategoryId);
+
+        });
+        function CheckDuplicate() {
+            var f = true;
+            console.log("in check duplicate");
+            var ProductName = $("#ProductName").val();
+            var CategoryId = $("#hiddenCategoryId").val();
+            var SubCategoryId = $("#hiddenSubCategoryId").val();
+            if (((ProductName != null && ProductName != ""))) {
+                var CheckDuplicateModel = { masterTable: "ProductMaster", masterName: ProductName, CategoryId: CategoryId, SubCategoryId: SubCategoryId, isAdd: $("#isAdd").val() };
+                $.ajax({
+                    url: '@Url.Action("CheckDuplicateMaster", "Product")',
+                    contentType: "application/json",
+                    data: JSON.stringify(CheckDuplicateModel),
+                    type: 'POST',
+                    async: false,
+                    success: function (objResponse) {
+                        if (objResponse != null) {
+                            if (objResponse != null) {
+                                if (objResponse.ResponseStatus == "FAIL") {
+                                    OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                                    $("#ProductName").val("");
+                                    f = false;
+                                    //reset();
+                                }
+                                else {
+                                    console.log("true");
+                                    f = true;
+                                }
+                            }
+                        }
+                    },
+                    error: function (xhr, data) {
+                        //  return false;
+                        console.log(xhr);
+                        console.log("Error:", data);
+                    }
+                });
+                return f;
+            }
+            return f;
+        }
+        function FillSubCategoryDropDown(catId) {
+            var i = 0;
+            var f = true;
+            $("#subcategoryId").empty();
+            for (i = 0; i < ListOfSubCategories.length; i++) {
+                if (ListOfSubCategories[i].CategoryId == catId) {
+                    if (f) {
+                        f = false;
+                        $("#hiddenSubCategoryId").val(ListOfSubCategories[i].SubCatId);
+                    }
+                    $("#subcategoryId").append("<option value=" + ListOfSubCategories[i].SubCatId + ">" + ListOfSubCategories[i].subCategoryName + "</option>");
+                }
+            }
+        }
+        //});
+
+        function OpenDialog(dialogId, Message, isConfirmation) {
+            if (isConfirmation == "true") {
+
+            }
+            else {
+                $("#" + dialogId).empty();
+                $("#" + dialogId).append('<p>' + Message + '</p>');
+
+                $("#" + dialogId).dialog({
+                    modal: true,
+                    buttons: [{
+                        text: "OK",
+                        id: "btn" + dialogId,
+                        click: function () {
+                            //var isOpen = $("#dialog").dialog("isOpen");
+                            //if (isOpen == true) {
+                            //    okCallBack();
+                            //}
+
+                            $("#" + dialogId).dialog("close");
+
+
+                        }
+                    }]
+                });
+                $(".ui-dialog-titlebar-close").empty();
+                $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+            }
+
+        }
+    });
+
+    function reset() {
+
+    }
+</script>
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Product</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+                @*<div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search for...">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="button">Go!</button>
+                        </span>
+                    </div>*@
+            </div>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Product Master</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                       
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form id="productForm" method="post" name="productForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                        @Html.HiddenFor(m => m.IsAdd, new { name = "isAdd", id = "isAdd" })
+                        @Html.HiddenFor(m => m.ProductBarcodeDetails.ExisitingBarcode, new { name = "ExisitingBarcode", id = "ExisitingBarcode" })
+                        <div class="col-lg-12">
+                            <div class="col-lg-6">
+                                <div class="form-group">
+                                  
+                                        <label class="control-label col-lg-4 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            Product Code @*<span class="required">*</span>*@
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                            @Html.TextBoxFor(m => m.ProductCode, new { name = "productCode", id = "productCode", maxlength = "18", @class = "form-control col-md-7 col-xs-12", @readonly = "readonly" })
+
+                                            @*<input type="text" id="categoryname" required="required" class="form-control col-md-7 col-xs-12">*@
+                                        </div>
+                                        <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                       
+                                      
+
+                                    </div>
+                            </div>
+                            <div class="col-lg-6">
+                                &nbsp;
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label"><u>Product General Details:</u></label>
+                                    </div>
+                                    <div class="ln_solid"></div>
+                                    <div class="form-group">
+                                        
+                                            <label class="control-label col-lg-4 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                                User Define Code
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                @Html.TextBoxFor(m => m.UserDefinedCode, new {tabindex="1", name = "UserDefinedCode", id = "UserDefinedCode", @class = "form-control col-md-7 col-xs-12" })
+                                            </div>
+                                            <div class="col-lg-2 col-md-6 col-sm-6 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                       
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-4 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            Select Category <span class="required" style="color:red">*</span>
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                            @Html.HiddenFor(m => m.CategoryId, new { id = "hiddenCategoryId" })
+                                            @Html.DropDownListFor(m => m.CategoryId, ViewBag.ListCategory as IEnumerable<SelectListItem>, new { tabindex = "2", name = "categoryId", id = "categoryId", required = "required", @class = "form-control col-md-7 col-xs-12" })
+                                            </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            <a href="~/Product/CategoryMaster"><img src="~/images/AddCategory.png" style="width: 55%;height: 34px;" /></a>
+                                            @*<input type="text" id="categoryname" required="required" class="form-control col-md-7 col-xs-12">*@
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="category-name">
+                                            Sub Category
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                            @Html.HiddenFor(m => m.SubCatgeoryId, new { id = "hiddenSubCategoryId" })
+                                            @Html.DropDownListFor(m => m.SubCatgeoryId, ViewBag.ListSubCategory as IEnumerable<SelectListItem>, new { tabindex = "3", name = "subcategoryId", id = "subcategoryId", @class = "form-control col-md-7 col-xs-12" })
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                <a href="~/Product/SubCategoryMaster"><img src="~/images/AddCategory.png" style="width: 55%;height: 34px;" /></a>
+                                                @*<input type="text" id="categoryname" required="required" class="form-control col-md-7 col-xs-12">*@
+                                            </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-4 col-lg-4 col-sm-3 col-xs-12" for="product-name">
+                                            Product Name<span class="required" style="color:red">*</span>
+                                        </label>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+
+                                            @Html.TextBoxFor(m => m.ProductName, new { tabindex = "4", name = "ProductName", id = "ProductName", @class = "form-control col-md-7 col-xs-12", required = "required" })
+
+                                        </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            &nbsp;
+                                            </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="product-name">
+                                            Description
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                            @Html.TextAreaFor(m => m.ProductDescription, new { tabindex = "5", name = "ProductDescription", id = "ProductDescription", @class = "form-control col-md-7 col-xs-12" })
+
+                                        </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                Purchase Rate
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.ProductBarcodeDetails.PurchaseRate, new { tabindex = "6", name = "PurchaseRate", id = "PurchaseRate", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                MRP
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.ProductBarcodeDetails.MRP, new { tabindex = "7", name = "MRP", id = "MRP", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-6">
+                                            @*<label class="control-label col-lg-4 col-md-3 col-sm-3 col-xs-12" for="purchaseRate">
+                                                B.V.
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.BV, new { name = "BV", id = "BV", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>*@
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                                D.P.
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.ProductBarcodeDetails.DP, new { tabindex = "8", name = "DP", id = "DP", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-3 col-sm-3 col-xs-12" for="purchaseRate">
+                                                @BVCaption
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.BV, new { tabindex = "9", name = "BV", id = "BV", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            @*<label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                R.P.
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.RP, new { name = "RP", id = "RP", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>*@
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                @CVCaption
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.CV, new { tabindex = "12", name = "CV", id = "CV", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            @*<label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                Disc. %
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.DiscountPer, new { name = "DiscountPer", id = "DiscountPer", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>*@
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                Disc. %
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.DiscountPer, new { tabindex = "13", name = "DiscountPer", id = "DiscountPer", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            @*<label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                Disc. Rs.
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.DiscountInRs, new { name = "DiscountInRs", id = "DiscountInRs", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>*@
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+
+                                        <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                            Barcode Type
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                            @if (Model.IsAdd == "Edit")
+                                            {
+                                                @Html.DropDownListFor(m => m.ProductBarcodeDetails.BarcodeType, ViewBag.ListBarcodetype as IEnumerable<SelectListItem>, new { tabindex = "15", name = "BarcodeType", id = "BarcodeType", @class = "form-control col-md-7 col-xs-12",@readonly="readonly" })
+                                            }
+                                            else
+                                            {
+                                            @Html.DropDownListFor(m => m.ProductBarcodeDetails.BarcodeType, ViewBag.ListBarcodetype as IEnumerable<SelectListItem>, new { tabindex = "15", name = "BarcodeType", id = "BarcodeType", @class = "form-control col-md-7 col-xs-12" })
+                                            }
+                                        </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                                Mfg. Date
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.ProductBarcodeDetails.MfgDateStr, new { tabindex = "18", name = "MfgDatePickerWidget", id = "MfgDatePickerWidget", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                Exp. Date
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.ProductBarcodeDetails.ExpDateStr, new { tabindex = "19", name = "ExpDatePickerWidget", id = "ExpDatePickerWidget", @class = "form-control col-md-7 col-xs-12",@readonly="readonly" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                                Special Offer
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.DropDownListFor(m => m.SpecialOffer, listItems as IEnumerable<SelectListItem>, new { tabindex = "20", name = "SpecialOffer", id = "SpecialOffer", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                Hot Sell
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.DropDownListFor(m => m.HotSell, listItems as IEnumerable<SelectListItem>, new { tabindex = "21", name = "HotSell", id = "HotSell", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                                On Website
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.DropDownListFor(m => m.OnWebsite, listItems as IEnumerable<SelectListItem>, new { tabindex = "22", name = "OnWebsite", id = "OnWebsite", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                Message Status
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.DropDownListFor(m => m.MessageStatus, listItems as IEnumerable<SelectListItem>, new { tabindex = "23", name = "MessageStatus", id = "MessageStatus", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+
+                                        <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                            Message
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                            @Html.TextAreaFor(m => m.Message, new { tabindex = "24", name = "Message", id = "Message", @class = "form-control col-md-7 col-xs-12" })
+
+                                        </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                       &nbsp;
+                                    </div>
+                                    <div class="form-group">
+                                        &nbsp;
+                                    </div>
+                                    <div class="form-group">
+
+
+                                        <div class="col-md-12 col-sm-12 col-xs-12">
+
+
+                                            <img src="@Model.ProductImagePath" name="ProductImage" id="ProductImage" class="form-control col-md-7 col-xs-12" style="height:274px;width:91%" />
+
+                                        </div>
+                                        <input type="file" id="upload" name="upload" style="visibility: hidden; width: 1px; height: 1px" />
+                                        <a href="" onclick="document.getElementById('upload').click();return false" id="UpdateImage" style="margin-left: 26%;">Update Image<span style="color:red">&nbsp;(Image Size Limit:4MB)</span></a>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-6">
+                                            @*<label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                                D.P.
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.ProductBarcodeDetails.DP, new { name = "DP", id = "DP", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>*@
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                @PVCaption
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.PV, new { tabindex = "10", name = "PV", id = "PV", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            @*<label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                C.V.
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.CV, new { name = "CV", id = "CV", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>*@
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                @RPCaption
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                @Html.TextBoxFor(m => m.RP, new { tabindex = "11", name = "RP", id = "RP", @class = "form-control col-md-7 col-xs-12" })
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                Disc. Rs.
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.DiscountInRs, new { tabindex = "13", name = "DiscountInRs", id = "DiscountInRs", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            @*<label class="control-label col-md-4 col-sm-4 col-xs-12" for="mfgDate">
+                                                Cmmsn
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.ProductCommission, new { name = "ProductCommission", id = "ProductCommission", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>*@
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            @*<label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                P.V.
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.PV, new { name = "PV", id = "PV", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>*@
+                                            <label class="control-label col-md-4 col-sm-4 col-xs-12" for="mfgDate">
+                                                Cmmsn
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.ProductCommission, new { tabindex = "14", name = "ProductCommission", id = "ProductCommission", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                                Barcode
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                
+                                               
+                                                @Html.TextBoxFor(m => m.ProductBarcodeDetails.Barcode, new { tabindex = "16", name = "Barcode", id = "Barcode", @class = "form-control col-md-7 col-xs-12", @readonly = "readonly" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                                IsExpirable
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.DropDownListFor(m => m.ProductBarcodeDetails.IsExpirable, listItems as IEnumerable<SelectListItem>, new { tabindex = "17", name = "IsExpirable", id = "IsExpirable", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label"><u>Product Tax Details:</u></label>
+                            </div>
+                            <div class="ln_solid"></div>
+                            <div class="form-group">
+                                <div class="col-lg-4">
+                                    <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                        GST(%)
+                                    </label>
+                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                        @Html.TextBoxFor(m => m.ProductTaxDetails.GSTTax, new { tabindex = "25", name = "GSTTax", id = "GSTTax", @class = "form-control col-md-7 col-xs-12" })
+
+                                    </div>
+                                    <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                        &nbsp;
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                       HSN Code
+                                    </label>
+                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                        @Html.TextBoxFor(m => m.HSNCode, new { tabindex = "25", name = "HSNCode", id = "HSNCode", @class = "form-control col-md-7 col-xs-12" })
+
+                                    </div>
+                                    <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                        &nbsp;
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    &nbsp;
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label"><u>Opening Stock Details:</u></label>
+                            </div>
+                            <div class="ln_solid"></div>
+                            <div class="form-group">
+                                <div class="col-lg-6">
+                                    <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                        Op. Stock Qty.
+                                    </label>
+                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                        @if (Model.IsAdd != "Edit")
+                                        {
+                                            @Html.TextBoxFor(m => m.ProductCurrentStockDetails.OpeningStockQty, new { tabindex = "28", name = "OpeningStockQty", id = "OpeningStockQty", @class = "form-control col-md-7 col-xs-12" })
+                                        }
+                                        else
+                                        {
+                                            @Html.TextBoxFor(m => m.ProductCurrentStockDetails.OpeningStockQty, new { tabindex = "28", name = "OpeningStockQty", id = "OpeningStockQty",@readonly="readonly", @class = "form-control col-md-7 col-xs-12" })
+                                        }
+                                    </div>
+                                    <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                        &nbsp;
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                        Min. Stock Qty.
+                                    </label>
+                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                        @Html.TextBoxFor(m => m.MinQty, new { tabindex = "29", name = "MinQty", id = "MinQty", @class = "form-control col-md-7 col-xs-12" })
+
+                                    </div>
+                                    <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                        &nbsp;
+                                    </div>
+                                </div>
+                            </div>
+
+                        <div class="form-group">
+                            <div class="col-lg-8">
+                                <label class="control-label col-lg-3 col-md-4 col-sm-3 col-xs-12" for="category-name">
+                                    Remarks
+                                </label>
+                                <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12">
+
+                                    @Html.TextAreaFor(m => m.ProductBarcodeDetails.Remarks, new { tabindex = "30", name = "Remarks", id = "Remarks", @class = "form-control col-md-7 col-xs-12" })
+                                </div>
+                                
+                            </div>
+                       
+                                <div class="col-lg-4">
+                                &nbsp;    
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-8">
+                                    <label class="control-label col-lg-3 col-md-4 col-sm-3 col-xs-12">Status</label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="margin-top: 0.9%;">
+                                        <div id="status">
+                                            <label>
+                                                @Html.RadioButtonFor(m => m.IsActive, true, new { tabindex = "31", name = "IsActive", id = "StatusActive", @class = "flat", required = "required", @checked = "checked" })&nbsp; Active &nbsp;
+                                                @*<input type="radio" name="status" value="male"> &nbsp; Male &nbsp;*@
+                                            </label>
+                                            <label>
+                                                @Html.RadioButtonFor(m => m.IsActive, false, new { tabindex = "32", name = "IsActive", id = "StatusInActive", @class = "flat" })&nbsp; InActive &nbsp;
+                                            </label>
+                                        </div>
+                                    </div>
+                                    </div>
+                                <div class="col-lg-4">
+                                    &nbsp;
+                                </div>
+                                </div>
+
+
+                            <div class="ln_solid"></div>
+                            <div class="form-group">
+                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                                    
+                                    @*<button class="btn btn-primary" type="reset" onclick="reset()">Reset</button>*@
+                                    <button type="submit" id="SaveProductMasterBtn" class="btn btn-success">Save</button>
+                                    <button class="btn btn-primary" type="button" onclick="reset()">Cancel</button>
+                                </div>
+                            </div>
+                            <div id="dialogMessage" title="Message">
+
+                            </div>
+</form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+

@@ -1,0 +1,670 @@
+﻿@model InventoryManagement.Entity.Common.SalesReport
+@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "DeleteBills";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool IsSoldByHo = (Session["LoginUser"] as User).IsSoldByHo;
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+}
+
+<style>
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+
+    .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+    /*.ui-widget-header .ui-icon {
+        background-color: black!important;
+    }*/
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+</style>
+<script type="text/javascript">
+    var grid, dialog;
+    var IsYes = false;
+    var BillWiseGrid = [{}];
+    var SalesType = "BillWise";
+    var BillNoToDelete;
+    var FsessId;
+    var IsDateFilter = false;
+    var IsDateFilter = false;
+    var FromDate = "", ToDate = "";
+    var IsBill = false;
+    var PreviouslySelectedFromDate = "";
+    var PreviouslySelectedToDate = "";
+    var PreviouslySelectedFromPickerDate = "", type = "";
+    var PreviouslySelectedToPickerDate = "";
+    var IsParty = false;
+    var PartyList = [];
+    var FullPartyList;
+    $(document).ready(function () {
+        var IsAdministrator = '@IsSoldByHo';
+        if (IsAdministrator == "True") {
+            GetAllParty();
+        }
+        else {
+            @*$("#PartyName").val('@CurrentPartyName');
+            $("#PartyName").prop("readonly", "readonly");*@
+            $("#PartyCode").val('@CurrentPartyCode');
+        }
+
+        $('#IsDateFilter').on('ifChecked', function () {
+            IsDateFilter = true;
+            FromDate = "";
+            ToDate = "";
+            $("#StartDate").val("All");
+            $("#StartDate").prop("readonly", "readonly");
+            $("#EndDate").val("All");
+            $("#EndDate").prop("readonly", "readonly");
+        });
+        $('#IsDateFilter').on('ifUnchecked', function () {
+            FromDate = "";
+            ToDate = "";
+            IsDateFilter = false;
+            $("#StartDate").val("");
+            $("#StartDate").prop("readonly", "");
+            $("#EndDate").val("");
+            $("#EndDate").prop("readonly", "");
+        });
+
+        $("#StartDate").datetimepicker({
+            format: 'DD-MM-YYYY',
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            var selectedDate = e.date._d;
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+            var newFromDate = selectedDate.getDate() + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+
+            FromDate = newFromDate;
+            PreviouslySelectedFromPickerDate = newFromDate;
+            ToDate = PreviouslySelectedToPickerDate;
+        });
+
+        $("#EndDate").datetimepicker({
+            format: 'DD-MM-YYYY',
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            var selectedDate = e.date._d;
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+
+            var newToDate = selectedDate.getDate() + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+
+            ToDate = newToDate;
+            PreviouslySelectedToPickerDate = newToDate;
+            FromDate = PreviouslySelectedFromPickerDate;
+        });
+
+        $('#IsBill').on('ifChecked', function () {
+            IsBill = true;
+            $("#BillNo").val("All");
+            $("#BillNo").prop("readonly", "readonly");
+
+        });
+
+        $('#IsBill').on('ifUnchecked', function () {
+            IsBill = false;
+            $("#BillNo").val("");
+            $("#BillNo").prop("readonly", "");
+            $("#BillNo").val("");
+        });
+
+        $(".preloader").hide();
+
+
+
+        $("#YesBtn").click(function () {
+            var ReasonDelete = $("#ReasonToDelete").val();
+            DeleteBill(ReasonDelete);
+
+        });
+        $("#NoBtn").click(function () {
+            BillNoToDelete = "0";
+            FsessId = 0;
+            $("#dialogDeleteBill").dialog("close");
+        });
+
+        $(".getReport").on('click', function () {
+            $(".preloader").show();
+            GetAllBills();
+        });
+
+        $("#PartyName").autocomplete({
+            source: function (request, response) {
+                var results = $.ui.autocomplete.filter(PartyList, request.term);
+
+                response(results.slice(0, 50));
+            },
+            minLength: 1,
+            scroll: true,
+            select: function (event, ui) {
+                //$("#txDestination").val(ui.item.label);
+                //cityID = ui.item.id;
+                console.log("ui.item", ui.item.label);
+                $("#PartyName").val(ui.item.label);
+                SetSpecificCode("Party", ui.item.label);
+                return false;
+            },
+
+        }).focus(function () {
+            $(this).autocomplete("search", "");
+        });
+        $('#IsParty').on('ifChecked', function () {
+            //console.log("checked");
+            IsParty = true;
+            //$("#PartyName").val("All");
+            //$("#PartyName").prop("readonly", "readonly");
+            //$("#PartyCode").val(0);
+            $("#PartyName").val('All');
+            $("#PartyName").prop("readonly", "readonly");
+            $("#PartyCode").val('0');
+        });
+
+        $('#IsParty').on('ifUnchecked', function () {
+            //console.log("checked");
+            IsParty = false;
+            //$("#PartyName").val("");
+            //$("#PartyName").prop("readonly", "");
+            //$("#PartyCode").val("");
+            $("#PartyName").val('');
+            $("#PartyName").prop("readonly", "");
+            $("#PartyCode").val('');
+        });
+    });
+    function SetSpecificCode(type, label) {
+
+        if (type == "Party") {
+            for (var i = 0; i < FullPartyList.length; i++) {
+                if (FullPartyList[i].PartyName == label) {
+                    $("#PartyCode").val(FullPartyList[i].PartyCode);
+                    break;
+                }
+            }
+        }
+    }
+
+    function GetAllParty() {
+        $.ajax({
+            url: '/Report/GetAllPartyListForReports',
+            dataType: 'JSON',
+            method: 'GET',
+            //data: { 'LedgerName': '' },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                FullPartyList = data;
+                PartyList = [];
+                if (data != null) {
+                    var i = 0;
+                    for (i = 0; i < data.length; i++) {
+                        //console.log("data[i]", data[i]);
+                        PartyList.push(data[i].PartyName);
+                    }
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+
+    function DeleteSelectedBill(e) {
+        BillNoToDelete = e.data.record.InternalBillNo;
+        FsessId = e.data.record.FsessId;
+        $("#BillNoToDelete").html(e.data.record.BillNo);
+        OpenDeleteBill();
+    }
+    function OpenDeleteBill() {
+        $("#dialogDeleteBill").dialog({
+            modal: true,
+
+        });
+        $(".ui-dialog-titlebar-close").empty();
+        $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+    }
+    function DeleteBill(ReasonDelete) {
+        $(".preloader").show();
+        $.ajax({
+            url: '@Url.Action("DeleteBill", "Transaction")',
+            type: 'GET',
+            data: { "BillNo": BillNoToDelete, "FsessId": FsessId, "Reason": ReasonDelete },
+
+            dataType: "json",
+            success: function (objResult) {
+                $(".preloader").hide();
+                $("#dialogDeleteBill").dialog('close');
+                if (objResult != null) {
+                    if (objResult.ResponseStatus == "OK") {
+                        OpenDialog("dialogMessage", "Bill Deleted Successfully", "false");
+                        window.location.reload();
+                    }
+                    else {
+                        OpenDialog("dialogMessage", objResult.ResponseMessage, "false");
+                    }
+                }
+                $(".preloader").hide();
+            }
+        });
+    }
+
+    function GetAllBills() {
+        console.log('Hi..');
+      var DBillNo = $("#BillNo").val();
+
+      var PartyCode = $("#PartyCode").val();
+      var IsAdministrator = '@IsSoldByHo';
+        console.log(IsAdministrator);
+        if (IsAdministrator != "True")
+        { PartyCode = '@CurrentPartyCode'; }
+
+        var DateError = false;
+        if (FromDate != "" && FromDate != null && ToDate != null && ToDate != null) {
+            var d1 = toDate(FromDate);
+            var d2 = toDate(ToDate);
+
+            if (d1 > d2) {
+
+                DateError = true;
+                $(".preloader").hide();
+                OpenDialog("dialogMessage", "From Date should be less than To Date!", "false");
+            }
+            else {
+                DateError = false;
+
+            }
+        }
+        else {
+            DateError = false;
+            if (DateError == false) {
+                if (IsDateFilter == false) {
+                }
+            }
+            if (FromDate == "" || FromDate == null) {
+                FromDate = "All";
+            }
+            if (ToDate == "" || ToDate == null) {
+                ToDate = "All";
+            }
+
+        }
+        if (DBillNo == "" || DBillNo == null) {
+            DBillNo = 0;
+        }
+
+        if (DateError == false) {
+            $.ajax({
+                url: '@Url.Action("GetSalesReport", "Report")',
+                type: 'POST',
+                data: { "FromDate": FromDate, "ToDate": ToDate, "CustomerId": "All", "ProductCode": "", "CategoryCode": "", "PartyCode": PartyCode, "BType": "S", "SalesType": SalesType, "BillNo": DBillNo },
+
+                dataType: "json",
+                success: function (objResult) {
+                    BillWiseGrid = [{}];
+                    console.log("objResult", objResult);
+
+                    if (objResult.length > 0) {
+
+                        BillWiseGrid = BillWiseGrid.splice(1);
+                        for (var i = 0; i < objResult.length; i++) {
+                            var dateObj = new Date(objResult[i].BillDate.match(/\d+/)[0] * 1);
+                            var myDate = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
+                            var InvoicePath = '@Url.Action("InvoicePrint", "Transaction", new {Pm="-1"})';
+
+                            var encodedparameters = objResult[i].BillNo;
+                            var EncryptedB64Url = window.btoa(encodedparameters);
+                            console.log("EncryptedB64Url", EncryptedB64Url);
+                            InvoicePath = InvoicePath.replace("-1", EncryptedB64Url);
+
+                            var TaxAmount = objResult[i].IGSTAmount + objResult[i].CGSTAmount + objResult[i].SGSTAmount;
+                            BillWiseGrid.push({ "FsessId": objResult[i].FsessId, "InvoicePath": InvoicePath, "SNo": i + 1, "BillNo": objResult[i].BillNo, "InternalBillNo": objResult[i].InternalBillNo, "BillDate": myDate, "PartyCode": objResult[i].PartyCode, "PartyName": objResult[i].PartyName, "Code": objResult[i].CustCode, "Name": objResult[i].CustName, "Amount": objResult[i].Amount, "TaxAmount": TaxAmount, "IGSTAmount": objResult[i].IGSTAmount, "CGSTAmount": objResult[i].CGSTAmount, "SGSTAmount": objResult[i].SGSTAmount, "NetAmount": objResult[i].NetAmount });
+                        }
+
+                    }
+
+                    fillGrid();
+
+                    $(".preloader").hide();
+                },
+                error: function (xhr, data) {
+                    //  return false;
+                    console.log(xhr);
+                    console.log("Error:", data);
+                }
+            });
+        }
+
+    }
+
+    function toDate(dateStr) {
+        var parts = dateStr.split("-");
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+
+    function OpenDialog(dialogId, Message, isConfirmation) {
+        $("#" + dialogId).empty();
+        $("#" + dialogId).append('<p>' + Message + '</p>');
+        if (isConfirmation == "true") {
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "Yes",
+                    id: "btnYes" + dialogId,
+                    click: function () {
+                        IsYes = true;
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                },
+                {
+                    text: "No",
+                    id: "btnNo" + dialogId,
+                    click: function () {
+                        IsYes = false;
+                        $("#" + dialogId).dialog("close");
+                    }
+                }
+                ]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+        else {
+
+
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "OK",
+                    id: "btn" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                }]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+
+    }
+    function fillGrid() {
+        console.log("BillWiseGrid", BillWiseGrid);
+
+        // BillWiseGrid = BillWiseGrid.splice(1);
+
+        $("#noRecord").hide();
+        //console.log("ProductGrid", ProductGrid);
+        if (grid != null) {
+            grid.destroy();
+            $('#grid').empty();
+
+        }
+
+        grid = $('#grid').grid({
+            dataSource: BillWiseGrid,
+            uiLibrary: 'bootstrap',
+            headerFilter: true,
+            columns: [
+                { field: 'SNo', title: 'S.No.', width: 80, sortable: true, hidden: false, filterable: false },
+                 { field: 'BillNo', title: 'Bill No', width: 100, sortable: true, hidden: false, filterable: true, tmpl: '<a target="_blank" style="text-decoration:underline;color:blue" href={InvoicePath}>{BillNo}</a>', align: 'center' },
+                  { field: 'BillDate', title: 'Bill Date', width: 100, sortable: true, hidden: false, filterable: true },
+                   { field: 'PartyCode', title: 'Party Code', width: 90, sortable: true, hidden: false, filterable: true },
+                    { field: 'PartyName', title: 'Party Name', width: 150, sortable: true, hidden: false, filterable: true },
+
+                      { field: 'Code', title: 'Cust. Code', width: 100, sortable: true, hidden: false, filterable: true },
+                       { field: 'Name', title: 'Cust. Name', width: 150, sortable: true, hidden: false, filterable: true },
+                        { field: 'Amount', title: 'Amount', width: 80, sortable: true, hidden: false, filterable: true },
+                         //{ field: 'TaxAmount', title: 'Tax Amount', sortable: true, hidden: false, filterable: true },
+                         { field: 'IGSTAmount', width: 80, title: 'IGST/Tax Amt.', sortable: true, hidden: false, filterable: true },
+                         { field: 'CGSTAmount', width: 80, title: 'CGST Amt.', sortable: true, hidden: false, filterable: true },
+                         { field: 'SGSTAmount', width: 80, title: 'SGST Amt.', sortable: true, hidden: false, filterable: true },
+                          { field: 'NetAmount', width: 80, title: 'Net Amount', sortable: true, hidden: false, filterable: true },
+{ title: '', field: 'Delete', type: 'icon', width: 30, icon: 'glyphicon-remove', tooltip: 'Delete', events: { 'click': DeleteSelectedBill }, filterable: false }
+            ],
+            pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+        });
+
+
+    }
+
+</script>
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Transaction</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Delete Bill</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+
+                    <form id="GetBillForm" method="post" name="GetBillForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                        @Html.HiddenFor(m => m.PartyCode, new { id = "PartyCode", name = "PartyCode" })
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            From Date
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                            @Html.TextBoxFor(m => m.StartDate, new { name = "StartDate", id = "StartDate", tabindex = "1", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            To Date
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                            @Html.TextBoxFor(m => m.EndDate, new { name = "EndDate", id = "EndDate", tabindex = "2", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-group">
+                                    <div id="IsDateDiv">
+                                        <label>
+                                            <input type="checkbox" id="IsDateFilter" name="IsDateFilter" class="flat" tabindex="3" />
+
+
+                                        </label>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (IsSoldByHo)
+                        {
+                            <div class="col-lg-12">
+                                <div class="col-lg-8">
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            Enter Party
+                                        </label>
+                                        <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                            @Html.TextBoxFor(m => m.PartyName, new { name = "PartyName", id = "PartyName", tabindex = "5", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="form-group">
+                                        <div id="IsPartyDiv">
+                                            <label>
+                                                <input type="checkbox" id="IsParty" name="IsParty" class="flat" tabindex="6" />
+
+                                            </label>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Bill Number
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                        @Html.TextBoxFor(m => m.BillNo, new { name = "BillNo", id = "BillNo", tabindex = "4", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-group">
+                                    <div id="IsCategoryDiv">
+                                        <label>
+                                            <input type="checkbox" id="IsBill" name="IsBill" class="flat" tabindex="5" />
+
+
+                                        </label>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <div class="col-lg-12"> 
+                                    <div class="col-lg-2">&nbsp;</div>
+                                        <div class="col-lg-4">
+                                            <input type="button" id="btnSummaryReport" name="btnSummaryReport" data-type="summary" value="Get List" class="getReport btn btn-success" />
+                                        </div>
+                                        <div class="col-lg-3">&nbsp;</div>
+                                    </div>                                
+                            </div>
+                        </div>
+                        </form>
+
+                        <br />
+                        <form id="DeleteBillForm" method="post" name="DeleteBillForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                            <div class="row" style="margin-top:1%">
+                                <br />
+                                <div>
+                                    <b><span id="StockTypeLabel"></span></b>
+                                </div>
+                                <br />
+
+                                <br />@*<br /><br /><center><div class="loader" style="display:none"></div></center>*@
+                                <table class="table bootstrap-datatable" id="grid"></table>
+                                <center><span style="display:none" id="noRecord">No Record Found</span></center>
+
+
+                            </div>
+
+
+                            <table id="gridExport" style="display:none"></table>
+                        </form>
+</div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+    <div id="dialogDeleteBill" title="Delete Bill" style="display:none">
+        <div class="col-lg-12" style="background-color:lightgrey;border:1px black solid;">
+            <span style="width:100%;"><center>Are you sure!! Do you want to delete this bill?</center></span>
+        </div>
+        <br />
+        <div class="row" style="margin-top:1%">
+            <div class="col-lg-12">
+
+                <label class="col-lg-6">
+                    Bill No.
+                </label>
+                <label class="col-lg-6" id="BillNoToDelete">
+
+                </label>
+            </div>
+            <div class="col-lg-12">
+                <label class="col-lg-6">
+                    Reason
+                </label>
+                <div class="col-lg-6">
+                    <input type="text" maxlength="100" id="ReasonToDelete" class="form-control" />
+                </div>
+            </div>
+
+        </div>
+        <div class="row" style="margin-top:1%">
+            <div class="col-lg-6 col-lg-offset-3">
+
+                @*<button class="btn btn-primary" type="reset" onclick="reset()">Reset</button>*@
+                <button type="button" id="YesBtn" class="btn btn-success" tabindex="0">Yes</button>
+                <button class="btn btn-primary" type="button" id="NoBtn" tabindex="0">No</button>
+            </div>
+        </div>
+    </div>
+
+   
+
+</div>
+

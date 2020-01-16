@@ -1,0 +1,2254 @@
+﻿@model InventoryManagement.Entity.Common.DistributorBillModel
+@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "CustomerBill";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+
+    string CVCaption = System.Configuration.ConfigurationManager.AppSettings["CVCaption"];
+    string BVCaption = System.Configuration.ConfigurationManager.AppSettings["BVCaption"];
+    string PVCaption = System.Configuration.ConfigurationManager.AppSettings["PVCaption"];
+    string RPCaption = System.Configuration.ConfigurationManager.AppSettings["RPCaption"];
+}
+
+<style>
+    .RowMargin {
+        margin-bottom: 1%;
+    }
+     .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+    /*.ui-widget-header .ui-icon {
+        background-color: black!important;
+    }*/
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+
+    #paymode_details {
+        display: none;
+        background: white;
+        position: absolute;
+        border: 1px solid black;
+        border-radius: 6px;
+        /*width: 100%;*/
+        padding: 15px;
+        overflow: hidden;
+        text-shadow: none;
+        z-index: 50;
+    }
+</style>
+
+<script type="text/javascript">
+    var IsYes = false;
+	var AvailableProductList = [{}];
+    var AvailableBarcodeList=[];
+    var IsEditGrid = false;
+	 var formdata;
+    var ProductSearchList;
+    var ItemList = [];
+    var grid, dialog;
+    //var TempProductArray = [{}];
+    var ProductArray;
+    var PrevValueOfDiscPer;
+    var SearchText;
+    var count = 0;
+    var TotalQty = 0;
+    var TotalRP = 0;
+	var TotalBV = 0;
+    var TotalSumAmount = 0;
+    var TotalDisc = 0;
+    var TotalTaxtAmt = 0;
+	var TotalTaxtPer = 0;
+    var TotalSumNetAmount = 0;
+    var NetAmounPayable = 0;
+    var RoundOff = 0;
+    var CashAmount = 0;
+    var PayGrid;
+    var errorPaymode = false;
+    var NetPayableAmountFinal = 0;
+    var FinalAmountToPay;
+    var LatestAmountEnteresdInPayMode = [{}];
+    var IsRegisteredCustomerCheck = true;
+    var IsCommissionAdd =1, IsDiscountAdd = 1;
+    var billDate = "";
+    var PartyList = [];
+    var FullPartyList;
+    var ProductGrid = [{ "AvailStock": "", "SNo": "", "Code": "", "ProductName": "", "MRP": "", "DP": "", "Rate": "", "BatchNo": "", "Barcode": "", "RP": "", "BV": "", "CV": "", "PV": "", "Qty": "", "RPValue": "", "BVValue": "", "CVValue": "", "PVValue": "", "CommsnPer": "", "CommsnAmt": "", "DiscPer": "", "DiscAmt": "", "Amount": "", "TaxType": "", "TaxPer": "", "TaxAmt": "", "TotalAmount": "" }];
+    $(document).keydown(function (event) {
+        if (event.shiftKey && event.keyCode == 78) {
+            console.log("Hey! Shift+n event captured!");
+            $("#DeliveryPlace").focus();
+            event.preventDefault();
+        }
+
+    });
+
+    $(document).ready(function () {
+        $(".preloader").hide();
+        getAllProductNames();
+        // GetAllParty();
+        $("#BillType").val("customer");
+        fillGrid();
+        changeValues();
+        //var fullDate = new Date();
+        //console.log(fullDate);
+        ////convert month to 2 digits
+        //var twoDigitMonth = ((fullDate.getMonth().length + 1) > 1) ? (fullDate.getMonth() + 1) : '0' + (fullDate.getMonth() + 1);
+        //console.log("twoDigitMonth", twoDigitMonth);
+        //var currentDate = fullDate.getDate() + "-" + twoDigitMonth + "-" + fullDate.getFullYear();
+        //$('#BillDateStr').val(currentDate);
+        //billDate = currentDate;
+        //console.log("billDate", billDate);
+
+        $("#Name").focus();
+        $("#ProductName").focusin(function () {
+            
+        });
+        $("#Barcode").focusin(function () {
+            
+        });
+        $('#PaymodePopup').click(function () {
+            OpenPayModePopup();
+            $("#CC").focus();
+            return false;
+        });
+
+        $('#closePaymodeDetail').click(function () {
+            //$('#paymode_details').slideToggle(300);
+            OpenPayModePopup();
+            $("#SaveCustomerForm").focus();
+            return false;
+        });
+
+        function OpenPayModePopup() {
+            position = $('#PaymodePopup').position();
+            $('body').append('<div class="overlay"></div>')
+            $('#paymode_details').slideToggle(300);
+            $('#paymode_details').css('top', '700px');
+        }
+
+        function SetCashAmountTextbox(enteredValue) {
+            console.log("NetPayableAmountFinal in set func", NetPayableAmountFinal);
+            var cashAmountValue = $("#CashAmount").val();
+            if (cashAmountValue != null && cashAmountValue != "") {
+                cashAmountValue = parseFloat(cashAmountValue);
+                cashAmountValue = cashAmountValue - enteredValue;
+            }
+            else {
+                cashAmountValue = 0;
+            }
+            console.log("cashAmountValue", cashAmountValue);
+            $("#CashAmount").val(cashAmountValue.toFixed(2));
+        }
+
+        $("#AmountByCard").focusout(function () {
+            var enteredValue = $("#AmountByCard").val();
+            if (enteredValue != null && enteredValue != "") {
+                enteredValue = parseFloat(enteredValue);
+            }
+            else {
+                enteredValue = 0;
+            }
+            var f = true;
+            var exisitngAmount = 0;
+            console.log("NetAmounPayable in card", NetAmounPayable);
+            console.log("enteredValue in card", enteredValue);
+
+
+            if (enteredValue <= NetAmounPayable) {
+                for (var i = 0; i < LatestAmountEnteresdInPayMode.length; i++) {
+                    if (LatestAmountEnteresdInPayMode[i].Paymode == "W") {
+                        exisitngAmount = LatestAmountEnteresdInPayMode[i].Amount;
+                        LatestAmountEnteresdInPayMode[i].Amount = enteredValue;
+                        f = false;
+                        break;
+                    }
+                }
+                if (f) {
+                    LatestAmountEnteresdInPayMode.push({ "Paymode": "CC", "Amount": enteredValue });
+                }
+                NetPayableAmountFinal -= exisitngAmount;
+                NetPayableAmountFinal += enteredValue;
+                // $("#AvailBal").val();
+                //  $("#RemBal").val();
+
+
+
+                $("#TotalPaymodeAmt").val(NetPayableAmountFinal);
+                SetCashAmountTextbox(enteredValue);
+            }
+            else {
+                $("#AmountByCard").val(0);
+
+            }
+
+        });
+        $('#CC').change(function () {
+            if ($(this).is(":checked")) {
+                $("#AmountByCard").prop("disabled", '');
+                $("#CardNo").prop("disabled", '');
+                $("#CardType").prop("disabled", '');
+                // $("#AvailBal").prop("disabled", '');
+                //$("#RemBal").prop("disabled", '');
+                // $("#CardType").prop("disabled", '');
+                //$("#DDBankName").prop("disabled", '');
+            }
+            else {
+                var enteredValue = $("#AmountByCard").val();
+
+                if (enteredValue != null && enteredValue != "") {
+                    enteredValue = parseFloat(enteredValue);
+                    NetPayableAmountFinal = NetPayableAmountFinal - enteredValue;
+                }
+                LatestAmountEnteresdInPayMode = $.grep(LatestAmountEnteresdInPayMode, function (e) {
+                    return e.Paymode != "CC";
+                });
+                $("#AmountByCard").val(0);
+                $("#TotalPaymodeAmt").val(NetPayableAmountFinal);
+                $("#AmountByCard").prop("disabled", "disabled");
+                $("#CardNo").prop("disabled", "disabled");
+                $("#CardType").prop("disabled", "disabled");
+                SetCashAmountTextbox(-(enteredValue));
+                // $("#AvailBal").prop("disabled", "disabled");
+                // $("#RemBal").prop("disabled", "disabled");
+                // $("#CardType").prop("disabled", "disabled");
+                //$("#DDBankName").prop("disabled", "disabled");
+            }
+
+        });
+        $("#AmountByWallet").focusout(function () {
+            var enteredValue = $("#AmountByWallet").val();
+            if (enteredValue != null && enteredValue != "") {
+                enteredValue = parseFloat(enteredValue);
+            }
+            else {
+                enteredValue = 0;
+            }
+            var f = true;
+            var exisitngAmount = 0;
+            console.log("NetAmounPayable in wallet", NetAmounPayable);
+            console.log("enteredValue in wallet", enteredValue);
+            var valueAvailBal = parseFloat($("#AvailBal").val());
+            console.log("valueAvailBal", valueAvailBal);
+
+            if (enteredValue <= valueAvailBal && enteredValue <= NetAmounPayable) {
+                for (var i = 0; i < LatestAmountEnteresdInPayMode.length; i++) {
+                    if (LatestAmountEnteresdInPayMode[i].Paymode == "W") {
+                        exisitngAmount = LatestAmountEnteresdInPayMode[i].Amount;
+                        LatestAmountEnteresdInPayMode[i].Amount = enteredValue;
+                        f = false;
+                        break;
+                    }
+                }
+                if (f) {
+                    LatestAmountEnteresdInPayMode.push({ "Paymode": "W", "Amount": enteredValue });
+                }
+                NetPayableAmountFinal -= exisitngAmount;
+                NetPayableAmountFinal += enteredValue;
+                // $("#AvailBal").val();
+                //  $("#RemBal").val();
+                var AvailBalance = $("#AvailBal").val();
+                AvailBalance = parseFloat(AvailBalance);
+
+                $("#RemBal").val(AvailBalance - enteredValue);
+                $("#TotalPaymodeAmt").val(NetPayableAmountFinal);
+                SetCashAmountTextbox(enteredValue);
+            }
+            else {
+                $("#AmountByWallet").val(0);
+                $("#RemBal").val($("#Avail").val());
+                if (enteredValue > (parseFloat($("#AvailBal").val()))) {
+                    OpenDialog("dialogMessage", "Insufficient Available Balance!", "false");
+                }
+                else {
+                    OpenDialog("dialogMessage", "Amount is more than Payable amount!", "false");
+                }
+            }
+
+        });
+        $('#W').change(function () {
+            if ($(this).is(":checked")) {
+                $("#AmountByWallet").prop("disabled", '');
+                // $("#AvailBal").prop("disabled", '');
+                //$("#RemBal").prop("disabled", '');
+                // $("#CardType").prop("disabled", '');
+                //$("#DDBankName").prop("disabled", '');
+            }
+            else {
+                var enteredValue = $("#AmountByWallet").val();
+
+                if (enteredValue != null && enteredValue != "") {
+                    enteredValue = parseFloat(enteredValue);
+                    NetPayableAmountFinal = NetPayableAmountFinal - enteredValue;
+                }
+                LatestAmountEnteresdInPayMode = $.grep(LatestAmountEnteresdInPayMode, function (e) {
+                    return e.Paymode != "W";
+                });
+                $("#AmountByWallet").val(0);
+                $("#TotalPaymodeAmt").val(NetPayableAmountFinal);
+                $("#AmountByWallet").prop("disabled", "disabled");
+                SetCashAmountTextbox(-(enteredValue));
+                // $("#AvailBal").prop("disabled", "disabled");
+                // $("#RemBal").prop("disabled", "disabled");
+                // $("#CardType").prop("disabled", "disabled");
+                //$("#DDBankName").prop("disabled", "disabled");
+            }
+
+        });
+        //$("#AmountByPaytm").focusout(function () {
+        //    var enteredValue = $("#AmountByPaytm").val();
+        //    if (enteredValue != null && enteredValue != "") {
+        //        enteredValue = parseFloat(enteredValue);
+        //    }
+        //    else {
+        //        enteredValue = 0;
+        //    }
+        //    var f = true;
+        //    var exisitngAmount = 0;
+        //    if (enteredValue <= NetAmounPayable) {
+        //        for (var i = 0; i < LatestAmountEnteresdInPayMode.length; i++) {
+        //            if (LatestAmountEnteresdInPayMode[i].Paymode == "P") {
+        //                exisitngAmount = LatestAmountEnteresdInPayMode[i].Amount;
+        //                LatestAmountEnteresdInPayMode[i].Amount = enteredValue;
+        //                f = false;
+        //                break;
+        //            }
+        //        }
+        //        if (f) {
+        //            LatestAmountEnteresdInPayMode.push({ "Paymode": "P", "Amount": enteredValue });
+        //        }
+        //        NetPayableAmountFinal -= exisitngAmount;
+        //        NetPayableAmountFinal += enteredValue;
+
+        //        $("#TotalPaymodeAmt").val(NetPayableAmountFinal);
+        //        SetCashAmountTextbox(enteredValue);
+        //    }
+        //    else {
+        //        $("#AmountByPaytm").val(0);
+        //        OpenDialog("dialogMessage", "Amount is more than Payable amount!", "false");
+        //    }
+        //});
+        //$('#P').change(function () {
+        //    if ($(this).is(":checked")) {
+        //        $("#AmountByPaytm").prop("disabled", '');
+        //        $("#PaytmTransactionId").prop("disabled", '');
+
+        //    }
+        //    else {
+        //        var enteredValue = $("#AmountByPaytm").val();
+        //        if (enteredValue != null && enteredValue != "") {
+        //            enteredValue = parseFloat(enteredValue);
+        //            NetPayableAmountFinal = NetPayableAmountFinal - enteredValue;
+        //        }
+        //        LatestAmountEnteresdInPayMode = $.grep(LatestAmountEnteresdInPayMode, function (e) {
+        //            return e.Paymode != "P";
+        //        });
+        //        $("#AmountByPaytm").val(0);
+        //        $("#TotalPaymodeAmt").val(NetPayableAmountFinal);
+        //        $("#AmountByPaytm").prop("disabled", "disabled");
+        //        $("#PaytmTransactionId").prop("disabled", "disabled");
+
+        //        // $("#CardType").prop("disabled", "disabled");
+        //        //$("#DDBankName").prop("disabled", "disabled");
+        //    }
+
+        //});
+
+
+        $("#SearchText").focusout(function () {
+            console.log("in function");
+            if ($(this).val() == "") {
+                $(this).val("P");
+            }
+            changeValues();
+        });
+        var fullDate = new Date();
+
+        //console.log(fullDate);
+        //Thu May 19 2011 17:25:38 GMT+1000 {}
+
+        //convert month to 2 digits
+        console.log(fullDate.getMonth() + 1);
+        var lengthOfMonth = ((fullDate.getMonth() + 1).toString()).length;
+        console.log(lengthOfMonth);
+        var twoDigitMonth = (lengthOfMonth > 1) ? (fullDate.getMonth() + 1) : '0' + (fullDate.getMonth() + 1);
+
+        var currentDate = fullDate.getDate() + "-" + twoDigitMonth + "-" + fullDate.getFullYear();
+
+
+        $('#SearchText').bind('keydown', function (event) {
+            var key = event.keyCode || event.charCode;
+            //if (key != 8 || key != 46) {
+            //    $(this).val("P");
+            //    //changeValues();
+            //}
+            var node = $(this).val();
+            console.log("node", node);
+            console.log("key", key);
+            if (key != 8 && key != 46 && key != 13) {
+                //up
+                if (key == 38) {
+                    $(this).val("P");
+                    changeValues();
+                }
+                    //down
+                else if (key == 40) {
+                    $(this).val("B");
+                    changeValues();
+                }
+                else {
+                    if (key == 66) {
+                        $(this).val("B");
+                        changeValues();
+                    }
+                    if (key == 80) {
+                        $(this).val("P");
+                        changeValues();
+                    }
+                    //if (node != "P" && node != "B" && node != "p" && node != "b") {
+                    //    //console.log(key);
+
+                    //    $(this).val("P");
+                    //    //changeValues();
+
+
+                    //}
+                }
+            }
+
+        });
+
+        $("#ProductName").keydown(function (event) {
+            if (event.keyCode == 13) {
+                $("#BarcodeList").focus();
+                event.preventDefault();
+                return false;
+            }
+        });
+
+
+        function changeValues() {
+            SearchText = $("#SearchText").val();
+            console.log("iSearchText:", SearchText);
+            if (SearchText == "P") {
+
+                $("#Barcode").prop("readonly", true);
+                $("#Barcode").addClass("input-readonly");
+                $("#ProductName").prop("readonly", '');
+                $("#ProductName").removeClass("input-readonly");
+                $("#Barcode").hide();
+                $("#BarcodeList").show();
+                $("#BarcodeList").empty();
+                $("#ProductName").show();
+                $("#ProductNameList").hide();
+                $("#ProductNameList").empty();
+                $("#ProductName").autocomplete({
+                    source: function (request, response) {
+                        var results = $.ui.autocomplete.filter(ItemList, request.term);
+
+                        response(results.slice(0, 50));
+                        //response(results);
+                        //$('html').getNiceScroll().resize();
+                        //$('#sidebar').getNiceScroll().resize();
+                        //$('.scroll-panel').getNiceScroll().resize();
+                        //response(ItemList);
+                    },
+                    minLength: 1,
+                    scroll: true,
+                    select: function (event, ui) {
+                        //$("#txDestination").val(ui.item.label);
+                        //cityID = ui.item.id;
+                        console.log("ui.item", ui.item.label);
+                        $("#ProductName").val(ui.item.label);
+                        GetProductInfo("P", ui.item.label);
+                        $("#Quantity").focus();
+                        return false;
+                    },
+
+                }).focus(function () {
+                    $(this).autocomplete("search", "");
+                });
+                //$("#ProductName").focusout(function () {
+                //    GetProductInfo("P");
+                //});
+                $("#Barcode").unbind("focusout");
+                $("#ProductName").focus();
+            }
+            if (SearchText == "B") {
+
+                $("#ProductName").prop("readonly", true);
+                $("#ProductName").addClass("input-readonly");
+                $("#Barcode").prop("readonly", '');
+                $("#Barcode").removeClass("input-readonly");
+                $("#ProductName").hide();
+                $("#ProductNameList").show();
+                $("#ProductNameList").empty();
+
+                $("#Barcode").show();
+                $("#BarcodeList").hide();
+                $("#BarcodeList").empty();
+                $("#Barcode").focusout(function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    GetProductInfo("B", $("#Barcode").val());
+                    $("#Quantity").focus();
+                });
+                $("#ProductName").unbind("autocomplete");
+                $("#Barcode").focus();
+                // resetProductDetails();
+                //ClearProductdetailsWithoutChangingValues();
+            }
+        }
+        //$("#IdNo").focusout(function (e) {
+        //    e.preventDefault();
+        //    e.stopPropagation();
+        //    var Value = $("#IdNo").val();
+        //    if(Value!="")
+        //    GetCustomerInfo(Value);
+
+        //});
+        $("#ProductName").keydown(function (event) {
+            if (event.keyCode == 13) {
+                if ($("#ProductName").val().length == 0) {
+                    $("#BarcodeList").focus();
+
+                    $("#ProductName").attr('style', 'border-color:none;width:89%');
+                    //$("#BarcodeList").attr("style", "border-color:lightblue");
+
+                    return true;
+                }
+            }
+        });
+
+        $("#Quantity").focusout(function () {
+            console.log("in function");
+            var qtyCurrent = $("#Quantity").val();
+            if (qtyCurrent != "") {
+                qtyCurrent = parseFloat(qtyCurrent);
+                if (qtyCurrent <= 1000.999) {
+                    DoCalculation();
+                }
+                else {
+                    OpenDialog("dialogMessage", "Please enter quantity less than 1000.999!", "false");
+                    $("#Quantity").val(0);
+                }
+            }
+            else {
+                // OpenDialog("dialogMessage", "Please enter quantity!", "false");
+                $("#Quantity").val(0);
+            }
+
+        });
+        $("#DiscPer").focusout(function () {
+            DoCalculation();
+        });
+
+        function DoCalculation() {
+            //  var ProductGrid = [{ "SNo": "", "Code": "", "ProductName": "", "MRP": "", "DP": "", "Rate": "", "Barcode": "", "RP": "", "BV": "", "CV": "", "PV": "", "Qty": "", "RPValue": "", "BVValue": "", "CVValue": "", "PVValue": "", "CommsnPer": "", "CommsnAmt": "", "DiscPer": "", "DiscAmt": "", "Amount": "", "TaxType": "", "TaxPer": "", "TaxAmt": "", "TotalAmount": "" }];
+            if (ProductArray != null && ProductArray != undefined) {
+                var Quantity = parseFloat(($("#Quantity").val() != "" || $("#Quantity").val() != null) ? $("#Quantity").val() : 0);
+                var dpValue;
+                var CommissionLessDp;
+                console.log("Quantity", Quantity);
+                console.log("ProductArray.AvailStock", ProductArray.AvailStock);
+                if (Quantity <= ProductArray.AvailStock || ProductArray.AvailStock<=0) {
+                    if (IsCommissionAdd == 1) {
+                        var Commssn = ProductArray.DP * ProductArray.CommsnPer / 100;
+                        dpValue = ProductArray.DP - Commssn;
+                        CommissionLessDp = dpValue;
+                        ProductArray.CommssnAmt = Commssn * Quantity;
+                    }
+                    else {
+                        dpValue = ProductArray.DP;
+                    }
+
+
+                    //to be calculated if value for this in config is "Y"
+                    @*var IsDiscountCalculated = '@Model.objConfigDetails.C_AllowDiscount';
+                    var IsDiscountForAllCust = '@Model.objConfigDetails.C_DiscForAllCust';
+                    var ToCalculateDiscount = true;
+                    if (IsDiscountForAllCust == "Y") {
+                        ToCalculateDiscount = true;
+                    }
+                    else {
+                        if (IsRegisteredCustomerCheck) {
+                            ToCalculateDiscount = true;
+                        }
+                        else {
+                            ToCalculateDiscount = false;
+                        }
+                    }*@
+                    //if (IsDiscountCalculated == "Y" && ToCalculateDiscount == true) {
+                    var DiscPer = ProductArray.DiscPer;
+                    var DiscAmt = ProductArray.DiscAmt;
+                    var DiscPerText = $("#DiscPer").val();
+                    if (parseFloat(DiscPer) != parseFloat(DiscPerText)) {
+                        DiscPer = parseFloat(DiscPerText);
+                        ProductArray.DiscPer = DiscPer;
+                    }
+                    /*if (IsQty == "D") {
+                        dpValue = CommissionLessDp;
+                        DiscPer = parseInt($("#DiscPer").val());
+                    }*/
+                    if (IsDiscountAdd == 1) {                       
+                        if (DiscPer != 0) {
+                            var Discount = dpValue * DiscPer / 100;
+                            dpValue = dpValue - Discount;
+                            ProductArray.DiscAmt = Discount * Quantity;
+                        }
+                        //else if (DiscPer == 0 && DiscAmt != 0) {
+                        //    var Discount = dpValue * DiscAmt;
+                        //    dpValue = dpValue - Discount;
+                        //    ProductArray.DiscAmt = Discount * Quantity;
+                        //}
+                        else {
+                            ProductArray.DiscAmt = 0;
+                        }
+                    }
+                    else {
+                        ProductArray.DiscAmt = 0;
+                    }
+                    //}
+                    //else {
+                    //    ProductArray.DiscAmt = 0;
+                    //}
+
+
+                    ProductArray.Rate = dpValue * 100 / (100 + ProductArray.TaxPer);
+                    ProductArray.Amount = dpValue * Quantity * 100 / (100 + ProductArray.TaxPer);
+
+                    ProductArray.TaxAmt = (dpValue * Quantity) - ProductArray.Amount;
+
+                    var temp = (ProductArray.TaxAmt.toFixed(2)).toString();
+                    var lastNum = parseInt(temp[temp.length - 1]);
+                    console.log("lastNum", lastNum);
+                    console.log("ProductArray.TaxAmt", ProductArray.TaxAmt);
+                    console.log("ProductArray.Amount", ProductArray.Amount);
+                    if ((parseInt(lastNum) % 2) != 0) {
+                        $("#OldTaxAmount").val(parseFloat(ProductArray.TaxAmt));
+                        ProductArray.Amount = parseFloat(ProductArray.Amount) + 0.01;
+                        ProductArray.TaxAmt = parseFloat(ProductArray.TaxAmt) - 0.01;
+                    }
+
+                    ProductArray.TotalAmt = (dpValue * Quantity);
+
+                    ProductArray.RPValue = ProductArray.RP * Quantity;
+                    ProductArray.CVValue = ProductArray.CV * Quantity;
+                    ProductArray.BVValue = ProductArray.BV * Quantity;
+                    ProductArray.PVValue = ProductArray.PV * Quantity;
+                    ProductArray.Qty = Quantity;
+                    $("#DiscAmt").val((ProductArray.DiscAmt).toFixed(2));
+
+                    $("#TaxAmt").val((ProductArray.TaxAmt).toFixed(2));
+                    $("#Amount").val((ProductArray.Amount).toFixed(2));
+                    $("#TotalAmount").val((ProductArray.TotalAmt).toFixed(2));
+                    //CalculateTotals();
+                }
+
+
+            }
+
+        }
+        $("#AddRecordInGrid").click(function (e) {
+            //if (e.which != 1) {
+            count++;
+            if (ProductArray != undefined) {
+                ProductArray.SNo = count;
+            }
+            var Qty = $("#Quantity").val();
+            if (Qty != null && Qty != "") {
+                Qty = parseFloat(Qty);
+            }
+            else {
+                Qty = 0;
+            }
+
+            //if "Y" Then replace older record in grid with new one but adding the existing values of specific product in new one and replace, if "A" ask for doing same,if "N" show message
+            @*var IsAddDuplicateRecord = '@Model.objConfigDetails.C_AddDuplicateProd';*@
+            var IsReplaceRecord = false;
+            console.log("Qty", Qty);
+
+            console.log("ProductArray", ProductArray);
+            console.log("ProductArray.AvailStock", ProductArray.AvailStock);
+            if ((ProductArray != null && ProductArray.AvailStock != null) && (Qty > 0) && (Qty <= ProductArray.AvailStock && ProductArray.AvailStock != 0)) {
+                var Flag = true;
+                var i;
+                for (i = 0; i < ProductGrid.length; i++) {
+                    if (ProductGrid[i].Code == ProductArray.ProdCode) {
+                        Flag = false;
+
+                        break;
+                    }
+                }
+                console.log("ProductGrid", ProductGrid);
+                if (ProductGrid.length > 0 && ProductGrid != null) {
+                    if (ProductGrid[0].SNo == "" || ProductGrid[0].SNo == null || ProductGrid[0].SNo == undefined) {
+                        ProductGrid = ProductGrid.splice(1);
+                    }
+                }
+                if (Flag) {
+                    //  var ProductGrid = [{ "SNo": "", "Code": "", "ProductName": "", "MRP": "", "DP": "", "Rate": "", "Barcode": "", "RP": "", "BV": "", "CV": "", "PV": "", "Qty": "", "RPValue": "", "BVValue": "", "CVValue": "", "PVValue": "", "CommsnPer": "", "CommsnAmt": "", "DiscPer": "", "DiscAmt": "", "Amount": "", "TaxType": "", "TaxPer": "", "TaxAmt": "", "TotalAmount": "" }];
+                    ProductGrid.push({ "AvailStock": ProductArray.AvailStock, "SNo": ProductArray.SNo, "Code": ProductArray.ProdCode, "ProductName": ProductArray.ProductName, "MRP": ProductArray.MRP, "DP": ProductArray.DP, "Rate": (ProductArray.Rate).toFixed(2), "BatchNo": ProductArray.BatchNo, "Barcode": ProductArray.Barcode, "RP": ProductArray.RP, "BV": ProductArray.BV, "CV": ProductArray.CV, "PV": ProductArray.PV, "Qty": ProductArray.Qty, "RPValue": ProductArray.RPValue, "BVValue": ProductArray.BVValue, "CVValue": ProductArray.CVValue, "PVValue": ProductArray.PVValue, "CommsnPer": ProductArray.CommsnPer, "CommsnAmt": (ProductArray.CommssnAmt).toFixed(2), "DiscPer": ProductArray.DiscPer, "DiscAmt": (ProductArray.DiscAmt).toFixed(2), "Amount": (ProductArray.Amount).toFixed(2), "TaxType": ProductArray.TaxType, "TaxPer": ProductArray.TaxPer, "TaxAmt": (ProductArray.TaxAmt).toFixed(2), "TotalAmount": (ProductArray.TotalAmt).toFixed(2) });
+                }
+                else {
+                    //ProductGrid[i].SNo = ProductArray.SNo;
+                    //if (IsAddDuplicateRecord == "N") {
+                    //    IsReplaceRecord = false;
+                    //    OpenDialog("dialogMessage", "This product already exists in grid!", "false");
+                    //}
+                    //else if (IsAddDuplicateRecord == "Y") {
+                    //    IsReplaceRecord = true;
+
+                    //}
+                    //else {
+                    //    OpenDialog("dialogMessage", "Product already exists. Do you want to Add Quantity?", "true");
+                    //    if (IsYes == true) {
+                    //        IsReplaceRecord = true;
+                    //    }
+                    //    else {
+                    //        IsReplaceRecord = false;
+                    //    }
+                    //}
+                    //if (IsReplaceRecord) {
+                    var Qty = (parseFloat(ProductGrid[i].Qty) + parseFloat(ProductArray.Qty)).toFixed(2);
+                    ProductGrid[i].Qty = Qty;
+                    var TaxAmt = (parseFloat(ProductGrid[i].TaxAmt) + parseFloat(ProductArray.TaxAmt)).toFixed(2);
+                    ProductGrid[i].TaxAmt = TaxAmt;
+                    var DiscAmt = (parseFloat(ProductGrid[i].DiscAmt) + parseFloat(ProductArray.DiscAmt)).toFixed(2);
+                    ProductGrid[i].DiscAmt = DiscAmt;
+                    var TotalAmount = (parseFloat(ProductGrid[i].TotalAmount) + parseFloat(ProductArray.TotalAmt)).toFixed(2);
+                    ProductGrid[i].TotalAmount = TotalAmount;
+                    var Amount = (parseFloat(ProductGrid[i].Amount) + parseFloat(ProductArray.Amount)).toFixed(2);
+                    ProductGrid[i].Amount = Amount;
+                    var Rate = (parseFloat(ProductGrid[i].Rate) + parseFloat(ProductArray.Rate)).toFixed(2);
+                    ProductGrid[i].Rate = Rate;
+                    var CommsnAmt = (parseFloat(ProductGrid[i].CommsnAmt) + parseFloat(ProductArray.CommssnAmt)).toFixed(2);
+                    ProductGrid[i].CommsnAmt = CommsnAmt;
+                    var RPValue = (parseFloat(ProductGrid[i].RPValue) + parseFloat(ProductArray.RPValue)).toFixed(2);
+                    ProductGrid[i].RPValue = RPValue;
+                    var CVValue = (parseFloat(ProductGrid[i].CVValue) + parseFloat(ProductArray.CVValue)).toFixed(2);
+                    ProductGrid[i].CVValue = CVValue;
+                    var PVValue = (parseFloat(ProductGrid[i].PVValue) + parseFloat(ProductArray.PVValue)).toFixed(2);
+                    ProductGrid[i].PVValue = PVValue;
+                    var BVValue = (parseFloat(ProductGrid[i].BVValue) + parseFloat(ProductArray.BVValue)).toFixed(2);
+                    ProductGrid[i].BVValue = BVValue;
+
+                    // }
+                }
+                fillGrid();
+                CalculateTotals();
+                resetProductDetails();
+                $("#ProductName").val('');
+                $("#Barcode").val('');
+                $("#ProductNameList").empty();
+                $("#BarcodeList").empty();
+                SearchText = $("#SearchText").val();
+                if (SearchText == "P") {
+                    $("#ProductName").focus();
+                }
+                else {
+                    $("#Barcode").focus();
+                }
+            }
+            else {
+                SearchText = $("#SearchText").val();
+                var ToFocuselemement="";
+                if (SearchText == "P")
+                    ToFocuselemement = "ProductName";
+                else
+                    ToFocuselemement = "Barcode";
+                if (ProductArray.AvailStock == null || ProductArray.AvailStock == null || ProductArray.AvailStock == 0) {
+                    OpenDialog("dialogMessage", "InSufficient Stock!", "false");
+                    $("#" + ToFocuselemement).focus();
+                }
+                else if (Qty > ProductArray.AvailStock) {
+                    OpenDialog("dialogMessage", "Adjust Quantity.It should be less than available stock", "false");
+                    $("#Quantity").focus();
+                }
+                else if (Qty == 0) {
+                    OpenDialog("dialogMessage", "Please Enter Quantity!", "false");
+                    $("#Quantity").focus();
+                }
+
+            }
+            //SearchText = $("#SearchText").val();
+            //if (SearchText == "P") {
+            //    $("#ProductName").focus();
+            //}
+            //else {
+            //    $("#Barcode").focus();
+            //}
+            // }
+        });
+        $("#ClearDetails").click(function (e) {
+            // if (e.which != 1) {
+            $("#ProductName").val('');
+            $("#Barcode").val('');
+            $("#ProductNameList").empty();
+            $("#BarcodeList").empty();
+            resetProductDetails();
+            changeValues();
+            //  }
+        });
+        function resetProductDetails() {
+            //$("#ProductName").val('');
+            //$("#Barcode").val('');
+
+            $("#DP").val(0);
+            $("#Quantity").val(0);
+            $("#StockAvailable").val(0);
+            $("#DiscPer").val(0);
+            $("#DiscAmt").val(0);
+            $("#Amount").val(0);
+            $("#TaxPer").val(0);
+            $("#TaxAmt").val(0);
+            $("#TotalAmount").val(0);
+            //  $("#ProductNameList").empty();
+            //$("#BarcodeList").empty();
+
+        }
+        function ClearProductdetailsWithoutChangingValues() {
+            $("#ProductNameList").empty();
+            $("#BarcodeList").empty();
+            $("#ProductName").val('');
+            $("#Barcode").val('');
+            $("#DP").val(0);
+            $("#Quantity").val(0);
+            $("#StockAvailable").val(0);
+            $("#DiscPer").val(0);
+            $("#DiscAmt").val(0);
+            $("#Amount").val(0);
+            $("#TaxPer").val(0);
+            $("#TaxAmt").val(0);
+            $("#TotalAmount").val(0);
+        }
+        function ResetDetails() {
+
+            $("#ProductName").val('');
+            $("#Barcode").val('');
+            $("#ProductNameList").empty();
+            $("#BarcodeList").empty();
+            resetProductDetails();
+            changeValues();
+            ClearPaymodeDetails();
+            $("#TotalRP").val(0);
+            $("#TotalQty").val(0);
+            $("#TotalAmount").val(0);
+            $("#TotalDisc").val(0);
+            $("#TotalTax").val(0);
+            $("#TotalNetAmount").val(0);
+            $("#RoundOff").val(0);
+            $("#CashAmount").val(0);
+            $("#NetPayable").val(0);
+            ProductGrid = [{}];
+            fillGrid();
+
+        }
+
+        function ClearPaymodeDetails() {
+
+            $("#AmountByCard").val(0);
+            $("#AmountByPaytm").val(0);
+            LatestAmountEnteresdInPayMode = [{}];
+            LatestAmountEnteresdInPayMode = LatestAmountEnteresdInPayMode.splice(1);
+            NetPayableAmountFinal = 0;
+
+        }
+
+        
+
+        function GetProductInfo(isProductSearch, data) {
+            var dataValue = data;
+            var IsBillOnMrp = true;/* $("#IsBillOnMrp").val();*/
+            console.log("IsBillOnMrp in product info", IsBillOnMrp);
+            if (isProductSearch == "P" || isProductSearch == "B") {
+                //if (isProductSearch == "P")
+                //    dataValue = $("#ProductName").val();
+                if (isProductSearch == "B") {
+                    dataValue = $("#Barcode").val();
+                }
+                if (dataValue != "" && dataValue != null && dataValue != undefined) {
+                    $.ajax({
+                        url: '@Url.Action("GetProductInfo", "Transaction")',
+                        type: 'POST',
+                        data: { "SearchType": isProductSearch, "data": dataValue, "isCForm": false, "BillType": "party", "IsBillOnMrp": IsBillOnMrp },
+                        dataType: "json",
+                        success: function (objResult) {
+                            if (objResult != null && objResult.length > 0) {
+                                //fill values
+                                ProductSearchList = null
+                                IsCommissionAdd = objResult[0].IsCommissonAdd;
+                                IsDiscountAdd = objResult[0].IsDiscountAdd;
+                                ProductSearchList = objResult;
+                                $("#ProductNameList").empty();
+                                $("#BarcodeList").empty();
+                                AvailableBarcodeList = [];
+                                AvailableProductList = [{}];
+                                if (isProductSearch == "P") {
+                                    $("#ProductName").val(objResult[0].ProductName);
+                                    $("#ProductHidden").val(objResult[0].ProductName);
+                                    var f = true;
+                                    for (var i = 0; i < objResult.length; i++) {
+                                        if (f == true) {
+                                            f = false;
+                                            $("#BarcodeHidden").val(objResult[i].Barcode);
+                                        }
+                                        // $("#BarcodeList").empty();
+                                        AvailableBarcodeList = AvailableBarcodeList.splice(1);
+                                        AvailableBarcodeList.push(objResult[i].Barcode);
+                                        console.log("AvailableBarcodeList in product info", AvailableBarcodeList);
+                                        $("#BarcodeList").append("<option value=" + objResult[i].Barcode + ">" + objResult[i].Barcode + "</option>");
+                                    }
+
+                                }
+                                if (isProductSearch == "B") {
+                                    $("#Barcode").val(objResult[0].Barcode);
+                                    $("#BarcodeHidden").val(objResult[0].Barcode);
+                                    var f = true;
+                                    for (var i = 0; i < objResult.length; i++) {
+                                        if (f == true) {
+                                            f = false;
+                                            $("#ProductHidden").val(objResult[i].ProductName);
+                                        }
+                                        AvailableProductList = AvailableProductList.splice(1);
+                                        AvailableProductList.push({ "ProdCode": objResult[i].ProdCode, "ProductName": objResult[i].ProductName });
+                                        $("#ProductNameList").append("<option value=" + objResult[i].ProdCode + ">" + objResult[i].ProductName + "</option>");
+                                    }
+
+                                }
+                                fillProductValues(objResult[0]);
+                            }
+                            else {
+                                OpenDialog("dialogMessage", "No Product Found!", "false");
+                                //$("#ProductName").val("");
+
+                                ClearProductdetailsWithoutChangingValues();
+                            }
+                        },
+                        error: function (xhr, data) {
+                            //  return false;
+                            console.log(xhr);
+                            console.log("Error:", data);
+                        }
+                    });
+                }
+
+            }
+        }
+        $("#ProductNameList").change(function () {
+            var SelectedVal = $("#ProductNameList").val()
+            $("#ProductHidden").val(SelectedVal);
+            console.log("ProductSearchList", ProductSearchList);
+            if (ProductSearchList != null && ProductSearchList.length > 0) {
+                for (var i = 0; i < ProductSearchList.length; i++) {
+                    if (SelectedVal == ProductSearchList[i].ProductName) {
+                        fillProductValues(ProductSearchList[i]);
+                        break;
+                    }
+                }
+            }
+            $("#Quantity").focus();
+        });
+        $("#BarcodeList").change(function () {
+            var SelectedVal = $("#BarcodeList").val();
+            $("#BarcodeHidden").val(SelectedVal);
+            if (ProductSearchList != null && ProductSearchList.length > 0) {
+                for (var i = 0; i < ProductSearchList.length; i++) {
+                    if (SelectedVal == ProductSearchList[i].Barcode) {
+                        fillProductValues(ProductSearchList[i]);
+                        break;
+                    }
+                }
+            }
+            $("#Quantity").focus();
+        });
+        function fillProductValues(objResult) {
+            SearchText = $("#SearchText").val();
+            var TempProductArray = [{}];
+
+            var Qty = $("#Quantity").val();
+            if (Qty != "" && Qty != null) {
+                Qty = parseFloat(Qty);
+            }
+            else {
+                Qty = 0;
+            }
+            //  var ProductGrid = [{ "SNo": "", "Code": "", "ProductName": "", "MRP": "", "DP": "", "Rate": "", "Barcode": "", "RP": "", "BV": "", "CV": "", "PV": "", "Qty": "", "RPValue": "", "BVValue": "", "CVValue": "", "PVValue": "", "CommsnPer": "", "CommsnAmt": "", "DiscPer": "", "DiscAmt": "", "Amount": "", "TaxType": "", "TaxPer": "", "TaxAmt": "", "TotalAmount": "" }];
+            if ((TempProductArray[0].SNo) != undefined) {
+                TempProductArray = TempProductArray.splice(1);
+            }
+            console.log(objResult);
+            console.log("objResult.StockAvailable", objResult.StockAvailable);
+            // ProductGrid.push({ "SNo": count, "Code": objResult.ProdCode, });
+            TempProductArray.push({ "AvailStock": objResult.StockAvailable, "SNo": count, "ProductName": objResult.ProductName, "Barcode": objResult.Barcode, "BatchNo": objResult.BatchNo, "ProdCode": objResult.ProdCode, "Qty": Qty, "TaxType": objResult.TaxType, "MRP": objResult.MRP, "DP": objResult.DP, "RP": objResult.RP, "BV": objResult.BV, "CV": objResult.CV, "PV": objResult.PV, "CommsnPer": objResult.CommissionPer, "DiscPer": objResult.DiscPer, "TaxPer": objResult.TaxPer, "CommssnAmt": 0, "TaxAmt": 0, "RPValue": 0, "CVValue": 0, "PVValue": 0, "BVValue": 0, "DiscAmt": objResult.DiscAmt, "Amount": 0, "TotalAmt": 0, "Rate": 0 });
+            if (SearchText == "P") {
+                $("#ProductName").val(objResult.ProductName);
+                $("#BarcodeList").val(objResult.Barcode);
+            }
+            else {
+                $("#Barcode").val(objResult.Barcode);
+                $("#ProductList").val(objResult.ProductName);
+            }
+
+
+
+            $("#StockAvailable").val(objResult.StockAvailable);
+            $("#DP").val(objResult.DP);
+            $("#DiscPer").val(objResult.DiscPer);
+            $("#DiscAmt").val(0);
+            $("#TaxPer").val(objResult.TaxPer);
+            $("#TaxAmt").val(0);
+            $("#Amount").val(0);
+            $("#TotalAmount").val(0);
+            $("#Quantity").val(0);
+            //$("#TotalRP").val(0);
+            //$("#TotalQty").val(0);
+            //$("#TotalAmount").val(0);
+            //$("#TotalDisc").val(0);
+            //$("#TotalTax").val(0);
+            //$("#TotalNetAmount").val(0);
+            //$("#RoundOff").val(0);
+            //$("#CashAmount").val(0);
+            //$("#NetPayable").val(0);
+            console.log("TempProductArray[0] in fill", TempProductArray);
+            console.log("ProductArray[0] in fill", ProductArray);
+            ProductArray = TempProductArray[1];
+            console.log("ProductArray[0] in after fill", ProductArray);
+        }
+
+        function getAllProductNames() {
+            $.ajax({
+                url: '/Transaction/GetAllProductNames',
+                dataType: 'JSON',
+                method: 'GET',
+                //data: { 'LedgerName': '' },
+                success: function (data) {
+                    console.log("data:", data);
+                    //response(data);
+                    ItemList = [];
+                    if (data != null) {
+                        var i = 0;
+                        for (i = 0; i < data.length; i++) {
+                            //console.log("data[i]", data[i]);
+                            ItemList.push(data[i]);
+                        }
+                    }
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        }
+        function Delete(e) {
+
+
+            if (confirm('Are you sure?')) {
+                console.log(e);
+                var RecordNo = e.data.record.SNo;
+                ProductGrid = $.grep(ProductGrid, function (e) {
+                    return e.SNo != RecordNo;
+                });
+                count--;
+                //ProductArray.SNo = count;
+                fillGrid();
+                CalculateTotals();
+                //$("#CategoryId").val(e.data.record.CategoryId);
+                //if (e.data.record.ActiveStatus == "Active") {
+                //    $("#StatusActive").attr('checked', "checked");
+                //    $("#StatusInActive").attr('checked', false);
+                //}
+                //else {
+                //    $("#StatusInActive").attr("checked", "checked");
+                //    $("#StatusActive").attr('checked', false);
+                //}
+
+                //Save();
+                //load the new data from the server after the deletion
+            }
+        }
+        function fillGrid() {
+            console.log("ProductGrid", ProductGrid);
+            if (ProductGrid.length >= 1) {
+                if (ProductGrid[0].SNo == "" || ProductGrid[0].SNo == null || ProductGrid[0].SNo == undefined)
+                    ProductGrid = ProductGrid.splice(1);
+            }
+            $("#noRecord").hide();
+            console.log("ProductGrid", ProductGrid);
+            if (grid != null) {
+                grid.destroy();
+                $('#grid').empty();
+
+            }
+            //  var ProductGrid = [{ "SNo": "", "Code": "", "ProductName": "", "MRP": "", "DP": "", "Rate": "", "Barcode": "", "RP": "", "BV": "", "CV": "", "PV": "", "Qty": "", "RPValue": "", "BVValue": "", "CVValue": "", "PVValue": "", "CommsnPer": "", "CommsnAmt": "", "DiscPer": "", "DiscAmt": "", "Amount": "", "TaxType": "", "TaxPer": "", "TaxAmt": "", "TotalAmount": "" }];
+            grid = $('#grid').grid({
+                dataSource: ProductGrid,
+                uiLibrary: 'bootstrap',
+                headerFilter: true,
+                columns: [
+                    { field: 'SNo', width: 80, title: 'S.No.', sortable: true, hidden: false, filterable: false },
+                    { field: 'AvailStock', width: 80, title: 'Stock Avail.', sortable: true, hidden: true, filterable: false },
+                    { field: 'Code', width: 100, title: 'Code', sortable: true, hidden: false, filterable: true },
+                    { field: 'ProductName', width: 150, title: 'Product Name', sortable: true, hidden: false, filterable: true },
+                    { field: 'MRP', width: 80, title: 'MRP', sortable: true, hidden: true, filterable: true },
+                    { field: 'DP', width: 80, title: 'DP', sortable: true, hidden: true, filterable: true },
+                    { field: 'Rate', width: 80, title: 'Rate', sortable: true, hidden: false, filterable: true },
+                    { field: 'BatchNo', width:100, title: 'Batch No.', sortable: true, hidden: true, filterable: true },
+                    { field: 'Barcode', width: 100, title: 'Barcode', sortable: true, hidden: false, filterable: true },
+                    { field: 'BV', width: 80, title: '@BVCaption', sortable: true, hidden: false, filterable: true },
+                    { field: 'RP', width: 80, title: '@RPCaption', sortable: true, hidden: false, filterable: true },
+                    { field: 'CV', width: 80, title: '@CVCaption', sortable: true, hidden: true, filterable: true },
+
+                    { field: 'PV', width: 80, title: '@PVCaption', sortable: true, hidden: true, filterable: true },
+                    { field: 'Qty', width: 80, title: 'Qty', sortable: true, hidden: false, filterable: true },
+                    { field: 'BVValue', width: 80, title: '@BVCaption Value', sortable: true, hidden: false, filterable: true },
+                    { field: 'RPValue', width: 80, title: '@RPCaption Value', sortable: true, hidden: false, filterable: true },
+                    { field: 'CVValue', width: 80, title: '@CVCaption Value', sortable: true, hidden: true, filterable: true },
+
+                    { field: 'PVValue', width: 80, title: '@PVCaption Value', sortable: true, hidden: true, filterable: true },
+                    { field: 'CommsnPer', width: 80, title: 'Commsn %', sortable: true, hidden: true, filterable: true },
+                    { field: 'CommsnAmt', width: 80, title: 'Commsn Amt.', sortable: true, hidden: true, filterable: true },
+                    { field: 'DiscPer', width: 80, title: 'Disc %', sortable: true, hidden: true, filterable: true },
+                    { field: 'DiscAmt', width: 80, title: 'Disc Amt.', sortable: true, hidden: false, filterable: true },
+                    { field: 'Amount', width: 80, title: 'Amount', sortable: true, hidden: false, filterable: true },
+                    { field: 'TaxType', width: 80, title: 'Tax Type', sortable: true, hidden: false, filterable: true },
+                    { field: 'TaxPer', width: 80, title: 'Tax%', sortable: true, hidden: false, filterable: true },
+                    { field: 'TaxAmt', width: 80, title: 'Tax Amt.', sortable: true, hidden: false, filterable: true },
+                    { field: 'TotalAmount', width: 80, title: 'Total Amount', sortable: true, hidden: false, filterable: true },
+                     { title: '', field: 'Delete', width: 30, type: 'icon', icon: 'glyphicon-remove', tooltip: 'Delete', events: { 'click': Delete }, filterable: false }
+                ],
+                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+            });
+            grid.on('rowSelect', function (e, $row, id, record) {
+                //alert('Row with id=' + id + ' is selected.');
+                console.log("$row", $row);
+                console.log("record", record);
+                FillGridValuesInTextBox(record)
+
+            });
+            //    }
+            //else {
+            //                    $("#noRecord").show();
+            //}
+        }
+        function FillGridValuesInTextBox(objResult) {
+            SearchText = $("#SearchText").val();
+            var TempProductArray = [{}];
+            if ((TempProductArray[0].SNo) != undefined) {
+                TempProductArray = TempProductArray.splice(1);
+            }
+            console.log(objResult);
+            // ProductGrid.push({ "SNo": count, "Code": objResult.ProdCode, });
+            TempProductArray.push({ "AvailStock": objResult.AvailStock, "SNo": objResult.SNo, "ProductName": objResult.ProductName, "BatchNo": objResult.BatchNo, "Barcode": objResult.Barcode, "ProdCode": objResult.Code, "Qty": objResult.Qty, "AvailStock": objResult.AvailStock, "TaxType": objResult.TaxType, "MRP": objResult.MRP, "DP": objResult.DP, "RP": objResult.RP, "BV": objResult.BV, "CV": objResult.CV, "PV": objResult.PV, "CommsnPer": objResult.CommsnPer, "DiscPer": objResult.DiscPer, "TaxPer": objResult.TaxPer, "CommssnAmt": objResult.CommsnAmt, "TaxAmt": objResult.TaxAmt, "RPValue": objResult.RPValue, "CVValue": objResult.CVValue, "PVValue": objResult.PVValue, "BVValue": objResult.BVValue, "DiscAmt": objResult.DiscAmt, "Amount": objResult.Amount, "TotalAmt": objResult.TotalAmount, "Rate": objResult.Rate });
+            if (SearchText == "P") {
+                $("#ProductName").val(objResult.ProductName);
+                console.log("AvailableBarcodeList", AvailableBarcodeList);
+                for (var i = 0; i < AvailableBarcodeList.length; i++) {
+                    $("#BarcodeList").append("<option value=" + AvailableBarcodeList[i] + ">" + AvailableBarcodeList[i] + "</option>");
+                }
+                $("#BarcodeList").val(objResult.Barcode);
+            }
+            else {
+                $("#Barcode").val(objResult.Barcode);
+                console.log("AvailableProductList", AvailableProductList);
+                for (var i = 0; i < AvailableProductList.length; i++) {
+
+                    $("#ProductList").append("<option value=" + AvailableProductList[i].ProdCode + ">" + AvailableProductList[i].ProductName + "</option>");
+                }
+                $("#ProductList").val(objResult.Code);
+            }
+            $("#StockAvailable").val(objResult.AvailStock);
+            $("#DP").val(objResult.DP);
+            $("#DiscPer").val(objResult.DiscPer);
+            $("#DiscAmt").val(objResult.DiscAmt);
+            $("#TaxPer").val(objResult.TaxPer);
+            $("#TaxAmt").val(objResult.TaxAmt);
+            $("#Amount").val(objResult.Amount);
+            $("#TotalAmount").val(objResult.TotalAmount);
+            $("#Quantity").val(objResult.Qty);
+            console.log("TempProductArray[0] in fill", TempProductArray);
+            console.log("ProductArray[0] in fill", ProductArray);
+            ProductArray = TempProductArray[1];
+            DoCalculation();
+        }
+        function OpenDialog(dialogId, Message, isConfirmation) {
+            $("#" + dialogId).empty();
+            $("#" + dialogId).append('<p>' + Message + '</p>');
+            if (isConfirmation == "true") {
+                $("#" + dialogId).dialog({
+                    modal: true,
+                    buttons: [{
+                        text: "Yes",
+                        id: "btnYes" + dialogId,
+                        click: function () {
+                            //var isOpen = $("#dialog").dialog("isOpen");
+                            //if (isOpen == true) {
+                            //    okCallBack();
+                            //}
+                            IsYes = true;
+                            $("#" + dialogId).dialog("close");
+
+
+                        }
+                    },
+                    {
+                        text: "No",
+                        id: "btnNo" + dialogId,
+                        click: function () {
+                            //var isOpen = $("#dialog").dialog("isOpen");
+                            //if (isOpen == true) {
+                            //    okCallBack();
+                            //}
+                            IsYes = false;
+                            $("#" + dialogId).dialog("close");
+                        }
+                    }
+                    ]
+                });
+                $(".ui-dialog-titlebar-close").empty();
+                $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+            }
+            else {
+
+
+                $("#" + dialogId).dialog({
+                    modal: true,
+                    buttons: [{
+                        text: "OK",
+                        id: "btn" + dialogId,
+                        click: function () {
+                            //var isOpen = $("#dialog").dialog("isOpen");
+                            //if (isOpen == true) {
+                            //    okCallBack();
+                            //}
+
+                            $("#" + dialogId).dialog("close");
+
+
+                        }
+                    }]
+                });
+                $(".ui-dialog-titlebar-close").empty();
+                $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+            }
+
+        }
+
+        function CalculateTotals() {
+            console.log("ProductGrid", ProductGrid);
+            if (ProductGrid != null) {
+                if (ProductGrid[0].SNo == "" || ProductGrid[0].SNo == null || ProductGrid[0].SNo == undefined)
+                    ProductGrid = ProductGrid.splice(1);
+                console.log("ProductGrid after:", ProductGrid);
+                //var TotalQty = 0;
+                //var TotalRP = 0;
+                //var TotalSumAmount = 0;
+                //var TotalDisc = 0;
+                //var TotalTaxtAmt = 0;
+                //var TotalSumNetAmount = 0;
+                //var NetAmounPayable = 0;
+                //var RoundOff = 0;
+                //var CashAmount = 0;
+                var TotalBV = 0;
+                var TotalCV = 0;
+                var TotalPV = 0;
+                TotalQty = 0;
+                var TotalDiscountPer = 0;
+                var TotalCommsonAmt = 0;
+                TotalSumNetAmount = 0;
+                TotalTaxtAmt = 0;
+                TotalDisc = 0;
+                TotalSumAmount = 0;
+                TotalTaxPer = 0;
+                var i = 0;
+                for (i = 0; i < ProductGrid.length; i++) {
+                    if (ProductGrid[i].SNo != "") {
+                        TotalBV += parseFloat(ProductGrid[i].BVValue);
+                        TotalCV += parseFloat(ProductGrid[i].CVValue);
+                        TotalPV += parseFloat(ProductGrid[i].PVValue);
+                        TotalDiscountPer += parseFloat(ProductGrid[i].DiscPer);
+                        TotalCommsonAmt += parseFloat(ProductGrid[i].CommsnAmt);
+                        console.log("TotalQty", TotalQty);
+                        TotalQty += parseFloat(ProductGrid[i].Qty);
+                        TotalRP += parseFloat(ProductGrid[i].RPValue);
+                        console.log("ProductGrid[i].TaxPer", ProductGrid[i].TaxPer);
+                        TotalTaxPer += parseFloat(ProductGrid[i].TaxPer);
+                        console.log("TotalTaxPer in calculate totals in loop", TotalTaxPer);
+                        console.log("ProductGrid[i].Amount", parseFloat(ProductGrid[i].Amount));
+                        TotalSumAmount += parseFloat(ProductGrid[i].Amount);
+                        TotalDisc += parseFloat(ProductGrid[i].DiscAmt);
+                        TotalTaxtAmt += parseFloat(ProductGrid[i].TaxAmt);
+                        TotalSumNetAmount += parseFloat(ProductGrid[i].TotalAmount);
+                    }
+                }
+                CashAmount = $("#CashAmount").val();
+                if (CashAmount != "") {
+                    CashAmount = parseFloat(CashAmount);
+                }
+                console.log("TotalSumNetAmount", TotalSumNetAmount);
+                console.log("TotalSumAmount", TotalSumAmount);
+                var roundingOffThePayment = (parseFloat(TotalSumNetAmount)).toFixed(2);
+                console.log("roundingOffThePayment", roundingOffThePayment);
+                RoundOff = roundingOffThePayment - parseFloat(TotalSumNetAmount);
+                NetAmounPayable = (parseFloat(TotalSumNetAmount) + RoundOff);
+                //display in textboxes
+                $("#TotalBV").val(TotalBV);
+                $("#TotalCommsonAmt").val(TotalCommsonAmt);
+                $("#TotalCV").val(TotalCV);
+                $("#TotalPV").val(TotalPV);
+                $("#TotalDiscPer").val(TotalDiscountPer.toFixed(2));
+                $("#TotalRP").val(TotalRP);
+                $("#TotalQty").val(TotalQty);
+                $("#TotalTotalAmount").val(TotalSumAmount.toFixed(2));
+                $("#TotalDisc").val(TotalDisc.toFixed(2));
+                $("#TotalTax").val(TotalTaxtAmt.toFixed(2));
+                console.log("TotalTaxtPer in calculatetotals", TotalTaxtPer);
+                $("#TotalTaxPercent").val(TotalTaxtPer.toFixed(2));
+                $("#TotalAmountNet").val(TotalSumNetAmount.toFixed(2));
+                $("#RoundOff").val(RoundOff.toFixed(2));
+                $("#CashAmount").val(NetAmounPayable);
+                $("#NetPayable").val(NetAmounPayable);
+                FinalAmountToPay = NetAmounPayable;
+                //NetPayableAmountFinal = NetAmounPayable;
+            }
+        }
+        $("#CashDiscPer").focusout(function () {
+            if (NetAmounPayable > 0) {
+                var discPer = $("#CashDiscPer").val();
+                if (discPer != "" && discPer != null) {
+                    discPer = parseFloat(discPer);
+                    if (discPer == 0) {
+                        $("#CashDiscAmount").val(0);
+                        NetAmounPayable = FinalAmountToPay;
+                    }
+                    else {
+                        var disountAmount = ((discPer / 100) * NetAmounPayable).toFixed(2);
+                        $("#CashDiscAmount").val(disountAmount);
+                        NetAmounPayable = (NetAmounPayable - disountAmount).toFixed(2);
+
+                    }
+                    $("#NetPayable").val(NetAmounPayable);
+                }
+            }
+
+        });
+        $("#CashDiscAmount").focusout(function () {
+            if (NetAmounPayable > 0) {
+                var discAmount = $("#CashDiscAmount").val();
+                if (discAmount != "" && discAmount != null) {
+                    discAmount = parseFloat(discAmount);
+                    if (discAmount == 0) {
+                        $("#CashDiscPer").val(0);
+                        NetAmounPayable = FinalAmountToPay;
+                    }
+                    else {
+                        var disountPer = ((discAmount * 100) / NetAmounPayable).toFixed(2);
+                        $("#CashDiscPer").val(disountPer);
+                        NetAmounPayable = (NetAmounPayable - discAmount).toFixed(2);
+                    }
+                    $("#NetPayable").val(NetAmounPayable);
+                }
+            }
+        });
+        $("#cancelClick").click(function(){
+            ResetDetails();
+        });
+        $("form[name=distributorForm]").unbind("submit");
+        $("form[name=distributorForm]").bind('submit', function (e) {
+            $("#SaveCustomerForm").attr("disabled", true);
+            errorPaymode = false;
+            //validations of paymode if selected
+
+
+
+            if ($("#CC").prop('checked') == true) {
+                //do something
+                var CardNumber = $("#CardNo").val();
+                if (CardNumber == null || CardNumber == "") {
+                    errorPaymode = true;
+                }
+            }
+
+            var NetpayableValue = $("#NetPayable").val();
+            if (NetpayableValue != null && NetpayableValue != "") {
+                NetpayableValue = parseFloat(NetpayableValue);
+            }
+            else {
+                NetpayableValue = 0;
+            }
+            var TotalPaymodeValue = $("#TotalPaymodeAmt").val();
+            if (TotalPaymodeValue != null && TotalPaymodeValue != "") {
+                TotalPaymodeValue = parseFloat(TotalPaymodeValue);
+            }
+            else {
+                TotalPaymodeValue = 0;
+            }
+            var FirstBillError = false;
+            var ReferenceId = $("#ReferenceIdNo").val();
+            var ReferenceName = $("#ReferenceName").val();
+            var Id = $("#IdNo").val();
+            var IsFirstBill = $("#IsFirstBill").val() == "true" ? true : false;
+            var MinRepurch = $("#MinRepurch").val();
+            
+            if (TotalPaymodeValue <= NetpayableValue && errorPaymode == false) {
+
+                if (ProductGrid != null) {
+                    if (ProductGrid[0].SNo == "" || ProductGrid[0].SNo == null || ProductGrid[0].SNo == undefined) {
+                        ProductGrid = ProductGrid.splice(1);
+                    }
+                }
+                console.log("ProductGrid.length", ProductGrid.length);
+                if (ProductGrid.length > 0) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var ListObjStr = JSON.stringify(ProductGrid);
+                    console.log("ListObjStr", ListObjStr);
+                    $("#ListObjHidden").val(ListObjStr);
+                    formdata = new FormData($(this)[0]);
+                    console.log("form data = > " + formdata);
+                    SaveBill();
+
+                }
+                else {
+                    $("#SaveCustomerForm").attr("disabled", false);
+                    OpenDialog("dialogMessage", "There should be atleast one product in grid", "false");
+                }
+
+            }
+            else {
+                $("#SaveCustomerForm").attr("disabled", false);
+                if (errorPaymode == true) {
+                    OpenDialog("dialogMessage", "Please fill blank and enabled fields in paymode", "false");
+                }
+                else if (BillDateError == true) {
+                    OpenDialog("dialogMessage", "Please select bill date", "false");
+                 }
+                else {
+
+                    $("#AmountByCard").val(0);
+                    $("#AmountByPaytm").val(0);
+                    $("#NetPayable").val(NetAmounPayable);
+                    $("#TotalPaymodeAmt").val(0);
+                    $("#CashAmount").val(NetAmounPayable);
+                    NetPayableAmountFinal = 0;
+                    OpenDialog("dialogMessage", "Total Paymode Amount should be less than Net Payable Amount", "false");
+                }
+            }
+
+        });
+
+
+
+        function SaveBill(){
+
+            console.log("form data = > " + formdata);
+            $.ajax({
+                url: '@Url.Action("SaveDistributorBill", "Transaction")',
+                type: 'POST',
+                data: formdata,
+                processData: false,
+                contentType: false,
+                dataType: "json",
+                success: function (objResponse) {
+                    $("#SaveCustomerForm").attr("disabled", false);
+                    if (objResponse != null) {
+                        if (objResponse.ResponseStatus == "OK") {
+                            //OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                            //OpenDialog("dialogMessage", "Do you want to print bill?", "true");
+                            //if (IsYes == true) {
+                            //PrintElem();
+                            var BillNo = objResponse.ResponseDetailsToPrint.BillNo;
+                            var SoldBy=objResponse.ResponseDetailsToPrint.SoldBy;
+                            var BillType = objResponse.ResponseDetailsToPrint.BillType;
+                            console.log("BillNo", BillNo);
+                            openBill(BillNo, SoldBy,BillType);
+                            window.location.href = '@Url.Action("CustomerBill", "Transaction")';
+                            //}
+                            //else {
+
+
+                            @*window.location.href = '@Url.Action("InvoicePrint", "Transaction")';*@
+                            //}
+                            }
+                        else {
+                            OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                        }
+                    }
+                },
+                error: function (xhr, data) {
+                    //  return false;
+                    console.log(xhr);
+                    console.log("Error:", data);
+                }
+            });
+        }
+
+        $("#BillDateStr").datetimepicker({
+
+
+            format: 'DD-MM-YYYY'
+            ,
+            // todayHighlight:true,
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            //// console.log(e.date);
+            //// fromDate = $('#FromDatePickerWidget').val();
+            var selectedDate = e.date._d;
+            console.log(selectedDate.getMonth());
+            console.log(selectedDate.getMonth() + 1);
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            console.log(lengthOfMonth);
+            var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+
+            var newDate = selectedDate.getDate() + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+            console.log("newDate", newDate);
+            billDate = newDate;
+            $("#PartyName").focus();
+
+
+        });
+
+        $("#PartyName").autocomplete({
+            source: function (request, response) {
+                var results = $.ui.autocomplete.filter(PartyList, request.term);
+
+                response(results.slice(0, 50));
+                //response(results);
+                //$('html').getNiceScroll().resize();
+                //$('#sidebar').getNiceScroll().resize();
+                //$('.scroll-panel').getNiceScroll().resize();
+                //response(ItemList);
+            },
+            minLength: 1,
+            scroll: true,
+            select: function (event, ui) {
+                //$("#txDestination").val(ui.item.label);
+                //cityID = ui.item.id;
+                console.log("ui.item", ui.item.label);
+                $("#PartyName").val(ui.item.label);
+                $("#Remarks").focus();
+                SetSpecificCode("Party", ui.item.label);
+                return false;
+            },
+
+        }).focus(function () {
+            $(this).autocomplete("search", "");
+        });
+
+    });
+
+    function SetSpecificCode(type, label) {
+
+
+        if (type == "Party") {
+            for (var i = 0; i < FullPartyList.length; i++) {
+                if (FullPartyList[i].PartyName == label) {
+                    $("#PartyCode").val(FullPartyList[i].PartyCode);
+                    $("#SelectedPartyStateCode").val(FullPartyList[i].StateCode);
+                    break;
+                }
+            }
+        }
+    }
+
+    function GetAllParty() {
+        $.ajax({
+            url: '/Transaction/GetAllParty',
+            dataType: 'JSON',
+            method: 'GET',
+            //data: { 'LedgerName': '' },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                FullPartyList = data;
+                PartyList = [];
+                if (data != null) {
+                    var i = 0;
+                    for (i = 0; i < data.length; i++) {
+                        //console.log("data[i]", data[i]);
+                        PartyList.push(data[i].PartyName);
+                    }
+                    if (data.length == 1) {
+                        var LoginPartyCode = '@CurrentPartyCode';
+                        if (LoginPartyCode == data[0].PartyCode) {
+                            $("#PartyName").val(data[0].PartyName);
+                            $("#PartyCode").val(data[0].PartyCode);
+                            $("#SelectedPartyStateCode").val(data[0].StateCode);
+                        }
+                    }
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+
+    function openBill(billNo, soldBy,billType) {
+        var url = '@Url.Action("InvoicePrint", "Transaction",new {Pm="-1"})';
+        var encodedparameters = billNo;
+        //console.log("encodedparameters", encodedparameters);
+        //encodedparameters="uid=testuser&pwd=test123456&Id=84503&Name=tes&Email=abc@xyz.com&MobileNo=9829898298&Address=Bhl";
+        var EncryptedB64Url = window.btoa(encodedparameters);
+        console.log("EncryptedB64Url", EncryptedB64Url);
+        url = url.replace("-1", EncryptedB64Url);
+        
+        console.log("url", url);
+        var win = window.open(url, '_blank');
+        //win.focus();
+    }
+
+</script>
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Transaction</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-lg-12 ">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Customer Bill</h2>
+
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form id="distributorForm" method="post" name="distributorForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                        @Html.Hidden("IsAdd", "", new { name = "isAdd", id = "isAdd" })
+                        @Html.HiddenFor(m => m.objCustomer.FormNo, new { name = "FormNo", id = "FormNo" })
+                        @Html.HiddenFor(m => m.objProductListStr, new { name = "ListObjHidden", id = "ListObjHidden" })
+                        @Html.HiddenFor(m => m.objCustomer.IsBillOnMrp, new { id = "IsBillOnMrp" })
+                        @Html.HiddenFor(m => m.objCustomer.MinRepurch, new { id = "MinRepurch" })
+                        @Html.HiddenFor(m => m.objCustomer.IsFirstBill, new { id = "FirstBill" })
+                        @Html.HiddenFor(m => m.objCustomer.StateCode, new { id = "SelectedPartyStateCode" })
+                        @Html.HiddenFor(m => m.BillType, new { id = "BillType", name = "BillType", value = "customer" })
+                        @Html.HiddenFor(m => m.objProduct.OldTaxAmount, new { id = "OldTaxAmount", name = "OldTaxAmount" })
+                        <div class="row RowMargin">
+                            <div class="col-lg-12">
+                                <center><h5 style="color:red">Press Shift+n to focus out of Product Section</h5></center>
+                            </div>
+                        </div>
+                        <div class="row RowMargin">
+                            <div class="col-lg-8">
+
+                                <label class="control-label col-lg-2" for="category-name">
+                                    Cust. Name: @*<span class="required">*</span>*@
+                                </label>
+                                <div class="col-lg-6">
+                                    @Html.TextBoxFor(m => m.objCustomer.Name, new { name = "Name", tabindex = "0", id = "Name", @maxlength = "20", @class = "form-control" })
+                                </div>
+
+                            </div>
+                           
+                            <div class="col-lg-4">
+                                &nbsp;
+                            </div>
+
+                        </div>
+                        <div class="row RowMargin">
+                            <div class="col-lg-8">
+
+                                <label class="control-label col-lg-2" for="category-name">
+                                    Contact No: @*<span class="required">*</span>*@
+                                </label>
+                                <div class="col-lg-6">
+                                   
+                                    @Html.TextBoxFor(m => m.objCustomer.MobileNo, new { name = "MobileNo", id = "MobileNo", tabindex = "0",maxlength="10", @class = "form-control onlyNumeric" })
+                                </div>
+
+                            </div>
+                            
+                            <div class="col-lg-4">
+                                &nbsp;
+                            </div>
+
+                        </div>
+                        <div class="row RowMargin">
+                            <div class="col-lg-8">
+                                <label class="control-label col-lg-2" for="category-name">
+                                    Remarks:
+                                </label>
+                                <div class="col-lg-10">
+                                    @Html.TextBoxFor(m => m.objCustomer.Remarks, new { name = "Remarks", id = "Remarks", @class = "form-control" })
+                                </div>
+
+                            </div>
+                           
+                            <div class="col-lg-4">
+                                &nbsp;
+                            </div>
+
+                        </div>
+
+
+                        <div class="row RowMargin">
+
+                            <div class="col-lg-12" style="margin-top: 2%;margin-bottom: 2%;">
+                                <label class="control-label"><u>Product Details:</u></label>
+                            </div>
+                            <div class="ln_solid" style="margin-top:18px"></div>
+                            @*<div class="form-group">*@
+                            <div class="col-lg-12">
+                                <div class="col-lg-6">
+                                    <label class="control-label col-lg-2" for="category-name" style="padding-left: 0px;">
+                                        Product
+                                    </label>
+                                    <div class="col-lg-8" style="padding-left:0px">
+                                        <input class="form-control col-lg-5 input-readonly" style="width:11%" type="text" id="SearchText" name="SearchText" value="P" maxlength="1" />
+                                        @Html.HiddenFor(m => m.objProduct.ProductName, new { id = "ProductHidden" })
+                                        @Html.TextBoxFor(m => m.objProduct.ProductName, new { tabindex = "0", name = "ProductName", id = "ProductName", @class = "form-control col-lg-7", @style = "width:89%" })
+                                        <select tabindex="0" name="ProductNameList" id="ProductNameList" style="display:none;width:89%" class="form-control col-lg-7">
+                                            <option value="0">--Select product</option>
+                                        </select>
+                                        @*@Html.DropDownListFor(m => m.objProduct.ProductName,new SelectListItem { Text="--Select Product--", Value="0", Selected=true} as IEnumerable<SelectListItem>, new { tabindex = "4", name = "ProductNameList", id = "ProductNameList",@style="display:none", @class = "form-control col-md-7 col-xs-12" })*@
+                                    </div>
+
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <label class="control-label col-lg-2" for="category-name">
+                                        Barcode
+                                    </label>
+                                    <div class="col-lg-8" style="padding-right:0px">
+                                        @Html.HiddenFor(m => m.objProduct.Barcode, new { id = "BarcodeHidden" })
+                                        @Html.TextBoxFor(m => m.objProduct.Barcode, new { tabindex = "0", name = "Barcode", id = "Barcode", @class = "form-control", @readonly = "readonly" })
+                                        <select tabindex="0" name="BarcodeList" id="BarcodeList" style="display:none;width:100%" class="form-control">
+                                            <option value="0">--Select barcode</option>
+                                        </select>
+                                        @*@Html.DropDownListFor(m => m.objProduct.Barcode, new SelectListItem { Text = "--Select Barcode--", Value = "0", Selected = true } as IEnumerable<SelectListItem>, new { tabindex = "5", name = "BarcodeList", id = "BarcodeList", @style = "display:none", @class = "form-control col-md-7 col-xs-12" })*@
+
+                                    </div>
+
+                                </div>
+                            </div>
+                            @*</div>*@
+                        </div>
+
+                        <div class="row RowMargin">
+                            <div class="col-lg-6">
+                                <label class="control-label col-lg-2" for="category-name">
+                                    Qty
+                                </label>
+                                <div class="col-lg-8">
+
+                                    @Html.TextBoxFor(m => m.objProduct.Quantity, new { name = "Quantity", maxlength = "10", tabindex = "0", id = "Quantity", @style = "width:50%", @class = "form-control col-lg-6 onlyDecimalValues" })
+                                    @Html.TextBoxFor(m => m.objProduct.StockAvailable, new { name = "StockAvailable", @style = "width:50%", id = "StockAvailable", @class = "form-control col-lg-6", @readonly = "readonly" })
+                                </div>
+
+                            </div>
+                            <div class="col-lg-6">
+                                <label class="control-label col-lg-2" for="category-name">
+                                    DP
+                                </label>
+                                <div class="col-lg-8 col-sm-8">
+
+                                    @Html.TextBoxFor(m => m.objProduct.DP, new { name = "DP", id = "DP", @class = "form-control", @readonly = "readonly" })
+                                </div>
+
+                            </div>
+                        </div>
+
+
+
+                        <div class="row RowMargin">
+                            <div class="col-lg-6">
+                                <label class="control-label col-lg-2" for="category-name">
+                                    Disc.
+                                </label>
+                                <div class="col-lg-8">
+
+                                    @Html.TextBoxFor(m => m.objProduct.DiscPer, new { name = "DiscPer", id = "DiscPer", @style = "width:50%", @class = "form-control col-lg-6" })
+                                    @Html.TextBoxFor(m => m.objProduct.DiscAmt, new { name = "DiscAmt", id = "DiscAmt", @style = "width:50%", @class = "form-control col-lg-6", @readonly = "readonly" })
+                                </div>
+
+                            </div>
+                            <div class="col-lg-6">
+                                <label class="control-label col-lg-2" for="category-name">
+                                    Amount
+                                </label>
+                                <div class="col-lg-8">
+
+                                    @Html.TextBoxFor(m => m.objProduct.Amount, new { name = "Amount", id = "Amount", @class = "form-control", @readonly = "readonly" })
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="row RowMargin">
+                            <div class="col-lg-6">
+                                <label class="control-label col-lg-2" for="category-name">
+                                    Tax
+                                </label>
+                                <div class="col-lg-8">
+
+                                    @Html.TextBoxFor(m => m.objProduct.TaxPer, new { name = "TaxPer", @style = "width:50%", id = "TaxPer", @class = "form-control col-lg-6", @readonly = "readonly" })
+                                    @Html.TextBoxFor(m => m.objProduct.TaxAmt, new { name = "TaxAmt", @style = "width:50%", id = "TaxAmt", @class = "form-control col-lg-6", @readonly = "readonly" })
+                                </div>
+
+                            </div>
+
+                            <div class="col-lg-6">
+                                <label class="control-label col-lg-2" for="category-name">
+                                    Total Amount
+                                </label>
+                                <div class="col-lg-8">
+
+                                    @Html.TextBoxFor(m => m.objProduct.TotalAmount, new { name = "TotalAmount", id = "TotalAmount", @class = "form-control", @readonly = "readonly" })
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="row RowMargin">
+                            <div class="col-lg-6 col-lg-offset-3">
+
+                                @*<button class="btn btn-primary" type="reset" onclick="reset()">Reset</button>*@
+                                <button type="button" id="AddRecordInGrid" class="btn btn-success" tabindex="0">Add</button>
+                                <button class="btn btn-primary" type="button" id="ClearDetails" tabindex="0">Clear</button>
+                            </div>
+                        </div>
+
+
+
+                        <div class="ln_solid"></div>
+
+                        @*grid section*@
+                        <div class="row RowMargin">
+                            <div class="col-lg-12">
+                                <table class="table bootstrap-datatable" id="grid"></table>
+                                <center><span style="display:none" id="noRecord">No Records Found</span></center>
+
+                            </div>
+                        </div>
+
+                        @*<div class="form-group">
+                                <label class="control-label"><u>Payment Mode:</u></label>
+                            </div>
+                            <div class="ln_solid"></div>*@
+                        @*payment section*@
+
+
+                        &nbsp;
+
+
+                        <div class="ln_solid"></div>
+
+                        @*delivery section*@
+
+                        <div class="row RowMargin">
+
+                            <label class="control-label col-lg-2" for="category-name">
+                                Delivery Place
+                            </label>
+                            <div class="col-lg-10">
+                                <div class="col-lg-11">
+                                    @Html.TextBoxFor(m => m.objProduct.DeliveryPlace, new { tabindex = "0", name = "DeliveryPlace", id = "DeliveryPlace", @class = "form-control", @style = "max-width: 100%!important;" })
+                                </div>
+                                <div class="col-lg-1 col-sm-1" style="margin-top: 1%;">
+                                    @Html.HiddenFor(m => m.objProduct.PayDetails.PayMode, new { @name = "hiddenPaymode", @id = "hiddenPaymode" })
+                                    <a class="paymode" id="PaymodePopup" name="PaymodePopup" style="cursor: pointer;color: blue;text-decoration: underline;" tabindex="0">Paymode</a>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div id="paymode_details" class="col-lg-12 gen_comment">
+                            <table style="width:100%">
+                                <tr>
+                                    <th>
+                                        Payment Mode
+                                    </th>
+                                    <th>
+                                        Amount
+                                    </th>
+                                    <th>
+                                        &nbsp;
+                                    </th>
+                                    <th>
+                                        &nbsp;
+                                    </th>
+                                    <th>
+                                        &nbsp;
+                                    </th>
+                                </tr>
+
+                                <tr>
+                                    <td>
+
+                                        <div class="row RowMargin">
+                                            <div class="col-lg-12">
+
+                                                <label>
+                                                    @Html.CheckBoxFor(m => m.objProduct.PayDetails.IsCC, new { @name = "CC", id = "CC", @class = "checkbox", tabindex = "0" }) By Card(CC)
+                                                    @*<input type="checkbox" name = "BD" id = "BD"/>Bank Deposit(BD)*@
+
+                                                </label>
+                                            </div>
+
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="row RowMargin">
+                                            <div class="col-lg-12">
+                                                @Html.TextBoxFor(m => m.objProduct.PayDetails.AmountByCard, new { @class = "form-control", @name = "AmountByCard", @id = "AmountByCard", @disabled = "disabled", tabindex = "0" })
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="row RowMargin">
+                                            <div class="col-lg-12">
+                                                <div class="col-lg-4">
+                                                    <label>
+                                                        Card No.
+
+                                                    </label>
+                                                </div>
+                                                <div class="col-lg-8">
+                                                    @Html.TextBoxFor(m => m.objProduct.PayDetails.CardNo, new { tabindex = "0", @class = "form-control", @name = "CardNo", @id = "CardNo", @maxlength = "10", @disabled = "disabled" })
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="row RowMargin">
+                                            <div class="col-lg-12">
+                                                <div class="col-lg-4">
+                                                    <label>
+                                                        Card Type
+
+                                                    </label>
+                                                </div>
+                                                <div class="col-lg-8">
+                                                    @Html.DropDownListFor(m => m.objProduct.PayDetails.CardType, ViewBag.CardTypes as IEnumerable<SelectListItem>, new { tabindex = "0", @class = "form-control", @name = "CardType", @id = "CardType", @disabled = "disabled" })
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        &nbsp;
+                                    </td>
+                                </tr>
+                                @*<tr>
+                                        <td>
+
+                                            <div class="row RowMargin">
+                                                <div class="col-lg-12">
+                                                    <label>
+                                                        @Html.CheckBoxFor(m => m.objProduct.PayDetails.IsW, new { @class = "checkbox", @name = "W", id = "W", tabindex = "0" }) By Wallet(W)
+                                                    </label>
+                                                </div>
+
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="row RowMargin">
+                                                <div class="col-lg-12">
+                                                    @Html.TextBoxFor(m => m.objProduct.PayDetails.AmountByWallet, new { @class = "form-control onlyNumeric", @name = "AmountByWallet", @id = "AmountByWallet", @disabled = "disabled", tabindex = "0" })
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="row RowMargin">
+                                                <div class="col-lg-12">
+                                                    <div class="col-lg-4">
+                                                        <label>
+                                                            Avail Bal.
+
+                                                        </label>
+                                                    </div>
+                                                    <div class="col-lg-8">
+                                                        @Html.TextBoxFor(m => m.objProduct.PayDetails.AvailBal, new { @class = "input-readonly form-control", tabindex = "0", @name = "AvailBal", @id = "AvailBal", @readonly = "readonly" })
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="row RowMargin">
+                                                <div class="col-lg-12">
+                                                    <div class="col-lg-4">
+                                                        <label>
+                                                            Rem Bal.
+
+                                                        </label>
+                                                    </div>
+                                                    <div class="col-lg-8">
+                                                        @Html.TextBoxFor(m => m.objProduct.PayDetails.RemBal, new { @class = "input-readonly form-control", @name = "RemBal", @id = "RemBal", @readonly = "readonly", tabindex = "0" })
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            &nbsp;
+                                        </td>
+                                    </tr>*@
+                                @*<tr>
+                                        <td>
+
+                                            <div class="row RowMargin">
+                                                <div class="col-lg-12">
+                                                    <label>
+                                                        @Html.CheckBoxFor(m => m.objProduct.PayDetails.IsP, new { @class = "checkbox", tabindex = "0", @name = "P", id = "P" }) By Paytm(P)
+
+
+                                                    </label>
+                                                </div>
+
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="row RowMargin">
+                                                <div class="col-lg-12">
+                                                    @Html.TextBoxFor(m => m.objProduct.PayDetails.AmountByPaytm, new { tabindex = "0", @class = "form-control onlyNumeric", @name = "AmountByPaytm", @id = "AmountByPaytm", @disabled = "disabled" })
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="row RowMargin">
+                                                <div class="col-lg-12">
+                                                    <div class="col-lg-4">
+                                                        <label>
+                                                            Transaction Id
+
+                                                        </label>
+                                                    </div>
+                                                    <div class="col-lg-8">
+                                                        @Html.TextBoxFor(m => m.objProduct.PayDetails.PaytmTransactionId, new { tabindex = "0", @class = "form-control", @name = "PaytmTransactionId", @id = "PaytmTransactionId", @disabled = "disabled" })
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>&nbsp;</td>
+                                        <td>&nbsp;</td>
+                                    </tr>*@
+                                <tr>
+                                    <td>&nbsp;</td>
+                                    <td><input type="text" id="TotalPaymodeAmt" name="TotalPaymodeAmt" style="" class="form-control" value="0" readonly="readonly" tabindex="0" /></td>
+                                    <td>&nbsp;</td>
+                                    <td>&nbsp;</td>
+                                    <td><a class="closepaymode" style="cursor:pointer;color:blue" id="closePaymodeDetail" tabindex="0">Close</a></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="ln_solid"></div>
+                        @*Calculation Part*@
+
+                        <div class="row RowMargin">
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    Total @BVCaption
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.TotalBV, new { name = "TotalBV", id = "TotalBV", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="TotalRP"/>*@
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    Total @RPCaption
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.TotalRP, new { name = "TotalRP", id = "TotalRP", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="TotalRP"/>*@
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    Total Cmmsn
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.TotalCommsonAmt, new { name = "TotalCommsonAmt", @id = "TotalCommsonAmt", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="TotalRP"/>*@
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row RowMargin">
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    Total Qty
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.TotalQty, new { name = "TotalQty", id = "TotalQty", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="TotalQty" />*@
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4 col-sm-4" for="category-name">
+                                    Amount
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.TotalTotalAmount, new { name = "TotalTotalAmount", id = "TotalTotalAmount", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="TotalAmount" />*@
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    Trade Disc.(-)
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.TotalDiscount, new { name = "TotalDisc", id = "TotalDisc", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="TotalDisc" />*@
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row RowMargin">
+
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    Tax Amt.(+)
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.HiddenFor(m => m.objProduct.TotalTaxPer, new { id = "TotalTaxPercent" })
+                                    @Html.TextBoxFor(m => m.objProduct.TotalTaxAmount, new { name = "TotalTax", id = "TotalTax", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="TotalTax" />*@
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    RoundOff
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.Roundoff, new { name = "RoundOff", id = "RoundOff", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="RoundOff" />*@
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    Total Amount
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.TotalPayAmount, new { name = "TotalAmountNet", id = "TotalAmountNet", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="TotalAmountNet" />*@
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row RowMargin">
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    Cash Disc(%)
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.CashDiscPer, new { name = "CashDiscPer", id = "CashDiscPer", @class = "form-control" })
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    Cash Disc.(-)
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.CashDiscAmount, new { name = "CashDiscAmount", id = "CashDiscAmount", @class = "form-control" })
+
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    Cash Amount
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.CashAmount, new { name = "CashAmount", id = "CashAmount", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="CashAmount" />*@
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="row RowMargin">
+                            <div class="col-lg-4">
+                                &nbsp;
+                            </div>
+                            <div class="col-lg-4">
+                                &nbsp;
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="control-label col-lg-4" for="category-name">
+                                    <b><u>Net Payable</u></b>
+                                </label>
+                                <div class="col-lg-8">
+                                    @Html.TextBoxFor(m => m.objProduct.TotalNetPayable, new { name = "NetPayable", id = "NetPayable", @class = "form-control", @readonly = "readonly" })
+                                    @*<input type="text" id="NetPayable" />*@
+                                </div>
+                            </div>
+                        </div>
+
+                        @*@Html.HiddenFor(m => m.objProduct.TotalBV, new { name = "TotalBV", @id = "TotalBV" })*@
+                        @*@Html.HiddenFor(m => m.objProduct.TotalRP, new { name = "TotalRP", @id = "TotalRP" })*@
+                        @Html.HiddenFor(m => m.objProduct.TotalCV, new { name = "TotalCV", @id = "TotalCV" })
+                        @Html.HiddenFor(m => m.objProduct.TotalPV, new { name = "TotalPV", @id = "TotalPV" })
+                        @Html.HiddenFor(m => m.objProduct.TotalDiscPer, new { name = "TotalDiscPer", @id = "TotalDiscPer" })
+                        @*@Html.HiddenFor(m => m.objProduct.TotalCommsonAmt, new { name = "TotalCommsonAmt", @id = "TotalCommsonAmt" })*@
+
+
+
+
+
+
+                        <div class="row RowMargin">
+                            <div class="col-lg-6 col-md-offset-3">
+
+                                @*<button class="btn btn-primary" type="reset" onclick="reset()">Reset</button>*@
+                                <button type="submit" id="SaveCustomerForm" class="btn btn-success" tabindex="0">Save</button>
+                                <button class="btn btn-primary" type="button" tabindex="0" id="cancelClick">Cancel</button>
+                            </div>
+                        </div>
+                        <div id="dialogMessage" title="Message">
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

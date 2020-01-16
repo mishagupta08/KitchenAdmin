@@ -1,0 +1,581 @@
+﻿@model InventoryManagement.Entity.Common.ProductDetails
+@{
+    ViewBag.Title = "BarcodeMaster";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var ActionValue = Model.IsAdd;
+    List<SelectListItem>
+    listItems = new List<SelectListItem>
+        ();
+        listItems.Add(new SelectListItem
+        {
+        Text = "Yes",
+        Value = "Y",
+        Selected = true
+        });
+        listItems.Add(new SelectListItem
+        {
+        Text = "No",
+        Value = "N",
+        Selected = true
+        });
+
+        string CVCaption = System.Configuration.ConfigurationManager.AppSettings["CVCaption"];
+        string BVCaption = System.Configuration.ConfigurationManager.AppSettings["BVCaption"];
+        string PVCaption = System.Configuration.ConfigurationManager.AppSettings["PVCaption"];
+        string RPCaption = System.Configuration.ConfigurationManager.AppSettings["RPCaption"];
+
+        }
+        <style>
+            .input-readonly {
+                background-color: #EBEBE4;
+            }
+             .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+        </style>
+        <script type="text/javascript">
+            var ErrorFlag = true;
+            var SizeOfImage;
+            var ProductGrid = [];
+            var ItemList = [];
+            var ProductModel = null;
+            var grid, dialog;
+            var ProductSearchList;
+            var eDate = "";
+            var mDate = "";
+            var currentDate = "";
+            $(document).ready(function () {
+                $(".preloader").hide();
+                var fullDate = new Date();
+                var lengthOfMonth = ((fullDate.getMonth() + 1).toString()).length;
+                var twoDigitMonth = (lengthOfMonth > 1) ? (fullDate.getMonth() + 1) : '0' + (fullDate.getMonth() + 1);
+                var lengthOfDate = ((fullDate.getDate() + 1).toString()).length;
+                var twoDigitDate = (lengthOfDate > 1) ? (fullDate.getDate() + 1) : '0' + (fullDate.getDate() + 1);
+                 currentDate = twoDigitDate + "-" + twoDigitMonth + "-" + fullDate.getFullYear();
+                //FillGrid();
+                ClearTextBox();
+                getAllProductNames();
+                changeValues();
+                
+                mDate = currentDate;
+                eDate = currentDate;
+             $("#MfgDateStr").datetimepicker({
+                        format: 'DD-MM-YYYY',
+                        widgetPositioning: {
+                            horizontal: 'auto',
+                            vertical: 'bottom'
+                        }
+
+                    }).on('dp.change', function (e) {
+                       
+                        var selectedDate = e.date._d;                        
+                        var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;                        
+                        var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+                        var lengthOfDate = ((selectedDate.getDate() + 1).toString()).length;
+                        var twoDigitDate = (lengthOfDate > 1) ? (selectedDate.getDate() + 1) : '0' + (selectedDate.getDate() + 1);
+                        var newDate = twoDigitDate + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+                        mDate = newDate;
+                    });
+                $('#MfgDateStr').val(currentDate);
+
+                $("#ExpDateStr").datetimepicker({
+                    format: 'DD-MM-YYYY',
+                    widgetPositioning: {
+                        horizontal: 'auto',
+                        vertical: 'bottom'
+                    }
+
+                }).on('dp.change', function (e) {
+
+                    var selectedDate = e.date._d;
+                    var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+                    var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+                    var lengthOfDate = ((selectedDate.getDate() + 1).toString()).length;
+                    var twoDigitDate = (lengthOfDate > 1) ? (selectedDate.getDate() + 1) : '0' + (selectedDate.getDate() + 1);
+                    var newDate = twoDigitDate + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+                    eDate = newDate;
+                });
+
+                $('#ExpDateStr').val(currentDate);
+                $("#BarcodeType").bind('change', function () {
+                    var SelectedVal = $("#BarcodeType").val();
+                    if (SelectedVal == "System Generated") {
+                        $("#Barcode").prop("readonly", true);
+                        $("#Barcode").addClass("input-readonly");
+                    }
+                    else {
+                        $("#Barcode").prop("readonly", '');
+                        $("#Barcode").removeClass("input-readonly");
+                    }
+                });
+
+                $("#IsExpirable").bind('change', function () {
+                    var SelectedVal = $("#IsExpirable").val();
+                    if (SelectedVal == "Y") {
+                        $("#ExpDateStr").prop("readonly", '');
+                        $("#ExpDateStr").removeClass("input-readonly");
+                    }
+                    else {
+                        $("#ExpDateStr").prop("readonly", true);
+                        $("#ExpDateStr").addClass("input-readonly");
+                    }
+                });
+
+                $("form[name=BarcodeForm]").unbind("submit");
+                $("form[name=BarcodeForm]").bind('submit', function (e) {
+                    $("#SaveProductMasterBtn").attr("disabled", true);
+                    AddToGrid();
+                    if (ProductGrid.length <= 0) {
+                        $("#SaveProductMasterBtn").attr("disabled", false);
+                        OpenDialog("dialogMessage", "There should be atleast one product in grid", "false");
+                    }
+                    else {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var ListObjStr = JSON.stringify(ProductGrid);
+
+                        $("#ListObjHidden").val(ListObjStr);
+                        var formdata = new FormData($(this)[0]);
+                        console.log("form data = > " + formdata);
+                        $.ajax({
+                            url: '@Url.Action("SaveBarcode", "Product")',
+                            type: 'POST',
+                            data: formdata,
+                            processData: false,
+                            contentType: false,
+                            dataType: "json",
+                            success: function (objResponse) {
+                                $("#SaveProductMasterBtn").removeAttr("disabled");
+                                if (objResponse != null) {
+                                    
+                                        OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                                    
+                                }
+                                ClearTextBox();
+                            },
+                            error: function (xhr, data) {
+                                //  return false;
+                                console.log(xhr);
+                                console.log("Error:", data);
+                            }
+                        });
+                    }
+                    return false;
+                });
+
+
+                $("#ProductNameList").change(function () {
+                    var SelectedVal = $("#ProductNameList").val();
+                    $("#ProductHidden").val(SelectedVal);
+                    if (ProductSearchList != null && ProductSearchList.length > 0) {
+                        for (var i = 0; i < ProductSearchList.length; i++) {
+                            if (SelectedVal == ProductSearchList[i].ProductName) {
+                                fillProductValues(ProductSearchList[i], false, 0);
+                                break;
+                            }
+                        }
+                    }
+                });
+
+
+            });
+
+            function getAllProductNames() {
+                $.ajax({
+                    url: '/Transaction/GetProductNamesOnly',
+                    dataType: 'JSON',
+                    method: 'GET',
+                    success: function (data) {
+                        ItemList = [];
+                        if (data != null) {
+                            var i = 0;
+                            for (i = 0; i < data.length; i++) {
+                                ItemList.push(data[i]);
+                            }
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                    }
+                });
+            }
+
+            function OpenDialog(dialogId, Message, isConfirmation) {
+                if (isConfirmation == "true") {
+
+                }
+                else {
+                    $("#" + dialogId).empty();
+                    $("#" + dialogId).append('<p>' + Message + '</p>');
+
+                    $("#" + dialogId).dialog({
+                        modal: true,
+                        buttons: [{
+                            text: "OK",
+                            id: "btn" + dialogId,
+                            click: function () {
+                                $("#" + dialogId).dialog("close");
+                            }
+                        }]
+                    });
+                    $(".ui-dialog-titlebar-close").empty();
+                    $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+                }
+
+
+            }
+
+            function AddToGrid() {
+                var productName = $("#ProductName").val();
+                var productCode = $("#productCode").val();
+                var pRate = $("#PurchaseRate").val();
+                var MRP = $("#MRP").val();
+                var dp = $("#DP").val();
+                var barcodetype = $("#BarcodeType").val();
+                var barcode = $("#Barcode").val();
+                var Isexpirable = $("#IsExpirable").val();
+                var MDate = mDate;
+                var EDate =eDate;
+                var remark = $("#Remarks").val();
+                var Status = $('input[name=IsActive]:checked').val();
+                ProductGrid.push({ "productCode": productCode, "productName": productName, "pRate": pRate, "MRP": MRP, "dp": dp, "barcodetype": barcodetype, "barcode": barcode, "Isexpirable": Isexpirable, "MDate": MDate, "EDate": EDate, "remark": remark, "Status": Status })
+           //     FillGrid();
+            }
+
+            function FillGrid() {
+                $("#noRecord").hide();
+                if (grid != null) {
+                    grid.destroy();
+                    $('#grid').empty();
+
+                }
+                grid = $('#grid').grid({
+                    dataSource: ProductGrid,
+                    uiLibrary: 'bootstrap',
+                    headerFilter: true,
+                    columns: [
+                       { field: 'productCode', title: 'Code', sortable: false, width: 70, hidden: false, cssClass: "noExl", filterable: false },
+                       { field: 'productName', title: 'Product Name', sortable: false, width: 70, hidden: false, cssClass: "noExl", filterable: false },
+                       { field: 'pRate', title: 'P Rate', sortable: false, width: 70, hidden: false, cssClass: "noExl", filterable: false },
+                       { field: 'MRP', title: 'MRP', sortable: false, width: 70, hidden: false, cssClass: "noExl", filterable: false },
+                       { field: 'dp', title: 'DP', sortable: false, width: 70, hidden: false, cssClass: "noExl", filterable: false },
+                       { field: 'barcodetype', title: 'Barcode Type', sortable: false, width: 70, hidden: false, cssClass: "noExl", filterable: false },
+                       { field: 'barcode', title: 'Barcode', sortable: false, width: 70, hidden: false, cssClass: "noExl", filterable: false },
+                    ],
+                    pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+                });
+            }
+
+            function changeValues() {
+                $("#ProductName").prop("readonly", '');
+                $("#ProductName").removeClass("input-readonly");
+                $("#ProductName").show();
+                $("#ProductNameList").hide();
+                $("#ProductNameList").empty();
+                $("#ProductName").autocomplete({
+                    source: function (request, response) {
+                        var results = $.ui.autocomplete.filter(ItemList, request.term);
+                        response(results.slice(0, 50));
+                    },
+                    minLength: 1,
+                    scroll: true,
+                    select: function (event, ui) {
+                        $("#ProductName").val(ui.item.label);
+                        GetProductInfo("P", ui.item.label, false, 0);
+                        return false;
+                    },
+
+                }).focus(function () {
+                    $(this).autocomplete("search", "");
+                });
+                $("#ProductName").focus();
+            }
+
+            function GetProductInfo(isProductSearch, data, offerProduct, offerQty) {
+
+                var dataValue = data;
+                if (isProductSearch == "P" || isProductSearch == "B") {
+
+                    if (dataValue != "" && dataValue != null && dataValue != undefined) {
+                        $.ajax({
+                            url: '@Url.Action("GetProductInfo", "Transaction")',
+                            type: 'POST',
+                            async: false,
+                            data: { "SearchType": isProductSearch, "data": dataValue, "isCForm": false, "BillType": "distributor", "IsBillOnMrp": false },
+                            dataType: "json",
+                            success: function (objResult) {
+                                if (objResult != null && objResult.length > 0) {
+                                    $("#productCode").val(objResult[0].ProductCodeStr);
+                                    $("#PurchaseRate").val(objResult[0].Rate);
+                                    $("#MRP").val(objResult[0].MRP);
+                                    $("#DP").val(objResult[0].DP);
+                                }
+                                else {
+                                    OpenDialog("dialogMessage", "No Product Found!", "false");
+                                    
+                                }
+                            },
+                            error: function (xhr, data) {                               
+                                console.log(xhr);
+                                console.log("Error:", data);
+                            }
+                        });
+                    }
+
+                }
+            }
+
+            function ClearGrid()
+            {
+                ProductGrid = [];
+                FillGrid();
+            }
+
+            function ClearTextBox() {
+                ProductGrid = [];                
+                $('#BarcodeForm')[0].reset();
+                $('#MfgDateStr').val(currentDate);
+                $('#ExpDateStr').val(currentDate);
+            }
+        </script>
+
+        <div class="row">
+            <div class="page-title">
+                <div class="title_left">
+                    <h3>Product</h3>
+                </div>
+                <div class="title_right">
+                    <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="x_panel">
+                        <div class="x_title">
+                            <h2>Barcode Master</h2>
+                            <ul class="nav navbar-right panel_toolbox">
+                                <li>
+                                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                </li>
+
+                            </ul>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="x_content">
+                            <br />
+                            <form id="BarcodeForm" method="post" name="BarcodeForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                                @Html.HiddenFor(m => m.ProductBarcodeDetails.objProductListStr, new { name = "ListObjHidden", id = "ListObjHidden" })
+                                @Html.HiddenFor(m => m.ProductBarcodeDetails.ExisitingBarcode, new { name = "ExisitingBarcode", id = "ExisitingBarcode" })
+                                <div class="col-lg-12">
+
+                                    <div class="form-group col-lg-6">
+                                        <label class="control-label col-lg-4 col-lg-4 col-sm-3 col-xs-12" for="product-name">
+                                            Product Name<span class="required" style="color:red">*</span>
+                                        </label>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+
+                                            @Html.TextBoxFor(m => m.ProductBarcodeDetails.ProductName, new { tabindex = "4", name = "ProductName", id = "ProductName", @class = "form-control col-md-7 col-xs-12", required = "required" })
+                                            <select tabindex="0" name="ProductNameList" id="ProductNameList" style="display:none;width:89%" class="form-control col-lg-7">
+                                                <option value="0">--Select product</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group col-lg-6">
+                                        <label class="control-label col-lg-4 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            Product Code @*<span class="required">*</span>*@
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                            @Html.TextBoxFor(m => m.ProductBarcodeDetails.ProductCode, new { name = "productCode", id = "productCode", maxlength = "18", @class = "form-control col-md-7 col-xs-12", @readonly = "readonly" })
+                                        </div>
+                                        <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div class="form-group col-lg-6">
+
+                                        <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                            Purchase Rate
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                            @Html.TextBoxFor(m => m.ProductBarcodeDetails.PurchaseRate, new { tabindex = "6", name = "PurchaseRate", id = "PurchaseRate", @class = "form-control col-md-7 col-xs-12" })
+
+                                        </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-lg-6">
+                                        <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                            MRP
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                            @Html.TextBoxFor(m => m.ProductBarcodeDetails.MRP, new { tabindex = "7", name = "MRP", id = "MRP", @class = "form-control col-md-7 col-xs-12" })
+
+                                        </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                <div class="col-lg-12">
+                                    <div class="form-group col-lg-6">                                      
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                                D.P.
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextBoxFor(m => m.ProductBarcodeDetails.DP, new { tabindex = "8", name = "DP", id = "DP", @class = "form-control col-md-7 col-xs-12" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>                                        
+                                    </div>
+                                    <div class="form-group col-lg-6">
+                                        <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                            IsExpirable
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                            @Html.DropDownListFor(m => m.ProductBarcodeDetails.IsExpirable, listItems as IEnumerable<SelectListItem>, new { tabindex = "17", name = "IsExpirable", id = "IsExpirable", @class = "form-control col-md-7 col-xs-12" })
+
+                                        </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                    </div>
+                                                                            
+                                </div>
+                                <div class="col-lg-12">
+                                    <div class="form-group col-lg-6">
+                                        <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                            Mfg. Date
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                            @Html.TextBoxFor(m => m.ProductBarcodeDetails.MfgDateStr, new { tabindex = "18", name = "MfgDateStr", id = "MfgDateStr", @class = "form-control col-md-7 col-xs-12" })
+
+                                        </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-lg-6">
+                                        <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                            Exp. Date
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+                                            @Html.TextBoxFor(m => m.ProductBarcodeDetails.ExpDateStr, new { tabindex = "19", name = "ExpDateStr", id = "ExpDateStr", @class = "form-control col-md-7 col-xs-12", @readonly = "readonly" })
+
+                                        </div>
+                                        <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                            &nbsp;
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div class="form-group col-lg-6">
+                                        <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="purchaseRate">
+                                            Barcode Type
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                            @if (Model.IsAdd == "Edit")
+                                            {
+                                            @Html.DropDownListFor(m => m.ProductBarcodeDetails.BarcodeType, ViewBag.ListBarcodetype as IEnumerable<SelectListItem>
+                                                , new { tabindex = "15", name = "BarcodeType", id = "BarcodeType", @class = "form-control col-md-7 col-xs-12", @readonly = "readonly" })
+                                                }
+                                                else
+                                                {
+                                                @Html.DropDownListFor(m => m.ProductBarcodeDetails.BarcodeType, ViewBag.ListBarcodetype as IEnumerable<SelectListItem>
+                                                    , new { tabindex = "15", name = "BarcodeType", id = "BarcodeType", @class = "form-control col-md-7 col-xs-12" })
+                                                    }
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-lg-6">
+                                        
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="mfgDate">
+                                                Barcode
+                                            </label>
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+
+
+                                                @Html.TextBoxFor(m => m.ProductBarcodeDetails.Barcode, new { tabindex = "16", name = "Barcode", id = "Barcode", @class = "form-control col-md-7 col-xs-12", @readonly = "readonly" })
+
+                                            </div>
+                                            <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                    
+                                 </div>
+                                
+                   
+                                <div class="col-lg-12">
+                                    <div class="form-group col-lg-6">
+                                        
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12" for="category-name">
+                                                Remarks
+                                            </label>
+                                            <div class="col-lg-7 col-md-6 col-sm-6 col-xs-12">
+
+                                                @Html.TextAreaFor(m => m.ProductBarcodeDetails.Remarks, new { tabindex = "30", name = "Remarks", id = "Remarks", @class = "form-control col-md-7 col-xs-12" })
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="form-group col-lg-6">
+                                        
+                                            <label class="control-label col-lg-4 col-md-4 col-sm-3 col-xs-12">Status</label>
+                                            <div class="col-lg-8 col-md-6 col-sm-6 col-xs-12" style="margin-top: 0.9%;">
+                                                <div id="status">
+                                                    <label>
+                                                        @Html.RadioButtonFor(m => m.ProductBarcodeDetails.IsActive, true, new { tabindex = "31", name = "IsActive", id = "StatusActive", @class = "flat", required = "required", @checked = "checked" })&nbsp; Active &nbsp;
+                                                        @*<input type="radio" name="status" value="male"> &nbsp; Male &nbsp;*@
+                                                    </label>
+                                                    <label>
+                                                        @Html.RadioButtonFor(m => m.ProductBarcodeDetails.IsActive, false, new { tabindex = "32", name = "IsActive", id = "StatusInActive", @class = "flat" })&nbsp; InActive &nbsp;
+                                                    </label>
+                                                </div>
+                                            </div>                                                                            
+                                    </div>
+                                    </div>
+
+                                        
+                                        <div class="form-group">
+                                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 col-md-offset-2">
+                                                @*<button class="btn btn-primary" type="button" onclick="AddToGrid()">Add</button>
+                                                <button class="btn btn-primary" type="button" onclick="ClearGrid()">Clear</button>*@
+                                                <button type="submit" id="SaveProductMasterBtn" class="btn btn-success">Save</button>
+                                                <button class="btn btn-primary" type="button" onclick="reset()">Cancel</button>
+                                            </div>
+                                        </div>
+                                        <div id="dialogMessage" title="Message">
+
+                                        </div>
+</form>
+                            <div class="ln_solid"></div>
+
+                            <div class="col-lg-12">
+                                <table class="table bootstrap-datatable" id="grid"></table>
+                                <center><span style="display:none" id="noRecord">No Records Found</span></center>
+                            </div>
+                </div>
+                        
+            </div>
+        </div>
+        </div>
+            
+        </div>
+

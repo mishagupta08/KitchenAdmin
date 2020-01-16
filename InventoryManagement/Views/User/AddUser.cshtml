@@ -1,0 +1,332 @@
+﻿@model InventoryManagement.Entity.Common.User
+@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "AddUser";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+}
+
+<script type="text/javascript">
+    var grid, dialog;
+    var UserGrid = [{}];
+    var ActionType = "Add";
+    var UserCode = "";
+    
+    var DuplicateUsername = false;
+    $(document).ready(function () {
+        $(".preloader").hide();
+        
+        var ModelActiveStatus = '@Model.ActiveStatus';
+        
+        if (ModelActiveStatus != null && ModelActiveStatus != "") {
+            $("#ActiveStatus").val(ModelActiveStatus);
+        }
+        
+        $("#ActiveStatus").change(function () {
+            var SelectedVal = $("#ActiveStatus").val();
+            $("#hiddenActiveStatus").val(SelectedVal);
+        });
+        
+        $("#FCode").change(function () {
+            var SelectedVal = $("#FCode").val();
+            $("#hiddenFCode").val(SelectedVal);            
+        });
+
+        $("#UserName").focusout(function () {
+            CheckDuplicateUsername();
+        });
+        
+        //$("#SavePartyForm").click(function (e) {
+        //    e.preventDefault();
+
+        //});
+        $("form[name=form_user]").unbind("submit");
+        $("form[name=form_user]").bind('submit', function (e) {
+            $("#SaveUserForm").attr("disabled", true);        
+            if (DuplicateUsername == false) {
+                var formdata = new FormData($("#form_user")[0]);
+                $(".preloader").show(); 
+                $.ajax({
+                    url: '@Url.Action("SaveUserDetails", "User")',
+                    type: 'POST',
+                    data: formdata,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    success: function (objResponse) {
+                        $("#SaveUserForm").removeAttr("disabled");
+                        if (objResponse != null) {
+                            if (objResponse.ResponseStatus == "OK") {
+
+                                var link = '@Url.Action("UserMasterList", "User")';
+                                $('#SaveUserForm').trigger("reset");
+                                window.location.href = link;
+
+                            }
+                            else {
+                                OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                            }
+                        }
+                        $(".preloader").hide();
+                        return false;
+                    },
+                    error: function (xhr, data) {
+                        //  return false;
+                        $(".preloader").hide();
+                        console.log(xhr);
+                        console.log("Error:", data);
+                    }
+                });
+            }
+            else {
+                $("#SaveUserForm").removeAttr("disabled");
+                    OpenDialog("dialogMessage", "Duplicate Username!", "false");              
+            }
+            return false;
+        });
+    });
+    
+    
+    function CheckDuplicateUsername() {
+        var UserNameStr=$("#UserName").val();
+        var UserCodeStr=$("#UserId").val();
+        var IsActionType = ActionType;
+        $(".preloader").show();
+        $.ajax({
+            url: '/User/IsDuplicateUserName',
+            dataType: 'JSON',
+            method: 'GET',
+            async:false,
+            data: { 'IsActionType': IsActionType, 'UserId': UserCodeStr, 'UserName': UserNameStr },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                if (data.ResponseStatus == "FAILED") {
+                    DuplicateUsername = true;                    
+                    OpenDialog("dialogMessage", "Please try different username!", "false");                  
+                }
+                else {
+                    DuplicateUsername = false;
+                }
+                $(".preloader").hide();
+
+            },
+            error: function (error) {
+                $(".preloader").hide();
+                console.log(error);
+            }
+        });
+    }
+    
+    function OpenDialog(dialogId, Message, isConfirmation) {
+        $("#" + dialogId).empty();
+        $("#" + dialogId).append('<p>' + Message + '</p>');
+        if (isConfirmation == "true") {
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "Yes",
+                    id: "btnYes" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = true;
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                },
+                {
+                    text: "No",
+                    id: "btnNo" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = false;
+                        $("#" + dialogId).dialog("close");
+                    }
+                }
+                ]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+        else {
+
+
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "OK",
+                    id: "btn" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                }]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+
+    }
+</script>
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>User</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Add/Edit User</h2>
+
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <form id="form_user" name="form_user" onsubmit="false">
+                        @Html.HiddenFor(m => m.IsActionName, new { id = "IsActionName", name = "IsActionName" })
+                       
+                        @Html.HiddenFor(m => m.UserId, new { id = "UserId", name = "UserId" })
+                        <div class="col-lg-12">
+                              <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Party<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+                                        @Html.HiddenFor(m => m.FCode, new { id = "hiddenFCode" })
+                                        @if (Model.IsActionName == "Edit")
+                                        {
+                                            @Html.DropDownListFor(m => m.FCode, ViewBag.PartyList as IEnumerable<SelectListItem>, new { id = "FCode", tabindex = "0", @required = "required", name = "FCode",@readonly="readonly", @class = "form-control" })
+                                        }
+                                        else
+                                        {
+                                        @Html.DropDownListFor(m => m.FCode, ViewBag.PartyList as IEnumerable<SelectListItem>, new { id = "FCode", tabindex = "0", @required = "required", name = "FCode", @class = "form-control" })
+                                        }
+                                    </div>
+                                </div>     
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="row" style="margin-top:1%">
+                                <label class="col-lg-3">User type<span style="color:red">*</span></label>
+                                <div class="col-lg-6">                                   
+                                   
+                                        @Html.DropDownListFor(m => m.GroupId, ViewBag.GroupList as IEnumerable<SelectListItem>, new { id = "GroupId", tabindex = "0", @required = "required", name = "FCode", @readonly = "readonly", @class = "form-control" })
+                                    
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                       
+                        <div class="col-lg-12">
+                       <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">UserName<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+@if (Model.IsActionName == "Edit")
+{
+    @Html.TextBoxFor(m => m.UserName, new { id = "UserName", tabindex = "0", @required = "required", name = "UserName", maxlength = "50",@readonly="readonly", @class = "form-control" })
+}
+else
+{
+                                        @Html.TextBoxFor(m => m.UserName, new { id = "UserName", tabindex = "0", @required = "required", name = "UserName", maxlength = "50", @class = "form-control" })
+}
+                                    </div>
+                                </div>
+
+                            </div>
+                            
+                        <div class="col-lg-12">
+
+                            <div class="row" style="margin-top:1%">
+                                <label class="col-lg-3">Password<span style="color:red">*</span></label>
+                                <div class="col-lg-6">
+
+                                    @Html.TextBoxFor(m => m.Password, new { id = "Password", type = "password", tabindex = "0", @required = "required", name = "Password", maxlength = "50", @class = "form-control" })
+                                </div>
+                            </div>
+
+
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="row" style="margin-top:1%">
+                                <label class="col-lg-3">Remarks</label>
+                                <div class="col-lg-6">
+
+                                    @Html.TextBoxFor(m => m.Remarks, new { id = "Remarks", tabindex = "0", name = "Remarks", maxlength = "255", @class = "form-control" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            
+                            
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Active Status</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.DropDownListFor(m => m.ActiveStatus, ViewBag.ActiveStatus as IEnumerable<SelectListItem>, new { id = "ActiveStatus", tabindex = "0", name = "ActiveStatus", @class = "form-control" })
+                                        @Html.HiddenFor(m => m.ActiveStatus, new { id = "hiddenActiveStatus" })
+                                        @*<label>
+                                                @Html.RadioButtonFor(m => m.ActiveStatus, "Y", new { name = "ActiveStatus", id = "ActiveStatusY", @class = "flat", @checked = "checked", tabindex = "0" })&nbsp; Active &nbsp;
+
+                                            </label>
+                                            <label>
+                                                @Html.RadioButtonFor(m => m.ActiveStatus, "N", new { name = "ActiveStatus", id = "ActiveStatusN", @class = "flat", tabindex = "0" })&nbsp; InActive &nbsp;
+                                            </label>*@
+                                    </div>
+                                </div>
+                           
+                        </div>
+                        <br />
+                        <div class="col-lg-12" style="margin-top:1%">
+                            <div class="col-lg-6 col-md-offset-3">
+
+                                @*<button class="btn btn-primary" type="reset" onclick="reset()">Reset</button>*@
+                                <input type="submit" id="SaveUserForm" class="btn btn-success" tabindex="0" value="Save">
+                                <button class="btn btn-primary" type="button" tabindex="0" id="cancelClick">Cancel</button>
+                            </div>
+                        </div>
+                    </form>
+
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+
+</div>
+
+

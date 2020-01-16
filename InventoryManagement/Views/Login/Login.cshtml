@@ -1,0 +1,181 @@
+﻿@model InventoryManagement.Entity.Common.LoginModel
+@{
+    ViewBag.Title = "Login";
+    Layout = "~/Views/Shared/_LayoutLogin.cshtml";
+}
+<script type="text/javascript">
+    $(document).ready(function () {
+    $(".preloader").hide();
+        $("#UserName").focus();
+        $("#FormLogin").click(function (e) {
+            //$('#LoginForm')[0].submit();
+            $(".preloader").show();
+            console.log("in click");
+            var formdata = new FormData($("#LoginForm")[0]);
+            $.ajax({
+                url: '@Url.Action("ValidateUser", "Login")',
+                type: 'POST',
+                data: formdata,
+                processData: false,
+                contentType: false,
+                dataType: "json",
+                success: function (objResponse) {
+                    if (objResponse != null) {
+                        if (objResponse.ResponseStatus == "FAILED") {
+                            OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                            reset();
+                        }
+                        else {
+
+                            window.location.href = '@Url.Action("Dashboard","Home")';
+                        }
+                    }
+                    $(".preloader").hide();
+                },
+                error: function (xhr, data) {
+                    //  return false;
+                    console.log(xhr);
+                    console.log("Error:", data);
+                }
+            });
+        });
+        @*$("form[id=LoginForm]").unbind("submit");
+        $("form[id=LoginForm]").bind('submit', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var formdata = new FormData($(this)[0]);
+            $.ajax({
+                url: '@Url.Action("ValidateUser", "Login")',
+                type: 'POST',
+                data: formdata,
+                processData: false,
+                contentType: false,
+                dataType: "json",
+                success: function (objResponse) {
+                    if (objResponse != null) {
+                        if (objResponse.ResponseStatus == "FAILED") {
+                            OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                            reset();
+                        }
+                        else {
+                            window.location.href = '@Url.Action("Dashboard","Home")';
+                        }
+                    }
+                },
+                error: function (xhr, data) {
+                    //  return false;
+                    console.log(xhr);
+                    console.log("Error:", data);
+                }
+            });
+        });*@
+
+        function OpenDialog(dialogId, Message, isConfirmation) {
+            if (isConfirmation == "true") {
+
+            }
+            else {
+                $("#" + dialogId).empty();
+                $("#" + dialogId).append('<p>' + Message + '</p>');
+
+                $("#" + dialogId).dialog({
+                    modal: true,
+                    buttons: [{
+                        text: "OK",
+                        id: "btn" + dialogId,
+                        click: function () {
+                            //var isOpen = $("#dialog").dialog("isOpen");
+                            //if (isOpen == true) {
+                            //    okCallBack();
+                            //}
+
+                            $("#" + dialogId).dialog("close");
+
+
+                        }
+                    }]
+                });
+                $(".ui-dialog-titlebar-close").empty();
+                $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+            }
+
+        }
+    });
+    function reset() {
+        //$("#subcategoryname").val("");
+        //$("#description").val("");
+        $("#UserName").val('');
+        $("#Password").val('');
+        $("#UserName").focus();
+    }
+</script>
+<div class="animate form login_form">
+    <section class="login_content">
+        <form name="LoginForm" id="LoginForm" method="post" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+            <h1>Login Form</h1>
+            <div>
+                @Html.TextBoxFor(m => m.UserName,new {@class= "form-control",id="UserName", placeholder = "Username", required = "" } )
+                @*<input type="text" class="form-control" placeholder="Username" required="" />*@
+            </div>
+            <div>
+                @Html.TextBoxFor(m => m.password, new { @class = "form-control", id = "Password", type = "password", placeholder = "Password", required = "" })
+                @*<input type="password" class="form-control" placeholder="Password" required="" />*@
+            </div>
+            <div>
+                <input type="button" class="btn btn-default submit" id="FormLogin" name="FormLogin" value="Log in"/>
+                @*<a class="reset_pass" style="cursor:pointer" id="resetPassword">Reset Password?</a>*@
+            </div>
+            <div class="clearfix"></div>
+            @*<div class="separator">
+                <p class="change_link">
+                    New to site?
+                    <a href="#signup" class="to_register"> Create Account </a>
+                </p>
+                <div class="clearfix"></div>
+                <br />
+                <div>
+                    <h1><i class="fa fa-paw"></i> Gentelella Alela!</h1>
+                    <p>©2016 All Rights Reserved. Gentelella Alela! is a Bootstrap 3 template. Privacy and Terms</p>
+                </div>
+            </div>*@
+        </form>
+    </section>
+</div>
+<div id="dialogMessage" title="Message">
+
+</div>
+
+<div id="register" class="animate form registration_form">
+    <section class="login_content">
+        <form>
+            <h1>Create Account</h1>
+            <div>
+                <input type="text" class="form-control" placeholder="Username" required="" />
+            </div>
+            <div>
+                <input type="email" class="form-control" placeholder="Email" required="" />
+            </div>
+            <div>
+                <input type="password" class="form-control" placeholder="Password" required="" />
+            </div>
+            <div>
+                <button type="submit" class="btn btn-success">Submit</button>
+            </div>
+            
+            <div class="clearfix"></div>
+            <div class="separator">
+                <p class="change_link">
+                    Already a member ?
+                    <a href="#signin" class="to_register"> Log in </a>
+                </p>
+                <div class="clearfix"></div>
+                <br />
+                <div>
+                    <h1><i class="fa fa-paw"></i> Gentelella Alela!</h1>
+                    <p>©2016 All Rights Reserved. Gentelella Alela! is a Bootstrap 3 template. Privacy and Terms</p>
+                </div>
+            </div>
+        </form>
+    </section>
+</div>
+

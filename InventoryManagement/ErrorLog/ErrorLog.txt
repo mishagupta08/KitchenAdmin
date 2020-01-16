@@ -1,0 +1,9 @@
+Time: 03/11/2017 01:40:25 PM
+-----------------------------------------------------------
+Message: Object reference not set to an instance of an object.
+StackTrace:    at InventoryManagement.Controllers.TransactionController.LogError(Exception ex)
+   at InventoryManagement.Controllers.TransactionController.DistributorBill()
+Source: InventoryManagement
+TargetSite: Void LogError(System.Exception)
+-----------------------------------------------------------
+

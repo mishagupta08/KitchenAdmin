@@ -1,0 +1,197 @@
+﻿@model InventoryManagement.Entity.Common.UpgradeID
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "Upgrade ID with Package";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+    bool IsAdministrator = (Session["LoginUser"] as User).IsSoldByHo;
+}
+
+<style>
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+
+    .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+</style>
+
+<div class="row">
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Transaction > Combination Bill</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form id="upgradeIdForm" method="post" name="upgradeIdForm" onsubmit="return false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                       
+                        @Html.HiddenFor(m => m.productstring, new { name = "productstring", id = "productstring" }) 
+                        @Html.HiddenFor(m => m.MacAdres, new { name = "MacAdres", id = "MacAdres" })
+                        @Html.HiddenFor(m => m.promoId, new { name = "promoId", id = "promoId" })                                               
+                        @Html.HiddenFor(m => m.NewKitId, new { name = "KitId_", id = "KitId_" })
+                        @Html.HiddenFor(m => m.NewKitName, new { name = "KitName_", id = "KitName_" })
+                        @Html.HiddenFor(m => m.BillType, new { name = "BillType", id = "BillType" })
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                       ID No.:
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                        @Html.TextBoxFor(m => m.IDno, new { name = "IDno", id = "IDno", tabindex = "1", @required = "required", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Name:
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                        @Html.TextBoxFor(m => m.MemberName, new { name = "MemberName", id = "MemberName", tabindex = "2", @required = "required", @class = "form-control col-md-7 col-xs-12",@readonly = "readonly" })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Package Name:
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                        @Html.TextBoxFor(m => m.KitName, new { name = "KitName", id = "KitName", tabindex = "3", @required = "required", @class = "form-control col-md-7 col-xs-12", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Select Package
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                        <select name="NewKitId" id="NewKitId" tabindex="4" required="required" class="form-control col-md-7 col-xs-12">
+                                            
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Package Amount
+                                    </label>
+                                    <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                        @Html.TextBoxFor(m => m.KitAmount, new { name = "KitAmount", id = "KitAmount", tabindex = "5", @required = "required", @class = "form-control col-md-7 col-xs-12", @readonly = "readonly" })
+                                    </div>
+
+                                    @if (IsAdministrator)
+                                    {
+                                        <div class="col-lg-5">
+                                            <label class="control-label col-lg-4" for="category-name">
+                                                Tax Type:
+                                            </label>
+                                            <div class="col-lg-8">
+                                               @Html.DropDownListFor(m=>m.TaxType,new SelectList(new List<SelectListItem> { new SelectListItem { Text= "CGST&SGST", Value="S"},
+                                          new SelectListItem { Text= "IGST", Value="I"}}, "Value", "Text"),new { @name= "TaxType", @class = "form-control",  @id="TaxType"})
+                                                
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-12">
+
+                            <div class="form-group">
+                                <div class="col-lg-12">
+                                    <div class="col-lg-6">&nbsp;</div>
+                                    <div class="col-lg-4">
+                                        <input type="submit" id="btnSave" name="btnSave" data-type="save" value="Save" class="getReport btn btn-success" />
+                                        <input type="button" id="btnCancel" name="btnCancel" data-type="Cancel" class="cancel btn btn-success" value="Cancel" />
+
+                                    </div>
+                                    <div class="col-lg-3">&nbsp;</div>
+                                </div>
+                                <br /><br /><br /><center><div class="loader" style="display:none"></div></center>
+                                <table class="table bootstrap-datatable" id="grid"></table>
+                                <center><span style="display:none" id="noRecord">No Records Found</span></center>
+
+
+                            </div>
+                        </div>
+                        
+                        <div id="dialogOffer" title="Message" style="display: none">
+                            <div class="col-lg-12">
+                                <label class="col-lg-12">Please choose a free product from below options :</label>
+                                <div class="col-lg-12" id="products">
+
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <button id="OkOffer" style="margin-left: 1%;">OK</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+
+</div>
+
+
+<script src="~/Scripts/UpgradeIDwithpackage.js"></script>
+

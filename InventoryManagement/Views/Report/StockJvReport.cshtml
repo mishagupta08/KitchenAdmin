@@ -1,0 +1,668 @@
+﻿@model InventoryManagement.Entity.Common.StockJv
+@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "StockJvReport";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+}
+
+<style>
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+     .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+    /*.ui-widget-header .ui-icon {
+        background-color: black!important;
+    }*/
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+</style>
+<script type="text/javascript">
+    var grid, dialog;
+    var StockGrid = [{}];
+    var IsBatch = false;
+    var tableStockGrid;
+    var ViewType = "Add";
+    var IsParty = false;
+    var PreviouslySelectedFromDate = "";
+    var PreviouslySelectedToDate = "";
+    var PreviouslySelectedToPickerDate = "";
+    var PreviouslySelectedFromPickerDate = "";
+    var IsDateFilter = false;
+    var FromDate = "", ToDate = "";
+    var PartyList = [];
+    var FullPartyList;
+
+    $(document).ready(function () {
+        
+
+        $(".preloader").hide();
+       // FullProductList = ProductListJson;
+        GetAllParty();
+        $("#SelectedViewType").val("Add");
+        //GetAllProducts(0);
+        $("#ViewType").change(function () {
+            var SelectedVal = $("#ViewType").val();
+            $("#SelectedViewType").val(SelectedVal);
+            ViewType = SelectedVal;
+        });
+        $("#PartyName").autocomplete({
+            source: function (request, response) {
+                var results = $.ui.autocomplete.filter(PartyList, request.term);
+
+                response(results.slice(0, 50));
+
+            },
+            minLength: 1,
+            scroll: true,
+            select: function (event, ui) {
+
+                console.log("ui.item", ui.item.label);
+                $("#PartyName").val(ui.item.label);
+                SetSpecificCode("Party",ui.item.label);
+                return false;
+            },
+
+        }).focus(function () {
+            $(this).autocomplete("search", "");
+        });
+
+
+        $('#IsParty').on('ifChecked', function () {
+            //console.log("checked");
+            IsParty = true;
+            $("#PartyName").val("All");
+            $("#PartyName").prop("readonly", "readonly");
+            $("#PartyCode").val(0);
+
+        });
+
+        $('#IsParty').on('ifUnchecked', function () {
+            //console.log("checked");
+            IsParty = false;
+            $("#PartyName").val("");
+            $("#PartyName").prop("readonly", "");
+            $("#PartyCode").val("");
+
+        });
+
+        $('#IsDateFilter').on('ifChecked', function () {
+            //console.log("checked");
+            IsDateFilter = true;
+            $("#StartDate").val("All");
+            $("#StartDate").prop("readonly", "readonly");
+            FromDate = "";
+            ToDate = "";
+            $("#EndDate").val("All");
+            $("#EndDate").prop("readonly", "readonly");
+            //var CustomerId = $('#CustCode').val();
+            // GetSalesDetails($("#StartDate").val(), $("#EndDate").val(), CustomerId, '@CurrentPartyCode', "S");
+        });
+        $('#IsDateFilter').on('ifUnchecked', function () {
+            //console.log("checked");
+            IsDateFilter = false;
+            $("#StartDate").val("");
+            $("#StartDate").prop("readonly", "");
+            $("#EndDate").val("");
+            $("#EndDate").prop("readonly", "");
+            FromDate = "";
+            ToDate = "";
+        });
+
+        $("#StartDate").datetimepicker({
+
+
+            format: 'DD-MM-YYYY'
+            ,
+            // todayHighlight:true,
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            // console.log(e.date);
+            // fromDate = $('#FromDatePickerWidget').val();
+            var selectedDate = e.date._d;
+            console.log(selectedDate.getMonth());
+            console.log(selectedDate.getMonth() + 1);
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            console.log(lengthOfMonth);
+            var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+
+            var newFromDate = selectedDate.getDate() + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+            console.log("newDate", newFromDate);
+            FromDate = newFromDate;
+            PreviouslySelectedFromPickerDate = newFromDate;
+            console.log("FromDate", FromDate);
+            ToDate = PreviouslySelectedToPickerDate;
+
+        });
+    $("#EndDate").datetimepicker({
+
+
+        format: 'DD-MM-YYYY'
+        ,
+        // todayHighlight:true,
+        widgetPositioning: {
+            horizontal: 'auto',
+            vertical: 'bottom'
+        }
+
+    }).on('dp.change', function (e) {
+        // console.log(e.date);
+        // fromDate = $('#FromDatePickerWidget').val();
+        var selectedDate = e.date._d;
+        console.log(selectedDate.getMonth() + 1);
+        var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+        console.log(lengthOfMonth);
+        var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+
+        var newToDate = selectedDate.getDate() + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+        console.log("newToDate", newToDate);
+        ToDate = newToDate;
+        PreviouslySelectedToPickerDate = newToDate;
+        console.log("ToDate in picker", ToDate);
+        FromDate = PreviouslySelectedFromPickerDate;
+
+    });
+
+        $('#ViewReport').click(function () {
+            $(".preloader").show();
+
+
+
+            var PartyCode = $("#PartyCode").val();
+            ViewType = $("#SelectedViewType").val();
+           if (PartyCode == "" || PartyCode == null) {
+               PartyCode = "0";
+            }
+            if (FromDate == "" || FromDate == null) {
+                FromDate = "All";
+            }
+            if (EndDate == "" || EndDate == null) {
+                EndDate = "All";
+            }
+            GetStockJv(FromDate, ToDate, PartyCode, ViewType);
+        });
+
+
+
+        $("#btnExport").on('click', function () {
+            //var tableToExcel = new TableToExcel();
+            // tableToExcel.render("grid");
+            var UserTypeStr = "StockJvReport";
+
+            console.log("in export gridExport", StockGrid);
+            var tableString = "<thead><tr>";
+
+            
+                tableString += "<th>S.No.</th>";
+                tableString += "<th>Ref No</th>";
+                tableString += "<th>Jv No</th>";
+                tableString += "<th>Date</th>";
+                tableString += "<th>Code</th>";
+                tableString += "<th>PartyName</th>";
+                tableString += "<th>Prod. Id.</th>";
+                tableString += "<th>Product Name</th>";
+                tableString += "<th>Batch No.</th>";
+                tableString += "<th>Qty</th>";
+                tableString += "<th>Remarks</th>";
+                tableString += "<th>SoldBy</th>";
+                
+                tableString += "</tr></thead><tbody>";
+                for (var i = 0; i < StockGrid.length; i++) {
+                    tableString += "<tr>";
+                    tableString += "<td>" + StockGrid[i].SNo + "</td>";
+                    tableString += "<td>" + StockGrid[i].RefNo + "</td>";
+                    tableString += "<td>" + StockGrid[i].JvNo + "</td>";
+                    console.log("StockGrid[i].StockDate", StockGrid[i].StockDate);
+                    tableString += "<td>" + StockGrid[i].PartyCode + "</td>";
+                    console.log("StockGrid[i].PartyName", StockGrid[i].PartyName);
+
+                    tableString += "<td class=formatText>" + StockGrid[i].ProductCode + "</td>";
+                    tableString += "<td>" + StockGrid[i].ProductName + "</td>";
+                    tableString += "<td class=formatText>" + StockGrid[i].BatchNo + "</td>";
+                    tableString += "<td>" + StockGrid[i].Qty + "</td>";
+                    tableString += "<td>" + StockGrid[i].Remarks + "</td>";
+                    tableString += "<td>" + StockGrid[i].SoldBy + "</td>";
+                   
+                    tableString += "</tr>";
+                }
+           
+               
+
+                tableString += "</tbody>";
+                $("#gridExport").empty();
+                $("#gridExport").append(tableString);
+                tableToExcel('gridExport', UserTypeStr + "_Export");
+
+
+                //$('<table>').append(table.$('tr').clone()).table2excel({
+                //    //    exclude: ".noExl",
+                //    //    name: UserTypeStr + "_Export",
+                //    //    filename: UserTypeStr + "_Export",
+                //    //    fileext: ".xls",
+                //});
+            //$("#grid").table2excel({
+            //    exclude: ".noExl",
+            //    name: UserTypeStr + "_Export",
+            //    filename: UserTypeStr + "_Export",
+            //    fileext: ".xls",
+            //});
+            });
+        
+
+    });
+    function toFormatDate(dateStrToFormat) {
+       // console.log("dateStr", dateStr);
+        var parts = dateStrToFormat.split("-");
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    function SetSpecificCode(type, label) {
+
+        if (type == "Party") {
+            for (var i = 0; i < FullPartyList.length; i++) {
+                if (FullPartyList[i].PartyName == label) {
+                    $("#PartyCode").val(FullPartyList[i].PartyCode);
+                    break;
+                }
+            }
+        }
+    }
+
+    
+
+
+    function GetAllParty() {
+        $.ajax({
+            url: '/Report/GetAllParty',
+            dataType: 'JSON',
+            method: 'GET',
+            //data: { 'LedgerName': '' },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                FullPartyList = data;
+                PartyList = [];
+                if (data != null) {
+                    var i = 0;
+                    for (i = 0; i < data.length; i++) {
+                        //console.log("data[i]", data[i]);
+                        PartyList.push(data[i].PartyName);
+                    }
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+    
+
+    function OpenDialog(dialogId, Message, isConfirmation) {
+        $("#" + dialogId).empty();
+        $("#" + dialogId).append('<p>' + Message + '</p>');
+        if (isConfirmation == "true") {
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "Yes",
+                    id: "btnYes" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = true;
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                },
+                {
+                    text: "No",
+                    id: "btnNo" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = false;
+                        $("#" + dialogId).dialog("close");
+                    }
+                }
+                ]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+        else {
+
+
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "OK",
+                    id: "btn" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                }]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+
+    }
+    function fillGrid() {
+        console.log("StockGrid", StockGrid);
+
+               // StockGrid = StockGrid.splice(1);
+
+        $("#noRecord").hide();
+        //console.log("ProductGrid", ProductGrid);
+        if (grid != null) {
+            grid.destroy();
+            $('#grid').empty();
+
+        }
+            grid = $('#grid').grid({
+                dataSource: StockGrid,
+                uiLibrary: 'bootstrap',
+                headerFilter: true,
+                columns: [
+                    { field: 'SNo', title: 'S.No.',width:100, sortable: true, hidden: false, filterable: false },
+                     { field: 'RefNo', title: 'Ref No.', width: 100, sortable: true, hidden: false, filterable: true },
+                      { field: 'JvNo', title: 'JV No.', width: 100, sortable: true, hidden: false, filterable: true },
+                       { field: 'StockDate', title: 'Date', width: 100, sortable: true, hidden: false, filterable: true },
+                        { field: 'PartyCode', title: 'Code', width: 100, sortable: true, hidden: false, filterable: true },
+                        { field: 'PartyName', title: 'Party Name', width: 150, sortable: true, hidden: false, filterable: true },
+                        { field: 'ProductCode', title: 'Prod. Id', width: 100, sortable: true, hidden: false, filterable: true },
+                        { field: 'ProductName', title: 'Product Name', width: 150, sortable: true, hidden: false, filterable: true },
+                         { field: 'BatchNo', title: 'Batch No.', sortable: true, width: 100, hidden: false, filterable: true },
+                         { field: 'Qty', title: 'Qty', width: 80, sortable: true, hidden: false, filterable: true },
+                         { field: 'Remarks', title: 'Remarks', width: 200, sortable: true, hidden: false, filterable: true },
+                         { field: 'SoldBy', title: 'Sold By', width: 100, sortable: true, hidden: false, filterable: true },
+                ],
+                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+            });
+
+    }
+
+    function GetStockJv(FromDate, ToDate, PartyCode, ViewType) {
+        $(".preloader").hide();
+        var DateError = false;
+
+        if (FromDate != "" && FromDate != null && ToDate != null && ToDate != "") {
+            //var d1 = new Date(FromDate);
+            //var d2 = new Date(ToDate);
+            console.log("FromDate in get", FromDate);
+            console.log("ToDate in get", ToDate);
+            var d1 = toFormatDate(FromDate);
+            var d2 = toFormatDate(ToDate);
+            console.log("d1", d1);
+            console.log("d2", d2);
+            if (d1 > d2) {
+                DateError = true;
+                $(".preloader").hide();
+                OpenDialog("dialogMessage", "From Date should be less than ToDate!", "false");
+                //$("#StartDate").focus();
+            }
+            else {
+                DateError = false;
+                console.log("in else");
+
+            }
+        }
+        else {
+            DateError = false;
+            console.log("PreviouslySelectedFromDate", PreviouslySelectedFromDate);
+            console.log("PreviouslySelectedToDate", PreviouslySelectedToDate);
+            
+            if (FromDate == "" || FromDate == null) {
+                FromDate = "All";
+            } if (ToDate == "" || ToDate == null) {
+                ToDate = "All";
+            }
+        }
+
+
+        if (PartyCode=="" || PartyCode == null) {
+            if (PartyCode == "") {
+                PartyCode = 0;
+            }
+
+        }
+        if (DateError == false) {
+            //if (FromDate != "All") {
+            //    PreviouslySelectedFromDate = FromDate;
+            //    var splitDate = FromDate.split("-");
+            //    FromDate = splitDate[2] + "-" + splitDate[1] + "-" + splitDate[0];
+            //}
+            //if (ToDate != "All") {
+            //    PreviouslySelectedToDate = ToDate;
+            //    var splitToDate = ToDate.split("-");
+            //    ToDate = splitToDate[2] + "-" + splitToDate[1] + "-" + splitToDate[0];
+            //}
+            console.log("FromDate", FromDate);
+            console.log("ToDate", ToDate);
+
+            $.ajax({
+                url: '@Url.Action("GetStockJvReport", "Report")',
+                type: 'POST',
+                data: { "FromDate": FromDate, "ToDate": ToDate, "PartyCode": PartyCode, "ViewType": ViewType },
+
+                dataType: "json",
+                success: function (objResult) {
+                    StockGrid = [{}];
+                    if (objResult.length > 0) {
+
+                        StockGrid = StockGrid.splice(1);
+                        for (var i = 0; i < objResult.length; i++) {
+                            var dateObj = new Date(objResult[i].StockDate.match(/\d+/)[0] * 1);
+                            var myDate = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
+                            StockGrid.push({ "SNo": i + 1, "PartyCode": objResult[i].FCode, "PartyName": objResult[i].PartyName, "RefNo": objResult[i].RefNo, "ProductCode": objResult[i].objProduct.ProductCodeStr, "ProductName": objResult[i].objProduct.ProductName, "JvNo": objResult[i].JvNo, "Qty": objResult[i].objProduct.Quantity, "Remarks": objResult[i].Remarks, "SoldBy": objResult[i].SoldBy, "BatchNo": objResult[i].objProduct.BatchNo, "StockDate": myDate });
+                        }
+                        tableStockGrid = StockGrid;
+
+
+                        $("#noRecord").hide();
+
+                    }
+                    else {
+
+                        $("#noRecord").show();
+                    }
+                    fillGrid();
+                    $(".preloader").hide();
+
+                },
+                error: function (xhr, data) {
+                    //  return false;
+                    console.log(xhr);
+                    console.log("Error:", data);
+                }
+            });
+        }
+
+
+    }
+   
+</script>
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Report</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Stock J.V. Report</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form id="distributorForm" method="post" name="distributorForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                        @Html.HiddenFor(m => m.FCode, new { id = "PartyCode", name = "PartyCode" })
+                        @Html.Hidden("SelectedViewType", new { id = "SelectedViewType", name = "SelectedViewType" })
+                        <div class="row" style="margin-top:1%">
+                            <div class="col-lg-5">
+                                
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Report Type @*<span class="required">*</span>*@
+                                    </label>
+                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                        <select class="form-control" id="ViewType" name="ViewType">
+                                            <option value="Add">Add J.V.</option>
+                                            <option value="Less">Less J.V.</option>
+                                            <option value="Both">Both</option>
+                                        </select>
+                                        
+                                    </div>
+                                
+                            </div>
+                            <div class="col-lg-7">
+                               
+                               
+
+                                    <label class="control-label col-lg-2 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Enter Party
+                                    </label>
+                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                        @Html.TextBoxFor(m => m.PartyName, new { name = "PartyName", id = "PartyName", tabindex = "5", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+                                    <div id="IsPartyDiv" class="col-lg-4">
+                                        <label>
+                                            <input type="checkbox" id="IsParty" name="IsParty" class="flat" tabindex="6" />
+
+
+                                        </label>
+
+                                    </div>
+
+                               
+                               
+                            </div>
+                           
+                        </div>
+                        
+                        
+                        <div class="row" style="margin-top:1%">
+                            
+                                <div class="col-lg-5">
+                                    
+                                        <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            From Date @*<span class="required">*</span>*@
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                            @Html.TextBoxFor(m => m.StartDate, new { name = "StartDate", id = "StartDate", tabindex = "1", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                    
+                                </div>
+                                <div class="col-lg-5" style="padding-right:0px">
+                                   
+                                        <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            To Date @*<span class="required">*</span>*@
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0px;">
+
+                                            @Html.TextBoxFor(m => m.EndDate, new { name = "EndDate", id = "EndDate", tabindex = "2", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                    <div class="col-lg-2"  style="padding-left:0px">
+                                        <a style="margin-right: 14%;cursor:pointer;color:blue;text-decoration:underline" id="ViewReport">View</a>
+                                        <img id="btnExport" src="~/images/ExcelImage.jpg" style="height: 25px;width: 34%;cursor:pointer" />
+                                    </div>
+                                    <div id="IsDateDiv" class="col-lg-1" style="padding-left:3%">
+                                        <label>
+                                            <input type="checkbox" id="IsDateFilter" name="IsDateFilter" class="flat" tabindex="3" />
+
+
+                                        </label>
+
+                                    </div>
+                                   
+                                </div>
+                            
+                                
+                            
+                            
+                           
+                        </div>
+                        
+                        <div class="row" style="margin-top:1%">
+                            <br />
+                            <div>
+                                <b><span id="StockTypeLabel"></span></b>
+                            </div>
+                            <br />
+                            
+                                <br />@*<br /><br /><center><div class="loader" style="display:none"></div></center>*@
+                                <table class="table bootstrap-datatable" id="grid"></table>
+                                <center><span style="display:none" id="noRecord">No Stock Found</span></center>
+
+                            
+                        </div>
+
+
+                        <table id="gridExport" style="display:none"></table>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+
+</div>
+
+

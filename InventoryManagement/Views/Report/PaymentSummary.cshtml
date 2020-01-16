@@ -1,0 +1,197 @@
+﻿@model InventoryManagement.Entity.Common.PaymentSummary
+@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "PaymentSummary";
+}
+
+<style>
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+
+    .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+</style>
+
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Report</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Payment Summary</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form id="ProductWiseSalesForm" method="post" name="ProductWiseSalesForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                        @Html.HiddenFor(m => m.PartyCode, new { id = "PartyCode", name = "PartyCode" })
+                        @Html.HiddenFor(m => m.GroupId, new { id = "GroupId", name = "GroupId" })
+
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            From Date
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                            @Html.TextBoxFor(m => m.StartDate, new { name = "StartDate", id = "StartDate", tabindex = "1", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            To Date
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                            @Html.TextBoxFor(m => m.EndDate, new { name = "EndDate", id = "EndDate", tabindex = "2", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-group">
+                                    <div id="IsDateDiv">
+                                        <label>
+                                            <input type="checkbox" id="IsDateFilter" name="IsDateFilter" class="flat" tabindex="3" />
+
+
+                                        </label>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+
+
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Enter Party
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                        @Html.TextBoxFor(m => m.PartyName, new { name = "PartyName", id = "PartyName", tabindex = "5", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-group">
+                                    <div id="IsPartyDiv">
+                                        <label>
+                                            <input type="checkbox" id="IsParty" name="IsParty" class="flat" tabindex="6" />
+
+
+                                        </label>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <br />
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-12">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-2 col-md-2 col-sm-2 col-xs-12" for="category-name">
+
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                        <table style="table-layout: fixed;width:100%;">
+                                            <tr>
+                                                @foreach (var paymode in Model.PaymentMode)
+                                                {
+                                                    <td style="width:20%;white-space: nowrap;">@paymode.payMode <br /> <input type="checkbox" name="paymode" class="flat" value="@paymode.payMode"> </td>
+                                                }
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <br />
+                        </div>
+                        
+                        <div class="col-lg-12">
+
+                            <div class="form-group">
+                                <div class="col-lg-12">
+                                    <div class="col-lg-2">&nbsp;</div>
+                                    <div class="col-lg-6">
+                                        <a id="btnSummaryReport" style="cursor:pointer;color:blue;text-decoration:underline" name="btnSummaryReport" data-type="B" class="getReport">Bill Wise Summary</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <a id="btnSummaryReport" style="cursor:pointer;color:blue;text-decoration:underline" name="btnSummaryReport" data-type="D" class="getReport">Date Wise Summary</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <a id="btnSummaryReport" style="cursor:pointer;color:blue;text-decoration:underline" name="btnSummaryReport" data-type="P" class="getReport">Party Wise Summary</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <img src="~/images/ExcelImage.jpg" id="btnExport" style="margin-right: 6%;height: 25px;cursor:pointer;" />
+                                    </div>
+                                    <div class="col-lg-4">&nbsp;</div>
+                                </div>
+                                <br /><br /><br /><center><div class="loader" style="display:none"></div></center>
+                                <table class="table bootstrap-datatable" id="grid"></table>
+                                <center><span style="display:none" id="noRecord">No Records Found</span></center>
+                            </div>
+                        </div>
+                        <table id="gridExport" style="display:none"></table>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+</div>
+<script src="~/Scripts/PaymentSummary.js"></script>

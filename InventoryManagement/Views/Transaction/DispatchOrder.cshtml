@@ -1,0 +1,959 @@
+﻿@model InventoryManagement.Entity.Common.DisptachOrderModel
+@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "DispatchOrder";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+}
+
+<style>
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+     .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+    /*.ui-widget-header .ui-icon {
+        background-color: black!important;
+    }*/
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+</style>
+<script type="text/javascript">
+    var FromDate = "";
+    var ToDate = "";
+    var DispMode = "";
+    var SoldBy = "";
+    var OrderDispatchList = "";
+    var OrderDispatchArray = [{}];
+    var IsId = false;
+    var IsOrder = false;
+    var IsParty = false;
+    var PreviouslySelectedFromDate = "";
+    var PreviouslySelectedToDate = "";
+    var PreviouslySelectedToPickerDate = "";
+    var PreviouslySelectedFromPickerDate = "";
+    var IsDateFilter = false;
+    var grid, dialog;
+    var OrderProductGrid = [{}];
+    var ViewType = "Pending";
+    var PartyList = [];
+    var PartyCode = "";
+    var IdNo = "";
+    var OrderNo = "";
+    var FullPartyList;
+    var OrderNoToReject = 0;
+
+    $(document).ready(function () {
+        $(".preloader").hide();
+        // FullProductList = ProductListJson;
+        GetAllParty();
+        $("#Pending").click(function () {
+            ViewType = "Pending";
+            $("#Pending_Save").show();
+            IdNo = $("#IdNo").val();
+            OrderNo = $("#OrderNo").val();
+            GetOrderDetails(FromDate, ToDate, IdNo, PartyCode, OrderNo, ViewType, DispMode);
+        });
+        $("#Dispatched").click(function () {
+            $("#Pending_Save").hide();
+            ViewType = "Dispatched";
+            IdNo = $("#IdNo").val();
+            OrderNo = $("#OrderNo").val();
+            GetOrderDetails(FromDate, ToDate, IdNo, PartyCode, OrderNo, ViewType, DispMode);
+        });
+        $("#DispType").change(function () {
+            var SelectedMode = $("#DispType").val();
+            DispMode = SelectedMode;
+        });
+        $("#PartyName").autocomplete({
+            source: function (request, response) {
+                var results = $.ui.autocomplete.filter(PartyList, request.term);
+
+                response(results.slice(0, 50));
+
+            },
+            minLength: 1,
+            scroll: true,
+            select: function (event, ui) {
+
+                console.log("ui.item", ui.item.label);
+                $("#PartyName").val(ui.item.label);
+                SetSpecificCode("Party", ui.item.label);
+                return false;
+            },
+
+        }).focus(function () {
+            $(this).autocomplete("search", "");
+        });
+
+
+        $('#IsParty').on('ifChecked', function () {
+            //console.log("checked");
+            IsParty = true;
+            $("#PartyName").val("All");
+            $("#PartyName").prop("readonly", "readonly");
+            $("#PartyCode").val(0);
+            PartyCode=0;
+        });
+
+        $('#IsParty').on('ifUnchecked', function () {
+            //console.log("checked");
+            IsParty = false;
+            $("#PartyName").val("");
+            $("#PartyName").prop("readonly", "");
+            $("#PartyCode").val("");
+            PartyCode=0;
+        });
+
+        $('#IsId').on('ifChecked', function () {
+            //console.log("checked");
+            IsId = true;
+            $("#IdNo").val("All");
+            $("#IdNo").prop("readonly", "readonly");
+            IdNo="All";
+        });
+
+        $('#IsId').on('ifUnchecked', function () {
+            //console.log("checked");
+            IsId = false;
+            $("#IdNo").val("");
+            $("#IdNo").prop("readonly", "");
+            IdNo="";
+
+        });
+        $('#IsOrder').on('ifChecked', function () {
+            //console.log("checked");
+            IsOrder = true;
+            $("#OrderNo").val("All");
+            $("#OrderNo").prop("readonly", "readonly");
+            OrderNo="All";
+
+        });
+
+        $('#IsOrder').on('ifUnchecked', function () {
+            //console.log("checked");
+            IsOrder = false;
+            $("#OrderNo").val("");
+            $("#OrderNo").prop("readonly", "");
+            OrderNo="";
+
+        });
+
+        $('#IsDateFilter').on('ifChecked', function () {
+            //console.log("checked");
+            IsDateFilter = true;
+            $("#StartDate").val("All");
+            $("#StartDate").prop("readonly", "readonly");
+            FromDate = "";
+            ToDate = "";
+            $("#EndDate").val("All");
+            $("#EndDate").prop("readonly", "readonly");
+            //var CustomerId = $('#CustCode').val();
+            // GetSalesDetails($("#StartDate").val(), $("#EndDate").val(), CustomerId, '@CurrentPartyCode', "S");
+        });
+        $('#IsDateFilter').on('ifUnchecked', function () {
+            //console.log("checked");
+            IsDateFilter = false;
+            $("#StartDate").val("");
+            $("#StartDate").prop("readonly", "");
+            $("#EndDate").val("");
+            $("#EndDate").prop("readonly", "");
+            FromDate = "";
+            ToDate = "";
+        });
+        $("#StartDate").datetimepicker({
+
+
+            format: 'DD-MM-YYYY'
+           ,
+            // todayHighlight:true,
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            // console.log(e.date);
+            // fromDate = $('#FromDatePickerWidget').val();
+            var selectedDate = e.date._d;
+            console.log(selectedDate.getMonth());
+            console.log(selectedDate.getMonth() + 1);
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            console.log(lengthOfMonth);
+            var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+
+            var newFromDate = selectedDate.getDate() + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+            console.log("newDate", newFromDate);
+            FromDate = newFromDate;
+            PreviouslySelectedFromPickerDate = newFromDate;
+            console.log("FromDate", FromDate);
+            ToDate = PreviouslySelectedToPickerDate;
+
+        });
+        $("#EndDate").datetimepicker({
+
+
+            format: 'DD-MM-YYYY'
+            ,
+            // todayHighlight:true,
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            // console.log(e.date);
+            // fromDate = $('#FromDatePickerWidget').val();
+            var selectedDate = e.date._d;
+            console.log(selectedDate.getMonth() + 1);
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            console.log(lengthOfMonth);
+            var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+
+            var newToDate = selectedDate.getDate() + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+            console.log("newToDate", newToDate);
+            ToDate = newToDate;
+            PreviouslySelectedToPickerDate = newToDate;
+            console.log("ToDate in picker", ToDate);
+            FromDate = PreviouslySelectedFromPickerDate;
+
+        });
+
+        $("#YesBtn").click(function () {
+            var ReasonReject = $("#ReasonToReject").val();
+            RejectThisOrder(OrderNoToReject, ReasonReject);
+        });
+        $("#NoBtn").click(function () {
+            OrderNoToReject = 0;
+            $("#dialogReject").dialog("close");
+        });
+
+        $("form[name=DispatchOrderForm]").unbind("submit");
+        $("form[name=DispatchOrderForm]").bind('submit', function (e) {
+            $("#Dispatch").prop("readonly", "readonly");
+            if (OrderProductGrid.length > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                var ListObjStr = JSON.stringify(OrderProductGrid);
+                console.log("ListObjStr", ListObjStr);
+                $("#OrderList").val(ListObjStr);
+                formdata = new FormData($(this)[0]);
+                console.log("formdata", formdata);
+                SaveDispatchOrder(formdata);
+            }
+            else {
+                $("#Dispatch").prop("readonly", "");
+                OpenDialog("dialogMessage", "There should be atleast one order to dispatch!", "false");
+            }
+        });
+
+    });
+
+    function SaveDispatchOrder(formdata) {
+        console.log("form data = > " + formdata);
+        $.ajax({
+            url: '@Url.Action("SaveDispatchOrderDetails", "Transaction")',
+            type: 'POST',
+            data: formdata,
+            processData: false,
+            contentType: false,
+            dataType: "json",
+            success: function (objResponse) {
+                $("#Dispatch").prop("readonly", "");
+                if (objResponse != null) {
+                    if (objResponse.ResponseStatus == "OK") {
+                    window.location.href = '@Url.Action("DispatchOrder", "Transaction")';      
+                        }
+                    else {
+                        OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                    }
+                }
+            },
+            error: function (xhr, data) {
+                //  return false;
+                console.log(xhr);
+                console.log("Error:", data);
+            }
+        });
+    }
+    function SetToSaveOrder(orderNo, IsChecked) {
+        console.log("IsChecked", IsChecked);
+        for (var i = 0; i < OrderProductGrid.length; i++) {
+            if (OrderProductGrid[i].OrderNo == orderNo) {
+                if (IsChecked) {
+                    OrderProductGrid[i].IsDispatched = true;
+                    break;
+                }
+                else {
+                    OrderProductGrid[i].IsDispatched = false;
+                    break;
+                }
+            }
+        }
+    }
+    function ShowOrderDetail(e) {
+        GetOrderProduct(e.data.record.OrderNo);
+        OpenOrderDetails();
+    }
+    function RejectOrder(e) {
+        OrderNoToReject = e.data.record.OrderNo;
+        $("#OrderNoToReject").html(OrderNoToReject);
+        OpenRejectOrder();
+    }
+    function RejectThisOrder(OrderNoToReject,RejectReason) {
+        $.ajax({
+            url: '@Url.Action("RejectOrder", "Transaction")',
+            type: 'GET',
+            data: { "OrderNo": OrderNoToReject, "RejectReason": RejectReason },
+
+            dataType: "json",
+            success: function (objResult) {
+                if(objResult!=null){
+                @*if (objResult.ResponseStatus == "OK") {
+
+
+                    window.location.href = '@Url.Action("DispatchOrder", "Transaction")';
+
+                }
+                else {*@
+                $("#dialogReject").dialog('close');
+                GetOrderDetails(FromDate, ToDate, IdNo, PartyCode, OrderNo, ViewType, DispMode);
+                    //OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+
+                ////}
+                }
+            }
+        });
+    }
+    function GetOrderProduct(OrderNoToGet) {
+        $.ajax({
+            url: '@Url.Action("GetOrderProduct", "Transaction")',
+            type: 'GET',
+            data: { "OrderNo": OrderNoToGet },
+            async:false,
+            dataType: "json",
+            success: function (objResult) {
+                if (objResult != null) {
+                    $("#OrderNoToGet").html(OrderNoToGet);
+                    $("#OrderProductDetails").empty();
+                    var tableStr;
+                    for (var i = 0; i < objResult.length; i++) {
+                        tableStr = tableStr + "<tr><td>" + objResult[i].ProdCode + "</td><td>" + objResult[i].ProductName + "</td><td>" + objResult[i].Quantity + "</td><td>" + objResult[i].StockAvailable + "</td></tr>";
+                    }
+                    $("#OrderProductDetails").html(tableStr);
+                }
+            }
+        });
+    }
+
+    function OpenRejectOrder() {
+        $("#dialogReject").dialog({
+            modal: true,
+
+        });
+        $(".ui-dialog-titlebar-close").empty();
+        $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+    }
+    function OpenOrderDetails() {
+        $("#dialogOrder").dialog({
+            modal: true,
+            buttons: [{
+                text: "OK",
+                id: "btndialogOrder",
+                click: function () {
+                    //var isOpen = $("#dialog").dialog("isOpen");
+                    //if (isOpen == true) {
+                    //    okCallBack();
+                    //}
+
+                    $("#dialogOrder").dialog("close");
+
+
+                }
+            }]
+        });
+        $(".ui-dialog-titlebar-close").empty();
+        $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+    }
+
+    function GetOrderDetails(FromDate,ToDate,IdNo,PartyCode,OrderNo,ViewType,DispMode){
+        $(".preloader").hide();
+        var DateError = false;
+
+        if (FromDate != "" && FromDate != null && ToDate != null && ToDate != ""&&FromDate!="All"&&ToDate!="All") {
+            //var d1 = new Date(FromDate);
+            //var d2 = new Date(ToDate);
+            console.log("FromDate in get", FromDate);
+            console.log("ToDate in get", ToDate);
+            var d1 = toFormatDate(FromDate);
+            var d2 = toFormatDate(ToDate);
+            console.log("d1", d1);
+            console.log("d2", d2);
+            if (d1 > d2) {
+                DateError = true;
+                $(".preloader").hide();
+                OpenDialog("dialogMessage", "From Date should be less than ToDate!", "false");
+                //$("#StartDate").focus();
+            }
+            else {
+                DateError = false;
+                console.log("in else");
+
+            }
+        }
+        else {
+            DateError = false;
+            console.log("PreviouslySelectedFromDate", PreviouslySelectedFromDate);
+            console.log("PreviouslySelectedToDate", PreviouslySelectedToDate);
+
+            if (FromDate == "" || FromDate == null) {
+                FromDate = "All";
+            } if (ToDate == "" || ToDate == null) {
+                ToDate = "All";
+            }
+        }
+
+       
+        if (PartyCode == "" || PartyCode == null) {
+                PartyCode = 0;
+        }
+        if (IdNo == "" || IdNo == null) {
+                IdNo = 0;
+        }
+        if (OrderNo == "" || OrderNo == null) {
+            OrderNo = 0;
+        }
+        if (ViewType == "" || ViewType == null) {
+            ViewType = "Pending";
+        }
+        if (DispMode == "" || DispMode == null) {
+            DispMode = "A";
+        }
+        if (DateError == false) {
+
+            console.log("FromDate", FromDate);
+            console.log("ToDate", ToDate);
+
+            $.ajax({
+                url: '@Url.Action("GetOrderList", "Transaction")',
+                type: 'POST',
+                data: { "FromDate": FromDate, "ToDate": ToDate, "PartyCode": PartyCode, "ViewType": ViewType,"IdNo":IdNo,"OrderNo":OrderNo,"DispMode":DispMode },
+
+                dataType: "json",
+                success: function (objResult) {
+                    OrderProductGrid = [{}];
+                    if (objResult.length > 0) {
+
+                        OrderProductGrid = OrderProductGrid.splice(1);
+                        for (var i = 0; i < objResult.length; i++) {
+                            var dateObj = new Date(objResult[i].OrderDate.match(/\d+/)[0] * 1);
+                            var myDate = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
+                            // OrderProductGrid.push({ "SNo": i + 1, "PartyCode": objResult[i].FCode, "PartyName": objResult[i].PartyName, "RefNo": objResult[i].RefNo, "ProductCode": objResult[i].objProduct.ProductCodeStr, "ProductName": objResult[i].objProduct.ProductName, "JvNo": objResult[i].JvNo, "Qty": objResult[i].objProduct.Quantity, "Remarks": objResult[i].Remarks, "SoldBy": objResult[i].SoldBy, "BatchNo": objResult[i].objProduct.BatchNo, "OrderDate": myDate });
+                            OrderProductGrid.push({ "SNo": i + 1, "OrderNo": objResult[i].OrderNo, "IdNo": objResult[i].IdNo, "Name": objResult[i].Name, "OrderAmount": objResult[i].OrderAmount, "OrderDate": myDate, "Remarks": objResult[i].Remarks, "Address": objResult[i].Address, "Pincode": objResult[i].Pincode, "Mobile": objResult[i].Mobile, "OrderType": objResult[i].OrderType, "DispBy": objResult[i].DispBy, "SoldBy": objResult[i].SoldBy, "Reject": objResult[i].Reject, "IsDispatched": objResult[i].IsDispatched });
+                        }
+                        //tableStockGrid = StockGrid;
+
+
+                        $("#noRecord").hide();
+
+                    }
+                    else {
+
+                        $("#noRecord").show();
+                    }
+                    fillGrid();
+                    $(".preloader").hide();
+
+                },
+                error: function (xhr, data) {
+                    //  return false;
+                    console.log(xhr);
+                    console.log("Error:", data);
+                }
+            });
+        }
+    }
+    function GetAllParty() {
+        $.ajax({
+            url: '/Report/GetAllParty',
+            dataType: 'JSON',
+            method: 'GET',
+            //data: { 'LedgerName': '' },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                FullPartyList = data;
+                PartyList = [];
+                if (data != null) {
+                    var i = 0;
+                    for (i = 0; i < data.length; i++) {
+                        //console.log("data[i]", data[i]);
+                        PartyList.push(data[i].PartyName);
+                    }
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+
+    function toFormatDate(dateStrToFormat) {
+        // console.log("dateStr", dateStr);
+        var parts = dateStrToFormat.split("-");
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    function SetSpecificCode(type, label) {
+
+        if (type == "Party") {
+            for (var i = 0; i < FullPartyList.length; i++) {
+                if (FullPartyList[i].PartyName == label) {
+                    PartyCode=FullPartyList[i].PartyCode;
+                    break;
+                }
+            }
+        }
+    }
+    function OpenDialog(dialogId, Message, isConfirmation) {
+        $("#" + dialogId).empty();
+        $("#" + dialogId).append('<p>' + Message + '</p>');
+        if (isConfirmation == "true") {
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "Yes",
+                    id: "btnYes" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = true;
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                },
+                {
+                    text: "No",
+                    id: "btnNo" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = false;
+                        $("#" + dialogId).dialog("close");
+                    }
+                }
+                ]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+        else {
+
+
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "OK",
+                    id: "btn" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                }]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+
+    }
+    function fillGrid() {
+        console.log("OrderProductGrid", OrderProductGrid);
+
+        // StockGrid = StockGrid.splice(1);
+
+        $("#noRecord").hide();
+        //console.log("ProductGrid", ProductGrid);
+        if (grid != null) {
+            grid.destroy();
+            $('#grid').empty();
+
+        }
+        if (ViewType == "Pending") {
+            grid = $('#grid').grid({
+                dataSource: OrderProductGrid,
+                uiLibrary: 'bootstrap',
+                headerFilter: true,
+                selectionType: 'multiple',
+                selectionMethod: 'checkbox',
+                columns: [
+                    { field: 'SNo',width:80, title: 'S.No.', sortable: true, hidden: false, filterable: false },
+
+                     { field: 'OrderNo', width:100, title: 'Order No.', sortable: true, hidden: false, filterable: true, events: { 'click': ShowOrderDetail } },
+                     { field: 'OrderDate', width: 100, title: 'Order Date', sortable: true, hidden: false, filterable: true },
+                      { field: 'IdNo', width: 100, title: 'ID No.', sortable: true, hidden: false, filterable: true },
+                       { field: 'Name', width: 150, title: 'Name', sortable: true, hidden: false, filterable: true },
+                        { field: 'OrderAmount', width: 80, title: 'Order Amount', sortable: true, hidden: false, filterable: true },
+                        { field: 'Remarks', width: 150, title: 'Remarks', sortable: true, hidden: false, filterable: true },
+                        { field: 'Address', width: 200, title: 'Address', sortable: true, hidden: false, filterable: true },
+                        { field: 'Pincode', width: 100, title: 'Pincode', sortable: true, hidden: false, filterable: true },
+                         { field: 'Mobile', width: 100, title: 'Mobile', sortable: true, hidden: false, filterable: true },
+                         { field: 'OrderType', width: 80, title: 'Order Type', sortable: true, hidden: false, filterable: true },
+                         { field: 'DispBy', width: 100, title: 'Disp. By', sortable: true, hidden: false, filterable: true },
+                         { field: 'Reject', width: 100, title: 'Reject', sortable: true, hidden: true, filterable: true, tmpl: '<a style="text-decoration:underline;color:blue">{Reject}</a>', events: { 'click': RejectOrder }, align: 'center' },
+                ],
+                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+            });
+            grid.on('rowSelect', function (e, $row, id, record) {
+                //console.log(e);
+                //console.log($row);
+                //console.log(id);
+                //console.log(record);
+                var SelectedOrderNo = "";
+                if (record != null && record != undefined) {
+                    console.log("orderno",record.OrderNo);
+                    SelectedOrderNo = record.OrderNo;
+                }
+                else {
+                    console.log("orderno", id.OrderNo);
+                    SelectedOrderNo = id.OrderNo;
+                }
+                SetToSaveOrder(SelectedOrderNo, true);
+                //alert('Row with OrderNo=' + record.OrderNo + ' is selected.');
+            });
+            grid.on('rowUnselect', function (e, $row, id, record) {
+                var SelectedOrderNo = "";
+                if (record != null && record != undefined) {
+                    console.log("orderno", record.OrderNo);
+                    SelectedOrderNo = record.OrderNo;
+                }
+                else {
+                    console.log("orderno", id.OrderNo);
+                    SelectedOrderNo = id.OrderNo;
+                }
+                SetToSaveOrder(SelectedOrderNo, false);
+                //alert('Row with orderNo=' + record.OrderNo + ' is unselected.');
+            });
+        }
+        else {
+            grid = $('#grid').grid({
+                dataSource: OrderProductGrid,
+                uiLibrary: 'bootstrap',
+                headerFilter: true,
+                columns: [
+                    { field: 'SNo', width: 80, title: 'S.No.', sortable: true, hidden: false, filterable: false },
+                     { field: 'OrderNo', width: 100, title: 'Order No.', sortable: true, hidden: false, filterable: true, events: { 'click': ShowOrderDetail } },
+                     { field: 'OrderDate', width: 100, title: 'Order Date', sortable: true, hidden: false, filterable: true },
+                      { field: 'IdNo', width: 100, title: 'ID No.', sortable: true, hidden: false, filterable: true },
+                       { field: 'Name', width: 150, title: 'Name', sortable: true, hidden: false, filterable: true },
+                        { field: 'OrderAmount', width: 80, title: 'Order Amount', sortable: true, hidden: false, filterable: true },
+                        { field: 'Remarks', width: 150, title: 'Remarks', sortable: true, hidden: false, filterable: true },
+                        { field: 'Address', width: 200, title: 'Address', sortable: true, hidden: false, filterable: true },
+                        { field: 'Pincode', width: 100, title: 'Pincode', sortable: true, hidden: false, filterable: true },
+                         { field: 'Mobile', width: 100, title: 'Mobile', sortable: true, hidden: false, filterable: true },
+                         { field: 'OrderType', width: 80, title: 'Order Type', sortable: true, hidden: false, filterable: true },
+                         { field: 'DispBy', width:100, title: 'Disp. By', sortable: true, hidden: false, filterable: true },
+                         
+                ],
+                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+            });
+        }
+
+    }
+</script>
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Transaction</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Dispatch Order</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form id="DispatchOrderForm" method="post" name="DispatchOrderForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                        @Html.HiddenFor(m => m.OrderList, new { id = "OrderList", name = "OrderList" })
+                        
+                        
+                        <div class="row" style="margin-top:1%">
+                            <div class="col-lg-8">
+                                <div class="col-lg-6">
+
+                                    <label class="control-label col-lg-4 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        From Date @*<span class="required">*</span>*@
+                                    </label>
+                                    <div class="col-lg-7 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                        @Html.TextBoxFor(m => m.FromDate, new { name = "StartDate", id = "StartDate", tabindex = "1", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+
+                                </div>
+                                <div class="col-lg-6">
+
+                                    <label class="control-label col-lg-4 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        To Date @*<span class="required">*</span>*@
+                                    </label>
+                                    <div class="col-lg-8 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;padding-right:0px">
+
+                                        @Html.TextBoxFor(m => m.ToDate, new { name = "EndDate", id = "EndDate", tabindex = "2", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            <div class="col-lg-4">
+                                <div id="IsDateDiv">
+                                    <label>
+                                        <input type="checkbox" id="IsDateFilter" name="IsDateFilter" class="flat" tabindex="0" />
+
+
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="row" style="margin-top:1%">
+                            
+                            <div class="col-lg-8">
+
+                                <div class="col-lg-8">
+
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Enter Party
+                                    </label>
+                                    <div class="col-lg-7 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                        @Html.TextBoxFor(m => m.PartyName, new { name = "PartyName", id = "PartyName", tabindex = "5", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+                                    <div id="IsPartyDiv" class="col-lg-2">
+                                        <label>
+                                            <input type="checkbox" id="IsParty" name="IsParty" class="flat" tabindex="6" />
+
+
+                                        </label>
+
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4">
+                                    <label class="control-label col-lg-5 col-md-3 col-sm-3 col-xs-12" style="padding-left: 0px;" for="category-name">
+                                        Disp. Mode @*<span class="required">*</span>*@
+                                    </label>
+                                    <div class="col-lg-7 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;padding-right: 0.5%;">
+                                        <select class="form-control" id="DispType" name="DispType">
+                                            <option value="A">All</option>
+                                            <option value="C">By Courier</option>
+                                            <option value="S">By Speed Post</option>
+                                            <option value="H">By Hand</option>
+                                        </select>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+
+                                
+
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top:1%">
+                            <div class="col-lg-8">
+                                <div class="col-lg-8">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Id Wise @*<span class="required">*</span>*@
+                                    </label>
+                                    <div class="col-lg-7" style="padding-left: 0.5%;">
+                                        @Html.TextBoxFor(m => m.IdNo, new {id="IdNo",name="IdNo",@class="form-control",maxlength="20" })
+                                    </div>
+                                    <div class="col-lg-2" id="IdDiv">
+                                        <label>
+                                            <input type="checkbox" id="IsId" name="IsId" class="flat" tabindex="6" />
+
+
+                                        </label>
+                                    </div>
+                                </div>
+                               <div class="col-lg-4">
+                                   <label class="control-label col-lg-5 col-md-3 col-sm-3 col-xs-12" style="padding-left: 0px;" for="category-name">
+                                       Order Wise @*<span class="required">*</span>*@
+                                   </label>
+                                   <div class="col-lg-7" style="padding-left: 0.5%;padding-right: 0.5%;">
+                                       @Html.TextBoxFor(m => m.OrderNo, new { id = "OrderNo", name = "OrderNo", @class = "form-control", maxlength = "20" })
+                                   </div>
+                                  
+                               </div>
+
+                               
+
+                            </div>
+                            <div class="col-lg-4">
+                                <div id="OrderDiv">
+
+
+                                    <label>
+                                        <input type="checkbox" id="IsOrder" name="IsOrder" class="flat" tabindex="6" />
+
+
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top:1%">
+                            <div class="col-lg-5">
+                                &nbsp;
+                            </div>
+                            <div class="col-lg-7">
+                                <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="margin-left: 14%;">
+                                    <a style="cursor:pointer;color:blue;text-decoration:underline" id="Pending">Pending</a>
+                                    <span><b>|</b></span>
+                                    <a style="cursor:pointer;color:blue;text-decoration:underline" id="Dispatched">Dispatched</a>
+                                    <img id="btnExport" src="~/images/ExcelImage.jpg" style="height: 25px;width: 7%;cursor:pointer" />
+                                </div>
+                               
+                            </div>
+                        </div>
+
+                        
+                        
+                        <div class="row" style="margin-top:1%">
+                            <br />
+                            <div>
+                                <b><span id="StockTypeLabel"></span></b>
+                            </div>
+                            <br />
+
+                            <br />@*<br /><br /><center><div class="loader" style="display:none"></div></center>*@
+                            <table class="table bootstrap-datatable" id="grid"></table>
+                            <center><span style="display:none" id="noRecord">No Stock Found</span></center>
+
+
+                        </div>
+
+                        <div class="row" style="margin-top:1%">
+                            <div class="col-lg-6 col-lg-offset-3" id="Pending_Save" style="display:none">
+
+                                @*<button class="btn btn-primary" type="reset" onclick="reset()">Reset</button>*@
+                                <button type="submit" id="Dispatch" class="btn btn-success" tabindex="0">Dispatch</button>
+                                <button class="btn btn-primary" type="button" id="Cancel" tabindex="0">Cancel</button>
+                            </div>
+                        </div>
+                        <table id="gridExport" style="display:none"></table>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+    <div id="dialogReject" title="Reject Order" style="display:none">
+        <div class="col-lg-12" style="background-color:lightgrey;border:1px black solid;">
+             <span style="width:100%;"><center>Are you sure!! Do you want to reject this order?</center></span>
+            </div>
+        <br />
+            <div class="row" style="margin-top:1%">
+                <div class="col-lg-12" >
+                
+                        <label class="col-lg-6">
+                            Order No.
+                        </label>
+                        <label class="col-lg-6" id="OrderNoToReject">
+
+                        </label>
+                    </div>
+                    <div class="col-lg-12">
+                        <label class="col-lg-6">
+                            Reason
+                        </label>
+                        <div class="col-lg-6">
+                            <input type="text" maxlength="100" id="ReasonToReject" class="form-control" />
+                        </div>
+                    </div>
+
+                </div>
+            <div class="row" style="margin-top:1%">
+                <div class="col-lg-6 col-lg-offset-3">
+
+                    @*<button class="btn btn-primary" type="reset" onclick="reset()">Reset</button>*@
+                    <button type="button" id="YesBtn" class="btn btn-success" tabindex="0">Yes</button>
+                    <button class="btn btn-primary" type="button" id="NoBtn" tabindex="0">No</button>
+                </div>
+            </div>
+        </div>
+    
+    <div id="dialogOrder" title="OrderDetail" style="display:none;padding:0px;">
+        <div class="col-lg-12" style="background-color:lightgrey;border:1px black solid;"><span style="width:100%;"><center>Order No:<span id="OrderNoToGet"></span></center></span></div>
+        <div class="col-lg-12" style="height: 150px;overflow-y: auto;min-height: 150px;">
+            
+            <br />
+             <table style="width:100%;">
+                 <thead>
+                     <tr>
+                         <th><span>Prod.ID</span></th>
+                         <th><span>Product Name</span></th>
+                         <th><span>Qty</span></th>
+                         <th><span>Stock Qty</span></th>
+                     </tr>
+                 </thead>
+                 <tbody id="OrderProductDetails">
+
+                 </tbody>
+             </table>
+        </div>
+    </div>
+
+</div>
+

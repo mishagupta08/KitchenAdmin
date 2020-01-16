@@ -1,0 +1,661 @@
+﻿@model InventoryManagement.Entity.Common.PartyModel
+@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "AddEditKitchen";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+    string IsActionName__ = Request["IsActionName"];
+}
+<script type="text/javascript">
+    var grid, dialog;
+    var PartyGrid = [{}];
+    var ActionType = "";
+    var PartyCode = "";
+    var CityList;
+    var DuplicateUsername = false;
+    var DuplicateUserPartyCode = false;
+    $(document).ready(function () {
+
+        $(".preloader").hide();
+        $("#CityName").focus();
+        $("#hiddenCityCode").val(0);
+        ActionType = '@IsActionName__';
+        //GetAllCity();
+        var ModelActiveStatus = '@Model.ActiveStatus';
+        var ModelonWebsite = '@Model.OnWebsite';
+
+        //if (ActionType == "Edit") {
+        //    $("#UserPartyCode").prop('disabled', true);
+        //    $("#UserName").prop('disabled', true);
+        //    $("#UserPartyCode").prop('disabled', true);
+        //}
+
+        if (ModelActiveStatus != null && ModelActiveStatus != "") {
+            $("#ActiveStatus").val(ModelActiveStatus);
+        }
+        if (ModelonWebsite != null && ModelonWebsite != "") {
+            $("#OnWebsite").val(ModelonWebsite);
+        }
+        $("#ActiveStatus").change(function () {
+            var SelectedVal = $("#ActiveStatus").val();
+            $("#hiddenActiveStatus").val(SelectedVal);
+        });
+        $("#OnWebsite").change(function () {
+            var SelectedVal = $("#OnWebsite").val();
+            $("#hiddenOnWebsite").val(SelectedVal);
+        });
+        $("#BankCode").change(function () {
+            var SelectedVal = $("#BankCode").val();
+            $("#hiddenBankCode").val(SelectedVal);
+            var SelectedText = $("#BankCode option:selected").text();
+            $("#hiddenBankName").val(SelectedText);
+        });
+        $("#GroupId").change(function () {
+            var SelectedVal = $("#GroupId").val();
+            $("#hiddenGroupId").val(SelectedVal);
+            GetParentPartyList(SelectedVal);
+            //GetPartyCode();
+
+        });
+        $("#ParentPartyCode").change(function () {
+            var SelectedVal = $("#ParentPartyCode").val();
+            $("#hiddenParentPartyCode").val(SelectedVal);
+            GetPartyCode();
+        });
+        $("#StateCode").change(function () {
+            var SelectedVal = $("#StateCode").val();
+            $("#hiddenStateCode").val(SelectedVal);
+            //GetCity(SelectedVal);
+        });
+        $("#CityCode").change(function () {
+            var SelectedVal = $("#CityCode").val(); CheckDuplicateUserPartyCode
+            $("#hiddenCityCode").val(SelectedVal);
+            var SelectedText = $("#CityCode option:selected").text();
+            $("#hiddenCityName").val(SelectedText);
+        });
+
+        $("#UserName").focusout(function () {
+            CheckDuplicateUsername();
+        });
+        $("#UserPartyCode").focusout(function () {
+            CheckDuplicateUserPartyCode();
+        });
+
+        //$("#SavePartyForm").click(function (e) {
+        //    e.preventDefault();
+
+        //});
+        $("form[name=form_party]").unbind("submit");
+        $("form[name=form_party]").bind('submit', function (e) {
+            $("#SavePartyForm").attr("disabled", true);
+            var CityName = $("#CityName").val();
+            var StateCode = $("#hiddenStateCode").val();
+            var UserPartyCode = $("#UserPartyCode").val();
+            if (DuplicateUsername == false && DuplicateUserPartyCode == false && CityName != "" && CityName != null && CityName != undefined && parseInt(StateCode) != 0) {
+                var formdata = new FormData($("#form_party")[0]);
+                console.log("form data = > " + formdata);
+                $.ajax({
+                    url: '@Url.Action("SavePartyDetails", "Registration")',
+                    type: 'POST',
+                    data: formdata,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    success: function (objResponse) {
+                        $("#SavePartyForm").removeAttr("disabled");
+                        if (objResponse != null) {
+                            if (objResponse.ResponseStatus == "OK") {
+                                var link = '@Url.Action("PartyRegistration", "Registration")';
+                                window.location.href = link;
+
+                            }
+                            else {
+                                OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                            }
+                        }
+                        return false;
+                    },
+                    error: function (xhr, data) {
+                        //  return false;
+                        console.log(xhr);
+                        console.log("Error:", data);
+                    }
+                });
+            }
+            else {
+                $("#SavePartyForm").removeAttr("disabled");
+                if (parseInt(StateCode) == 0) {
+                    OpenDialog("dialogMessage", "Enter State!", "false");
+                }
+                else if (parseInt(CityCode) == 0) {
+                    OpenDialog("dialogMessage", "Enter City!", "false");
+                }
+                else {
+                    OpenDialog("dialogMessage", "Duplicate Username!", "false");
+                }
+            }
+            return false;
+        });
+    });
+    function GetParentPartyList(GroupId) {
+
+        $.ajax({
+            url: '/Registration/GetParentPartyList',
+            dataType: 'JSON',
+            method: 'GET',
+            data: { 'GroupId': GroupId },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                if (data.length > 0) {
+                    $("#hiddenParentPartyCode").val(data[0].PartyCode);
+                    $("#ParentPartyCode").empty();
+                    for (var i = 0; i < data.length; i++) {
+                        $("#ParentPartyCode").append("<option value=" + data[i].PartyCode + ">" + data[i].PartyName + "</option>");
+                    }
+                    GetPartyCode();
+                }
+
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+    function GetPartyCode() {
+        debugger;
+        var SelectedParentPartyCode = $("#hiddenParentPartyCode").val();
+        var SelectedGroupId = $("#hiddenGroupId").val();
+        $.ajax({
+            url: '/Registration/GetPartyCodeStr',
+            dataType: 'JSON',
+            method: 'GET',
+            data: { 'SelectedParentPartyCode': SelectedParentPartyCode, 'SelectedGroupId': SelectedGroupId },
+            success: function (data) {
+                console.log("data party code:", data);
+                //response(data);
+                $("#PartyCode").val(data);
+
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+    function CheckDuplicateUsername() {
+        var UserNameStr = $("#UserName").val();
+        var PartyCodeStr = $("#PartyCode").val();
+        var IsActionType = ActionType;
+        $.ajax({
+            url: '/Registration/IsDuplicatePartyUserName',
+            dataType: 'JSON',
+            method: 'GET',
+            data: { 'IsActionType': IsActionType, 'PartyCode': PartyCodeStr, 'UserName': UserNameStr },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                if (data.ResponseStatus == "FAILED") {
+                    DuplicateUsername = true;
+                    if (UserNameStr == "") {
+
+                    }
+                    else {
+                        OpenDialog("dialogMessage", "Please try different username!", "false");
+                    }
+                }
+                else {
+                    DuplicateUsername = false;
+                }
+
+
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+
+    function CheckDuplicateUserPartyCode() {
+        var UserPartyCode = $("#UserPartyCode").val();
+        var PartyCodeStr = $("#PartyCode").val();
+        var IsActionType = ActionType;
+        if (UserPartyCode != '') {
+            $.ajax({
+                url: '/Registration/IsDuplicatePartyUserPartycode',
+                dataType: 'JSON',
+                method: 'GET',
+                data: { 'IsActionType': IsActionType, 'PartyCode': PartyCodeStr, 'UserPartycode': UserPartyCode },
+                success: function (objResult) {
+                    console.log("data:", objResult);
+                    //response(data);
+                    if (objResult.length != 0) {
+                        DuplicateUserPartyCode = true;
+                        console.log(DuplicateUserPartyCode);
+                        $("#UserPartyCode").val('');
+                        OpenDialog("dialogMessage", "This code is already exist!", "false");
+                    }
+                    else {
+                        DuplicateUserPartyCode = false;
+                    }
+                },
+                error: function (error) {
+                    console.log("error:", error);
+                }
+            });
+        }
+    }
+    function GetAllCity() {
+        $.ajax({
+            url: '/Registration/GetAllCities',
+            dataType: 'JSON',
+            method: 'GET',
+            //data: { 'LedgerName': '' },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                CityList = data;
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+    function GetCity(StateId) {
+        $("#CityCode").empty();
+        var flag = 0;
+        for (var i = 0; i < CityList.length; i++) {
+            if (parseFloat(CityList[i].StateCode) == parseFloat(StateId)) {
+                if (flag == 0) {
+                    flag = 1;
+                    $("#hiddenCityCode").val(CityList[i].CityCode);
+                    $("#hiddenCityName").val(CityList[i].CityName);
+                }
+                $("#CityCode").append("<option value=" + CityList[i].CityCode + ">" + CityList[i].CityName + "</option>");
+            }
+        }
+    }
+    function OpenDialog(dialogId, Message, isConfirmation) {
+        $("#" + dialogId).empty();
+        $("#" + dialogId).append('<p>' + Message + '</p>');
+        if (isConfirmation == "true") {
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "Yes",
+                    id: "btnYes" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = true;
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                },
+                {
+                    text: "No",
+                    id: "btnNo" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = false;
+                        $("#" + dialogId).dialog("close");
+                    }
+                }
+                ]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+        else {
+
+
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "OK",
+                    id: "btn" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                }]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+
+    }
+</script>
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Registration</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Kitchen</h2>
+
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <form id="form_party" name="form_party" onsubmit="false">
+                        @Html.HiddenFor(m => m.IsActionName, new { id = "IsActionName", name = "IsActionName" })
+                        @Html.HiddenFor(m => m.IsSupplier, new { id = "IsSupplier", name = "IsSupplier" })
+                        <div class="col-lg-12">
+                            <div class="col-lg-6">
+
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Party Code<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+                                        @Html.TextBoxFor(m => m.PartyCode, new { id = "PartyCode", tabindex = "0", @required = "required", name = "PartyCode", @class = "form-control", @readonly = "readonly" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Group<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+                                        @Html.HiddenFor(m => m.GroupId, new { id = "hiddenGroupId" })
+                                        @Html.DropDownListFor(m => m.GroupId, ViewBag.GroupList as IEnumerable<SelectListItem>, new { id = "GroupId", tabindex = "0", @required = "required", name = "GroupId", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Parent Party<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+                                        @Html.HiddenFor(m => m.ParentPartyCode, new { id = "hiddenParentPartyCode" })
+                                        @Html.DropDownListFor(m => m.ParentPartyCode, ViewBag.ParentPartyList as IEnumerable<SelectListItem>, new { id = "ParentPartyCode", tabindex = "0", @required = "required", name = "ParentPartyCode", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Kitchen Name<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.PartyName, new { id = "PartyName", tabindex = "0", @required = "required", name = "PartyName", maxlength = "150", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Tehsil</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.Tehsil, new { id = "Tehsil", tabindex = "0", name = "Tehsil", maxlength = "150", @class = "form-control" })
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-lg-6">
+
+                                <div class="row" style="margin-top:1%;padding-bottom:3%">
+                                    &nbsp;
+                                </div>
+                                <div class="row" style="margin-top:1%;">
+                                    <label class="col-lg-3"> Code<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+                                      
+                                            @Html.TextBoxFor(m => m.UserPartyCode, new { id = "UserPartyCode", name = "UserPartyCode", @required = "required", tabindex = "0", maxlength = "3", @class = "form-control" })
+                                      
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">State<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+                                        @Html.HiddenFor(m => m.StateCode, new { id = "hiddenStateCode" })
+                                        @Html.DropDownListFor(m => m.StateCode, ViewBag.StateList as IEnumerable<SelectListItem>, new { id = "StateCode", tabindex = "0", name = "StateCode", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">City<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+                                        @Html.HiddenFor(m => m.CityCode, new { id = "hiddenCityCode" })
+                                        @*@Html.HiddenFor(m => m.CityName, new { id = "hiddenCityName" })*@
+                                        @*@Html.DropDownListFor(m => m.CityCode, ViewBag.CityList as IEnumerable<SelectListItem>, new { id = "CityCode", tabindex = "0", name = "CityCode", @class = "form-control" })*@
+                                        @Html.TextBoxFor(m => m.CityName, new { id = "CityName", tabindex = "0", name = "CityName", @class = "form-control" })
+                                    </div>
+                                </div>
+
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">PinCode</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.PinCode, new { id = "PinCode", tabindex = "0", name = "PinCode", maxlength = "6", @class = "form-control" })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12" style="padding-left: 19px;">
+                            <div class="row" style="margin-top:1%">
+                                <label class="col-lg-1" style="padding-left:13px">Address1</label>
+                                <div class="col-lg-9" style="margin-left: 4%;padding-right:17px">
+
+                                    @Html.TextBoxFor(m => m.Address1, new { id = "Address1", tabindex = "0", name = "Address1", maxlength = "1000", @class = "form-control" })
+                                </div>
+                            </div>
+                            <div class="row" style="margin-top:1%">
+                                <label class="col-lg-1" style="padding-left:13px">Address2</label>
+                                <div class="col-lg-9" style="margin-left: 4%;padding-right:17px">
+
+                                    @Html.TextBoxFor(m => m.Address2, new { id = "Address2", tabindex = "0", name = "Address2", maxlength = "1500", @class = "form-control" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="col-lg-6">
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Phone No.</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.PhoneNo, new { id = "PhoneNo", tabindex = "0", name = "PhoneNo", maxlength = "100", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Fax No.</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.FaxNo, new { id = "FaxNo", tabindex = "0", name = "FaxNo", maxlength = "50", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">GSTIN</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.GSTIN, new { id = "GSTIN", tabindex = "0", name = "GSTIN", maxlength = "50", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">E-Mail Add.</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.EmailAddress, new { id = "EmailAddress", tabindex = "0", name = "EmailAddress", type = "email", maxlength = "50", @class = "form-control" })
+                                    </div>
+                                </div>
+                                @*<div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Bank</label>
+                                    <div class="col-lg-6">
+                                        @Html.HiddenFor(m => m.BankCode, new { id = "hiddenBankCode" })
+                                        @Html.HiddenFor(m => m.BankName, new { id = "hiddenBankName" })
+                                        @Html.DropDownListFor(m => m.BankCode, ViewBag.BankList as IEnumerable<SelectListItem>, new { id = "BankCode", tabindex = "0", name = "BankCode", @class = "form-control" })
+                                    </div>
+                                </div>*@
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Contact Person</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.ContactPerson, new { id = "ContactPerson", name = "ContactPerson", tabindex = "0", maxlength = "200", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">UserName<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+                                        @if (IsActionName__ == "Edit")
+                                        {
+                                            @Html.TextBoxFor(m => m.objUserDetails.UserName, new { id = "UserName", tabindex = "0", @required = "required", name = "UserName", maxlength = "50", @class = "form-control", @readonly="readonly" })}
+                                        else
+                                        {@Html.TextBoxFor(m => m.objUserDetails.UserName, new { id = "UserName", tabindex = "0", @required = "required", name = "UserName", maxlength = "50", @class = "form-control",
+                                        autocomplete = "off",
+                                        @readonly = "readonly",
+                                        onfocus = "this.removeAttribute('readonly');"
+                                    })}
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Mobile No.</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.MobileNo, new { id = "MobileNo", tabindex = "0", name = "MobileNo", maxlength = "10", @class = "onlyNumeric form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Pan No.</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.PanNo, new { id = "PanNo", tabindex = "0", name = "PanNo", maxlength = "50", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">S.Tax No.</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.STaxNo, new { id = "STaxNo", tabindex = "0", name = "STaxNo", maxlength = "50", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%;padding-bottom:3%">
+                                    &nbsp;
+                                </div>
+
+                                @*<div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Bank A/C No.</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.BankAccNo, new { id = "BankAccNo", tabindex = "0", name = "BankAccNo", maxlength = "16", @class = "onlyNumeric form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">CIN No.</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.TextBoxFor(m => m.NewFId1, new { id = "NewFId1", tabindex = "0", name = "NewFId1", maxlength = "200", @class = "form-control" })
+                                    </div>
+                                </div>*@
+
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Password<span style="color:red">*</span></label>
+                                    <div class="col-lg-6">
+                                        @if (IsActionName__ == "Edit")
+                                        {
+                                            @Html.TextBoxFor(m => m.objUserDetails.Password, new { id = "Password", type = "password", tabindex = "0", @required = "required", name = "Password", maxlength = "50", @class = "form-control", @readonly = "readonly" })}
+                                        else
+                                        {  @Html.TextBoxFor(m => m.objUserDetails.Password, new { id = "Password", type = "password", tabindex = "0", @required = "required", name = "Password", maxlength = "50", @class = "form-control",
+                                          autocomplete = "off",
+                                          @readonly = "readonly",
+                                          onfocus = "this.removeAttribute('readonly');"
+                                      })}
+                                    </div>
+                                </div>
+                                @*<div class="row" style="margin-top:1%">
+                                        <label class="col-lg-3">CIN No.</label>
+                                        <div class="col-lg-9">
+
+                                            @Html.TextBoxFor(m => m.CI, new { id = "ContactPerson", name = "ContactPerson", maxlength = "200", @class = "form-control" })
+                                        </div>
+                                    </div>*@
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="row" style="margin-top:1%">
+                                <label class="col-lg-1" style="padding-left:19px">Remarks</label>
+                                <div class="col-lg-9" style="margin-left:4.7%;padding-right:22px">
+
+                                    @Html.TextBoxFor(m => m.Remarks, new { id = "Remarks", tabindex = "0", name = "Remarks", maxlength = "255", @class = "form-control" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            @*<div class="col-lg-6">
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">On Website</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.DropDownListFor(m => m.OnWebsite, ViewBag.OnWebsite as IEnumerable<SelectListItem>, new { id = "OnWebsite", tabindex = "0", name = "OnWebsite", @class = "form-control" })
+                                        @Html.HiddenFor(m => m.OnWebsite, new { id = "hiddenOnWebsite" })
+                                        @*<label>
+                                                @Html.RadioButtonFor(m => m.OnWebsite, "Y", new { name = "OnWebsite", id = "OnWebsiteY", @class = "flat", @checked = "checked", tabindex = "0" })&nbsp; Yes &nbsp;
+
+                                            </label>
+                                            <label>
+                                                @Html.RadioButtonFor(m => m.OnWebsite, "N", new { name = "OnWebsite", id = "OnWebsiteN", @class = "flat", tabindex = "0" })&nbsp; No &nbsp;
+                                            </label>
+                                    </div>
+                                </div>
+                            </div>*@
+                            <div class="col-lg-6">
+                                <div class="row" style="margin-top:1%">
+                                    <label class="col-lg-3">Active Status</label>
+                                    <div class="col-lg-6">
+
+                                        @Html.DropDownListFor(m => m.ActiveStatus, ViewBag.ActiveStatus as IEnumerable<SelectListItem>, new { id = "ActiveStatus", tabindex = "0", name = "ActiveStatus", @class = "form-control" })
+                                        @Html.HiddenFor(m => m.ActiveStatus, new { id = "hiddenActiveStatus" })
+                                        @*<label>
+                                                @Html.RadioButtonFor(m => m.ActiveStatus, "Y", new { name = "ActiveStatus", id = "ActiveStatusY", @class = "flat", @checked = "checked", tabindex = "0" })&nbsp; Active &nbsp;
+
+                                            </label>
+                                            <label>
+                                                @Html.RadioButtonFor(m => m.ActiveStatus, "N", new { name = "ActiveStatus", id = "ActiveStatusN", @class = "flat", tabindex = "0" })&nbsp; InActive &nbsp;
+                                            </label>*@
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="col-lg-12" style="margin-top:1%">
+                            <div class="col-lg-6 col-md-offset-3">
+
+                                @*<button class="btn btn-primary" type="reset" onclick="reset()">Reset</button>*@
+                                <input type="submit" id="SavePartyForm" class="btn btn-success" tabindex="0" value="Save">
+                                <button class="btn btn-primary" type="button" tabindex="0" id="cancelClick">Cancel</button>
+                            </div>
+                        </div>
+                    </form>
+
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+
+</div>

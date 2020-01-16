@@ -1,0 +1,111 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Inventory Management</title>
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    <link href="~/Content/themes/base/jquery-ui.css" rel="stylesheet" />
+    <!-- Bootstrap -->
+    <link href="~/Content/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="~/Content/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- NProgress -->
+    @*<link href="~/Content/vendors/nprogress/nprogress.css" rel="stylesheet">*@
+    <!-- Animate.css -->
+    @*<link href="~/Content/vendors/animate.css/animate.min.css" rel="stylesheet">*@
+    <!-- Custom Theme Style -->
+    <link href="~/Content/css/custom.min.css" rel="stylesheet">
+    <link href="~/Content/spinners.css" rel="stylesheet" />
+</head>
+
+<body class="login">
+    <div class="preloader">
+        <div class="cssload-speeding-wheel"></div>
+    </div>
+    <div>
+        <a class="hiddenanchor" id="signup"></a>
+        <a class="hiddenanchor" id="signin"></a>
+        <div class="login_wrapper">
+            @RenderBody()
+            
+        </div>
+    </div>
+    @*@Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)*@
+    <script src="~/Scripts/jquery-ui-1.12.1.js"></script>
+    <script type="text/javascript">
+        jQuery.extend(jQuery.expr[':'], {
+            focusable: function (el, index, selector) {
+                //console.log("el", el);
+                return $(el).is('a,button,select,input,[tabindex]');
+            }
+        });
+
+        $(document).on('keypress', 'input,select', function (e) {
+            var className = $(this).attr("class");
+            console.log("className", className)
+            if (className.indexOf("form-control") > -1 || className.indexOf("checkbox") > -1 || className.indexOf("btn") > -1) {
+                if (e.which == 13) {
+                    e.preventDefault();
+                    // Get all focusable elements on the page
+                    var CanFocusList = $(':focusable');
+                    var templist = [];
+                    //var $canfocus=$(CanFocusList).find(':visible:enabled:not([readonly])');
+                    var $canfocus = CanFocusList.filter(':visible');
+                    $canfocus = $canfocus.filter(':not([readonly])');
+                    //$canfocus = $canfocus.filter(':not(button)');
+                    $canfocus = $canfocus.filter(':not([id=SearchText])');
+                    $canfocus = $canfocus.filter(':not([class=paymode])');
+                    $canfocus = $canfocus.filter(':not([class=gj-width-full])');
+                    $canfocus = $canfocus.filter(':not([class~=input-sm])');
+                    //$canfocus = $canfocus.filter('not([readonly])');
+                    //for (var i = 9; i < CanFocusList.length; i++)
+                    //{
+                    //    if (($(CanFocusList[i]).is(':visible')) && (!($(CanFocusList[i]).prop('disabled'))) && (!($(CanFocusList[i]).is('[readonly="readonly"]')))) {
+                    //        templist.push(CanFocusList[i]);
+                    //    }
+                    //}
+                    //var $canfocus = templist;
+                    //console.log("CanFocusList", CanFocusList);
+                    console.log("$canfocus", $canfocus);
+                    //console.log("document.activeElement", document.activeElement);
+
+                    var index = $canfocus.index(document.activeElement) + 1;
+                    //var currentEle = $canfocus.find(document.activeElement);
+
+                    //var index = $canfocus.index(currentEle) + 1;
+                    console.log("index", index);
+                    if (index >= $canfocus.length) { index = 0; $canfocus.eq(index).focus(); }
+
+                    var ActiveEleId = document.activeElement.id;
+                    var ToBefocusedEle = $canfocus.eq(index);
+                    var ToBefocusedId = $(ToBefocusedEle).attr("id");
+                    console.log("ToBefocusedId", ToBefocusedId);
+                    
+                    console.log("ActiveEleId", ActiveEleId);
+                    if(ActiveEleId=="FormLogin"){
+                      $('#FormLogin').click();
+                    }
+                    //$("#"+ActiveEleId).attr('style', 'border-color:none');
+
+                    //var ToBefocusedId = $canfocus.eq(index).id;
+                    //if (($("#" + ToBefocusedId).prop("readonly")) == '') {
+                    $canfocus.eq(index).focus();
+                    //$canfocus.eq(index).attr("style", "border-color:lightblue");
+                    //}
+                    //else {
+                    //    //to add code to focus on next enabled element
+                    //}
+                    
+                }
+            }
+        });
+    </script>
+</body>
+</html>

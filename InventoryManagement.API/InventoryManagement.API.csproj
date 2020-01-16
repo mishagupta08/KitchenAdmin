@@ -1,0 +1,970 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C4577E34-4A34-4954-AB00-23E4A5539606}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>InventoryManagement.API</RootNamespace>
+    <AssemblyName>InventoryManagement.API</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <MvcBuildViews>false</MvcBuildViews>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Activities" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Http.WebHost, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.3\lib\net45\System.Web.Http.WebHost.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Abstractions" />
+    <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http">
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest">
+    </Reference>
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Optimization">
+      <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="WebGrease">
+      <Private>True</Private>
+      <HintPath>..\packages\WebGrease.1.5.2\lib\WebGrease.dll</HintPath>
+    </Reference>
+    <Reference Include="Antlr3.Runtime">
+      <Private>True</Private>
+      <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Core">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.Core.2.2.1\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Owin">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.Owin.2.2.1\lib\net45\Microsoft.AspNet.Identity.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.EntityFramework">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.EntityFramework.2.2.1\lib\net45\Microsoft.AspNet.Identity.EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="Owin">
+      <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin">
+      <HintPath>..\packages\Microsoft.Owin.3.0.1\lib\net45\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb">
+      <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.0.1\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security">
+      <HintPath>..\packages\Microsoft.Owin.Security.3.0.1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Facebook">
+      <HintPath>..\packages\Microsoft.Owin.Security.Facebook.3.0.1\lib\net45\Microsoft.Owin.Security.Facebook.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Cookies">
+      <HintPath>..\packages\Microsoft.Owin.Security.Cookies.3.0.1\lib\net45\Microsoft.Owin.Security.Cookies.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.OAuth">
+      <HintPath>..\packages\Microsoft.Owin.Security.OAuth.3.0.1\lib\net45\Microsoft.Owin.Security.OAuth.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Google">
+      <HintPath>..\packages\Microsoft.Owin.Security.Google.3.0.1\lib\net45\Microsoft.Owin.Security.Google.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.Twitter">
+      <HintPath>..\packages\Microsoft.Owin.Security.Twitter.3.0.1\lib\net45\Microsoft.Owin.Security.Twitter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security.MicrosoftAccount">
+      <HintPath>..\packages\Microsoft.Owin.Security.MicrosoftAccount.3.0.1\lib\net45\Microsoft.Owin.Security.MicrosoftAccount.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.Owin">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Owin.5.2.3\lib\net45\System.Web.Http.Owin.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Start\BundleConfig.cs" />
+    <Compile Include="App_Start\FilterConfig.cs" />
+    <Compile Include="App_Start\IdentityConfig.cs" />
+    <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="App_Start\Startup.Auth.cs" />
+    <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Areas\HelpPage\ApiDescriptionExtensions.cs" />
+    <Compile Include="Areas\HelpPage\App_Start\HelpPageConfig.cs" />
+    <Compile Include="Areas\HelpPage\Controllers\HelpController.cs" />
+    <Compile Include="Areas\HelpPage\HelpPageAreaRegistration.cs" />
+    <Compile Include="Areas\HelpPage\HelpPageConfigurationExtensions.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\CollectionModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ComplexTypeModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\DictionaryModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\EnumTypeModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\EnumValueDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\IModelDocumentationProvider.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\KeyValuePairModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelDescriptionGenerator.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelNameAttribute.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelNameHelper.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ParameterAnnotation.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ParameterDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\SimpleTypeModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\Models\HelpPageApiModel.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\HelpPageSampleGenerator.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\HelpPageSampleKey.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\ImageSample.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\InvalidSample.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\ObjectGenerator.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
+    <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Common\Program.cs" />
+    <Compile Include="Controllers\DashboardAPIController.cs" />
+    <Compile Include="Controllers\LoginAPIController.cs" />
+    <Compile Include="Controllers\ProductAPIController.cs" />
+    <Compile Include="Controllers\RegistrationAPIController.cs" />
+    <Compile Include="Controllers\ReportAPIController.cs" />
+    <Compile Include="Controllers\TransactionAPIController.cs" />
+    <Compile Include="Controllers\UserAPIController.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Models\BankBranch.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\BKDH.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>BKDH.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\BKDH.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\BKDH.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>BKDH.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="Models\ChildProductRegistration.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedBillDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedBillMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedChallanDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedChallanMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedCurrentStock.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedCustomerMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedInwardDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedInwardMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedMaxDiscount.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedPartyOrderDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedPartyOrderMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedProductDispatchDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedPurchaseOrderDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedPurchaseOrderMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedReceipt.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedSalesReturnDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedSalesReturnMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedStockJv.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeletedVoucher.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\D_sessnmaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\IdentityModels.cs" />
+    <Compile Include="Models\Im_CurrentStock.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Inv_M_ConfigMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Inv_M_MenuMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Inv_M_SearchTypeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Inv_M_ThemeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Inv_M_UserMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Inv_M_UserPermissionMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Inv_TempUserMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Inv_TempUserPermissionMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\KitOffer.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MakeKit.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_BankMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_BarCodeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_BatchMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_BillCondition.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_BillTypeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_BlockProductMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_BloodGroupMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_BrandMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_CardIssue.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_CatMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_ChargesMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_CityStateMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_CompanyMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_CompBankersMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_ConfigMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_CountryMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_CouponSalesDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_CourierDetails.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_CourierMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_CustomerMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_DeleteTransaction.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_DispatchMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_DispatchTypeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_DistrictMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_DivisionMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_ExtraDiscount.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_FiscalMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_FlashMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_FormGeneration.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_GroupMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_GrpPermissionMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_Initials.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_InsuranceCompMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_InvoiceTypeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_InwardData.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_InwardDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_InwardMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_IsCardIssue.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_JType.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_KitProductMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_KitUnitMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_LeaderWiseOffer.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_LedgerMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_LogMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_MaxDiscount.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_MemberMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_MenuMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_MonthSessnMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_NewCustomer.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_NewHOVersionInfo.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_NewOfferMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_NewsSeminarMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_OccupationMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_OfferProductType.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_OfferType.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_PackageProductMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_PartyDiscount.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_PartyWiseBillCondition.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_PayModeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_PKGForCustBilling.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_PlanMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_ProductKitUnitMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_ProductMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_ProfessionMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_QualifyTypeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_ReportType.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_Reward.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_RewardMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_SearchMethodMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_SearchTypeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_SessnMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_SpecialOfferMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_SpecialProductMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_StateDivMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_StockReportType.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_SubCategory.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_SubCatMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_TaxBaseMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_TaxCatMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_TaxMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_TaxTypeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_ThemeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_UserDataHistory.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_UserGroupMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_UserMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\M_UserPermissionMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\OfferAchvdMem.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\OLDBillDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\OLDBillMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\ProdVoucher.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RepurchIncome.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TargetDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TargetMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempBankMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempBarCodeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempBatchMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempBillMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempCatMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempChildProductRegistration.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempCityStateMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempCompBankersMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempCourierMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempDispatchMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempDistrictMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempLeaderWiseOffer.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempLedger.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempLedgerMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempNewHOVersionInfo.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempNewOfferMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempPartyWiseBillCondition.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempProductBookingMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempProductMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempSalesReturnDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempSalesReturnMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempStateDivMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempSubCatMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempTaxCatMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempTaxMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TempVoucher.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TmpBillDate.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TransMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnBillData.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnBillDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnBillMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnCancelOrder.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnCancelOrderDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnChallanDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnChallanMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\trnFoodCart.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\trnFoodOrderDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\trnFoodOrderMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnFormGeneration.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnLedger.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnOrderDeliveryDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPartyOrderDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPartyOrderMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPartyOrderMainOLD.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPaymentConfirmation.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPaymentHoldDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPayModeDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPayModeMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPickListDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnProductDispatchDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnProductMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPurchaseOrderDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPurchaseOrderMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPurchaseReqDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPurchaseReqMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPurchaseReturnDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnPurchaseReturnMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnReceipt.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnReceiptDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnSalesReturnDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnSalesReturnMain.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnStockAdjustment.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnStockJv.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnUpdateBillDetail.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TrnVoucher.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\VisionOffer.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\VisionOfferProduct.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\WalletReq.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Web_M_MenuMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Web_M_UserPermissionMaster.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Providers\ApplicationOAuthProvider.cs" />
+    <Compile Include="Results\ChallengeResult.cs" />
+    <Compile Include="Startup.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Areas\HelpPage\HelpPage.css" />
+    <Content Include="Content\bootstrap.css" />
+    <Content Include="Content\bootstrap.min.css" />
+    <Content Include="favicon.ico" />
+    <Content Include="fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="Global.asax" />
+    <Content Include="Models\BKDH.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>BKDH.edmx</DependentUpon>
+      <LastGenOutput>BKDH.Context.cs</LastGenOutput>
+    </Content>
+    <Content Include="Models\BKDH.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>BKDH.edmx</DependentUpon>
+      <LastGenOutput>BKDH.cs</LastGenOutput>
+    </Content>
+    <Content Include="Scripts\bootstrap.js" />
+    <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="Areas\HelpPage\Views\Web.config" />
+    <Content Include="Areas\HelpPage\Views\Shared\_Layout.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\ResourceModel.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\Index.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\TextSample.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\SimpleTypeModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\Samples.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\Parameters.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ModelDescriptionLink.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\KeyValuePairModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\InvalidSample.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ImageSample.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\HelpPageApiModel.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\EnumTypeModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\DictionaryModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ComplexTypeModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\CollectionModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
+    <EntityDeploy Include="Models\BKDH.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>BKDH.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <Content Include="Models\BKDH.edmx.diagram">
+      <DependentUpon>BKDH.edmx</DependentUpon>
+    </Content>
+    <None Include="Properties\PublishProfiles\VisionInv.pubxml" />
+    <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\jquery-1.10.2.js" />
+    <Content Include="Scripts\jquery-1.10.2.min.js" />
+    <None Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery.validate.js" />
+    <Content Include="Scripts\jquery.validate.min.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="Scripts\modernizr-2.6.2.js" />
+    <Content Include="Scripts\respond.js" />
+    <Content Include="Scripts\respond.min.js" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
+    <Content Include="Content\Site.css" />
+    <Content Include="Scripts\_references.js" />
+    <Content Include="Views\Web.config" />
+    <Content Include="Views\_ViewStart.cshtml" />
+    <Content Include="Views\Error.cshtml" />
+    <Content Include="_Layout.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+    <Folder Include="Views\Shared\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="packages.config" />
+    <None Include="Project_Readme.html" />
+    <Content Include="Scripts\jquery-1.10.2.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\InventoryManagement.Entity\InventoryManagement.Entity.csproj">
+      <Project>{AADD1EDC-9549-412D-818C-662348ADAB90}</Project>
+      <Name>InventoryManagement.Entity</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">
+    <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
+  </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>59748</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:59748/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.0.0\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.0\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target> -->
+</Project>

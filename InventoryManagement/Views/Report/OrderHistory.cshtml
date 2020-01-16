@@ -1,0 +1,421 @@
+﻿@model InventoryManagement.Entity.Common.PartyOrderModel
+@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "OrderHistory";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+}
+
+<style>
+    .RowMargin {
+        margin-bottom: 1%;
+    }
+     .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+    /*.ui-widget-header .ui-icon {
+        background-color: black!important;
+    }*/
+  
+    .ui-dialog{
+        width:969px!important;
+        height:350px!important;
+    }
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+
+  
+</style>
+
+<script type="text/javascript">
+    var IsYes = false;
+    var AvailableProductList = [{}];
+    var AvailableBarcodeList=[];
+    var IsEditGrid = false;
+    var formdata;
+    var ProductSearchList;
+    var ItemList = [];
+    var  dialog, gridUpper;
+    var CurrentlySelectedProduct;
+    var ProductArray;
+    var PrevValueOfDiscPer;
+    var SearchText;
+    var count = 0;
+    var TotalQty = 0;
+    var TotalRP = 0;
+    var TotalBV = 0;
+    var TotalSumAmount = 0;
+    var TotalDisc = 0;
+    var TotalTaxtAmt = 0;
+    var TotalTaxtPer = 0;
+    var TotalSumNetAmount = 0;
+    var NetAmounPayable = 0;
+    var RoundOff = 0;
+    var CashAmount = 0;
+    var PayGrid;
+    var errorPaymode = false;
+    var NetPayableAmountFinal = 0;
+    var FinalAmountToPay;
+    var LatestAmountEnteresdInPayMode = [{}];
+    var IsParty = false;
+    var PartyList = [];
+    var FullPartyList;
+    var IsCommissionAdd = 0, IsDiscountAdd = 1;
+    var IsAnyProductDispatched = true;
+    var ProductGrid = [{"DispQty":"", "AvailStock": "", "SNo": "", "Code": "", "ProductName": "", "MRP": "", "DP": "", "Rate": "", "BatchNo": "", "Barcode": "", "RP": "", "BV": "", "CV": "", "PV": "", "Qty": "", "RPValue": "", "BVValue": "", "CVValue": "", "PVValue": "", "CommsnPer": "", "CommsnAmt": "", "DiscPer": "", "DiscAmt": "", "Amount": "", "TaxType": "", "TaxPer": "", "TaxAmt": "", "TotalAmount": "" }];
+    var OrderGrid = [{}];
+    var OrderProductGrid = [{}];
+
+    $(document).ready(function () {
+        GetOrderList();
+        //GetOrderProductList();
+       
+        $(".preloader").hide();
+     //changeValues();
+
+        function GetOrderList() {
+            OrderGrid = [{}];
+            var orderby = '@CurrentPartyCode';
+            $.ajax({
+                url: '@Url.Action("GetOrderDetails", "Transaction")',
+                type: 'GET',
+                dataType: "json",
+                data: { "OrderTo": "ALL", "OrderBy": orderby , "Status": "A" },
+                success: function (objResult) {
+                    if (objResult != null) {
+                        var i=0;
+                        for (i = 0; i < objResult.length; i++) {
+                            var dateObj = new Date(objResult[i].OrderDate.match(/\d+/)[0] * 1);
+                            var myDate = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
+                            var dateObj1 = new Date(objResult[i].ChDate.match(/\d+/)[0] * 1);
+                            var myDate1 = (dateObj1.getDate()) + "/" + (dateObj1.getMonth() + 1) + "/" + dateObj1.getFullYear();
+                            console.log("TEST:",objResult[i]);
+                            OrderGrid.push({ "SNo": (i + 1), "OrderNo": objResult[i].OrderNo, "PartyCode": objResult[i].PartyCode, "PartyName": objResult[i].PartyName, "OrderDate": myDate, "OrderAmt": objResult[i].OrderAmt, "ChNo": objResult[i].ChNo, "ChDate": myDate1, "ChAmt": objResult[i].ChAmt, "BankName": objResult[i].BankName, "WalletAmt": objResult[i].WalletAmt });
+                        }
+                        fillUpperGrid();
+                    }
+                }
+            });
+        }
+
+        function GetOrderProductList(record) {
+            ProductGrid = [{}];
+            $("#OrderNo").val(record.OrderNo);
+            $("#OrderBy").val(record.PartyCode);
+            console.log(record);
+            var OrderNo = record.OrderNo;
+            var OrderBy = record.PartyCode;
+            console.log("OrderNo",record.OrderNo);
+            console.log("OrderBy", record.PartyCode);
+            //TempProductArray.push({ "AvailStock": objResult.AvailStock, "SNo": objResult.SNo, "ProductName": objResult.ProductName, "BatchNo": objResult.BatchNo, "Barcode": objResult.Barcode, "ProdCode": objResult.Code, "Qty": objResult.Qty, "AvailStock": objResult.AvailStock, "TaxType": objResult.TaxType, "MRP": objResult.MRP, "DP": objResult.DP, "RP": objResult.RP, "BV": objResult.BV, "CV": objResult.CV, "PV": objResult.PV, "CommsnPer": objResult.CommsnPer, "DiscPer": objResult.DiscPer, "TaxPer": objResult.TaxPer, "CommssnAmt": objResult.CommsnAmt, "TaxAmt": objResult.TaxAmt, "RPValue": objResult.RPValue, "CVValue": objResult.CVValue, "PVValue": objResult.PVValue, "BVValue": objResult.BVValue, "DiscAmt": objResult.DiscAmt, "Amount": objResult.Amount, "TotalAmt": objResult.TotalAmount, "Rate": objResult.Rate });
+            $.ajax({
+                url: '@Url.Action("GetOrderProductDetails", "Transaction")',
+                type: 'GET',
+                data: { "OrderNo": record.OrderNo,"OrderBy":record.PartyCode },
+                dataType: "json",
+                success: function (objResult) {
+                    if (objResult != null) {
+                        $("#OrderNoToGet").html(OrderNo);
+                        $("#OrderProductDetails").empty();
+                        var tableStr;
+                        for (var i = 0; i < objResult.length; i++) {
+                            tableStr = tableStr + "<tr><td>" + (i + 1) + "</td><td>" + objResult[i].ProductCodeStr + "</td><td>" + objResult[i].ProductName + "</td><td>" + objResult[i].Rate + "</td><td>" + objResult[i].BV + "</td><td>" + objResult[i].OrderedOty + "</td><td>" + objResult[i].DispQty + "</td><td>" + objResult[i].TaxPer + "</td></tr>";
+                        }
+                        $("#OrderProductDetails").html(tableStr);
+                        //var i = 0;
+                        //for (i = 0; i < objResult.length; i++) {
+                        //    //var dateObj = new Date(objResult[i].OrderDate.match(/\d+/)[0] * 1);
+                        //    //var myDate = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
+                        //    //var dateObj1 = new Date(objResult[i].ChDate.match(/\d+/)[0] * 1);
+                        //    //var myDate1 = (dateObj1.getDate()) + "/" + (dateObj1.getMonth() + 1) + "/" + dateObj1.getFullYear();
+                        //    OrderProductGrid.push({ "SNo": (i + 1), "OrderedQty": objResult[i].OrderedOty, "ProductName": objResult[i].ProductName, "ProductCodeStr": objResult[i].ProductCodeStr, "DispatchedQty": objResult[i].DispQty, "DispatchQty": 0, "AvailableBatch": "", "Rate": objResult[i].Rate, "TaxPer": objResult[i].TaxPer, "TaxAmt": 0, "Amount": 0, "DiscPer": objResult[i].DiscPer, "DiscAmt": 0, "NetPayable": 0 });
+                        //}
+                        //fillLowerGrid();
+                    }
+                }
+            });
+        }
+
+        function fillUpperGrid() {
+            console.log("OrderGrid", OrderGrid);
+            if (OrderGrid.length >= 1) {
+                if (OrderGrid[0].SNo == "" || OrderGrid[0].SNo == null || OrderGrid[0].SNo == undefined)
+                    OrderGrid = OrderGrid.splice(1);
+            }
+            $("#noRecordUpper").hide();
+            console.log("OrderGrid", OrderGrid);
+            if (gridUpper != null) {
+                gridUpper.destroy();
+                $('#gridUpper').empty();
+
+            }
+            //  var ProductGrid = [{ "SNo": "", "Code": "", "ProductName": "", "MRP": "", "DP": "", "Rate": "", "Barcode": "", "RP": "", "BV": "", "CV": "", "PV": "", "Qty": "", "RPValue": "", "BVValue": "", "CVValue": "", "PVValue": "", "CommsnPer": "", "CommsnAmt": "", "DiscPer": "", "DiscAmt": "", "Amount": "", "TaxType": "", "TaxPer": "", "TaxAmt": "", "TotalAmount": "" }];
+            gridUpper = $('#gridUpper').grid({
+                dataSource: OrderGrid,
+                uiLibrary: 'bootstrap',
+                headerFilter: true,
+                columns: [
+                    { field: 'SNo',width:80, title: 'S.No.', sortable: true, hidden: false, filterable: false },
+                    { field: 'OrderNo', width: 100, title: 'Order No.', sortable: true, hidden: false, filterable: false, events: { 'click': ShowOrderDetail } },
+                    { field: 'PartyCode', width: 100, title: 'Party Code', sortable: true, hidden: false, filterable: false },
+                    { field: 'PartyName', width: 150, title: 'Party Name', sortable: true, hidden: false, filterable: false },
+                    { field: 'OrderDate', width: 100, title: 'Order Date', sortable: true, hidden: false, filterable: false },
+                    { field: 'OrderAmt', width: 80, title: 'Order Amt.', sortable: true, hidden: false, filterable: false },
+                    { field: 'ChNo', width: 100, title: 'Ch/DD No.', sortable: true, hidden: false, filterable: false },
+                    { field: 'ChDate', width:100, title: 'Ch/DD Date', sortable: true, hidden: false, filterable: false },
+                    { field: 'ChAmt', width: 80, title: 'Ch/DD Amt.', sortable: true, hidden: false, filterable: false },
+                    { field: 'BankName', width: 150, title: 'Bank Name', sortable: true, hidden: false, filterable: false },
+                    { field: 'WalletAmt', width: 80, title: 'Wallet Amt.', sortable: true, hidden: false, filterable: false },
+                ],
+                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+            });
+            gridUpper.on('rowSelect', function (e, $row, id, record) {
+                //alert('Row with id=' + id + ' is selected.');
+                console.log("$row", $row);
+                console.log("record", record);
+                $("#PartyCode").val(record.PartyCode);
+                $("#PartyName").val(record.PartyName);
+                IsAnyProductDispatched = false;
+                GetOrderProductList(record);
+            });
+        }
+
+        function ShowOrderDetail(e) {
+            console.log("ShowOrderDetail");
+            GetOrderProductList(e.data.record);
+            OpenOrderDetails();
+        }
+        function OpenOrderDetails() {
+            console.log("OpenOrderDetails");
+            $("#dialogOrder").dialog({
+                modal: true,
+                buttons: [{
+                    text: "OK",
+                    id: "btndialogOrder",
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+
+                        $("#dialogOrder").dialog("close");
+
+
+                    }
+                }]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+        function OpenDialog(dialogId, Message, isConfirmation) {
+            $("#" + dialogId).empty();
+            if (Message != "" || Message != null) {
+
+                $("#" + dialogId).append('<p>' + Message + '</p>');
+            }
+            if (isConfirmation == "true") {
+                $("#" + dialogId).dialog({
+                    modal: true,
+                    buttons: [{
+                        text: "Yes",
+                        id: "btnYes" + dialogId,
+                        click: function () {
+                            //var isOpen = $("#dialog").dialog("isOpen");
+                            //if (isOpen == true) {
+                            //    okCallBack();
+                            //}
+                            IsYes = true;
+                            $("#" + dialogId).dialog("close");
+
+
+                        }
+                    },
+                    {
+                        text: "No",
+                        id: "btnNo" + dialogId,
+                        click: function () {
+                            //var isOpen = $("#dialog").dialog("isOpen");
+                            //if (isOpen == true) {
+                            //    okCallBack();
+                            //}
+                            IsYes = false;
+                            $("#" + dialogId).dialog("close");
+                        }
+                    }
+                    ]
+                });
+                $(".ui-dialog-titlebar-close").empty();
+                $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+            }
+            else {
+
+
+                $("#" + dialogId).dialog({
+                    modal: true,
+                    buttons: [{
+                        text: "OK",
+                        id: "btn" + dialogId,
+                        click: function () {
+                            //var isOpen = $("#dialog").dialog("isOpen");
+                            //if (isOpen == true) {
+                            //    okCallBack();
+                            //}
+
+                            $("#" + dialogId).dialog("close");
+
+
+                        }
+                    }]
+                });
+                $(".ui-dialog-titlebar-close").empty();
+                $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+            }
+
+        }
+
+    });
+
+    function SetSpecificCode(type, label) {
+
+        if (type == "Party") {
+            for (var i = 0; i < FullPartyList.length; i++) {
+                if (FullPartyList[i].PartyName == label) {
+                    $("#PartyCode").val(FullPartyList[i].PartyCode);
+                    break;
+                }
+            }
+        }
+    }
+
+    function GetAllParty() {
+        $.ajax({
+            url: '/Report/GetAllPartyListForReports',
+            dataType: 'JSON',
+            method: 'GET',
+            //data: { 'LedgerName': '' },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                FullPartyList = data;
+                PartyList = [];
+                if (data != null) {
+                    var i = 0;
+                    for (i = 0; i < data.length; i++) {
+                        //console.log("data[i]", data[i]);
+                        PartyList.push(data[i].PartyName);
+                    }
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+
+</script>
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Reports</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-lg-12 ">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Order History</h2>
+
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form id="partyOrderDispatchForm" method="post" name="partyOrderDispatchForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                        <div class="ln_solid"></div>
+                        @*upper grid section*@
+                        <div class="row RowMargin">
+                            <div class="col-lg-12">
+                                <table class="table bootstrap-datatable" id="gridUpper"></table>
+                                <center><span style="display:none" id="noRecordUpper">No Records Found</span></center>
+
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                      
+                        &nbsp;
+
+                        <div class="ln_solid"></div>
+
+                        <div id="dialogMessage" title="Message">
+
+                        </div>
+
+                        <div id="dialogOrder" title="OrderDetail" style="display:none;padding:0px;width:400px">
+                            <div class="col-lg-12" style="background-color:lightgrey;border:1px black solid;"><span style="width:100%;"><center>Order No:<span id="OrderNoToGet"></span></center></span></div>
+                            <div class="col-lg-12" style="height: auto;overflow-y: auto;min-height: 150px;">
+
+                                <br />
+                                <table style="width:100%;border-width:1px" cellpadding="2" border="1">
+                                    <thead>
+                                        <tr>
+                                            <th><span>S. No.</span></th>
+                                            <th><span>Prod.ID</span></th>
+                                            <th><span>Product Name</span></th>
+                                            <th><span>Rate</span></th>
+                                            <th><span>PV</span></th>
+                                            <th><span>Ord.Qty</span></th>
+                                            <th><span>Disp.Qty</span></th>
+                                            <th><span>Tax(%)</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="OrderProductDetails"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

@@ -1,0 +1,161 @@
+﻿@model InventoryManagement.Entity.Common.PackUnpack
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "PackUnpack";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+}
+
+<style>
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+
+    .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+</style>
+
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Transaction</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Pack Unpack</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form id="PackUnpackForm" method="post" name="PackUnpackForm" onsubmit="return false" data-parsley-validate class="validateForm form-horizontal form-label-left">                                 
+                        
+                        @Html.HiddenFor(m => m.kitName, new { name = "kitName", id = "kitName" })
+                        @Html.HiddenFor(m => m.UserId, new { name = "UserId", id = "UserId" })
+                        @Html.HiddenFor(m => m.UserCode, new { name = "UserCode", id = "UserCode" })
+                        @Html.HiddenFor(m => m.productstring, new { name = "productstring", id = "productstring" })
+                        <input type="hidden" id="maxkit" name="maxkit" />
+                         
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">   
+                                        &nbsp;                                     
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">                                        
+                                        <label><input type="radio" name="PackOrUnpack" required="required" value="pack" checked="checked"> Pack</label>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;
+                                        <label><input type="radio" name="PackOrUnpack" required="required" value="unpack"> Unpack</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Select Kit
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                        <select name = "kitId" id = "kitId" tabindex = "3" required = "required" class = "form-control col-md-7 col-xs-12">
+                                            @foreach (var record in Model.kitlist)
+                                            {
+                                              <option value="@record.kitId" data-productId="@record.productId">@record.kitName</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>                            
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Packed Qty
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                        @Html.TextBoxFor(m => m.qunatity, new { name = "qunatity", id = "qunatity", tabindex = "4", @required = "required", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+                                </div>
+                            </div>                            
+                        </div>
+
+                        <div class="col-lg-12">
+
+                            <div class="form-group">
+                                <div class="col-lg-12">
+                                    <div class="col-lg-6">&nbsp;</div>
+                                    <div class="col-lg-4">
+                                        <input type="submit" id="btnSave" name="btnSave" data-type="save" value="Save" class="getReport btn btn-success" />
+                                        <input type="button" id="btnCancel" name="btnCancel" data-type="Cancel" class="cancel btn btn-success" value="Cancel" />
+                                       
+                                    </div>
+                                    <div class="col-lg-3">&nbsp;</div>
+                                </div>
+                                <br /><br /><br /><center><div class="loader" style="display:none"></div></center>
+                                <table class="table bootstrap-datatable" id="grid"></table>
+                                <center><span style="display:none" id="noRecord">No Records Found</span></center>
+
+
+                            </div>
+                        </div>
+
+
+                        <table id="gridExport" style="display:none"></table>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+
+</div>
+
+
+<script src="~/Scripts/PackUnpack.js"></script>
+

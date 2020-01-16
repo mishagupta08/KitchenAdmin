@@ -1,0 +1,738 @@
+﻿@model InventoryManagement.Entity.Common.PurchaseReport
+@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@{
+    ViewBag.Title = "PurchaseSummary";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+
+}
+<style>
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+     .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+    /*.ui-widget-header .ui-icon {
+        background-color: black!important;
+    }*/
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+</style>
+<script type="text/javascript">
+    var grid, dialog;
+    var StockGrid = [{}];
+    var IsBatch = false;
+    var tableStockGrid;
+    var ViewType = "Supplier";
+    var IsParty = false;
+    var IsSupplier = false;
+    var PreviouslySelectedFromDate = "";
+    var PreviouslySelectedToDate = "";
+    var PreviouslySelectedToPickerDate = "";
+    var PreviouslySelectedFromPickerDate = "";
+    var IsDateFilter = false;
+    var FromDate = "", ToDate = "";
+    var PartyList = [];
+    var FullPartyList;
+    var SupplierList = [];
+    var FullSupplierList;
+
+    $(document).ready(function () {
+
+
+        $(".preloader").hide();
+
+        GetAllParty();
+        GetAllSupplier();
+        fillGrid();
+        $("#SelectedViewType").val("Supplier");
+        console.log("SupplierList", SupplierList);
+
+        $("#SupplierName").autocomplete({
+            source: function (request, response) {
+                var results = $.ui.autocomplete.filter(SupplierList, request.term);
+
+                response(results.slice(0, 50));
+
+            },
+            minLength: 1,
+            scroll: true,
+            select: function (event, ui) {
+
+                console.log("ui.item", ui.item.label);
+                $("#SupplierName").val(ui.item.label);
+                SetSpecificCode("Supplier", ui.item.label);
+                return false;
+            },
+
+        }).focus(function () {
+            $(this).autocomplete("search", "");
+        });
+
+        $('#IsSupplier').on('ifChecked', function () {
+            //console.log("checked");
+            IsSupplier = true;
+            $("#SupplierName").val("All");
+            $("#SupplierName").prop("readonly", "readonly");
+            $("#SupplierCode").val(0);
+
+        });
+
+        $('#IsSupplier').on('ifUnchecked', function () {
+            //console.log("checked");
+            IsSupplier = false;
+            $("#SupplierName").val("");
+            $("#SupplierName").prop("readonly", "");
+            $("#SupplierCode").val("");
+
+        });
+
+        $("#PartyName").autocomplete({
+            source: function (request, response) {
+                var results = $.ui.autocomplete.filter(PartyList, request.term);
+
+                response(results.slice(0, 50));
+
+            },
+            minLength: 1,
+            scroll: true,
+            select: function (event, ui) {
+
+                console.log("ui.item", ui.item.label);
+                $("#PartyName").val(ui.item.label);
+                SetSpecificCode("Party",ui.item.label);
+                return false;
+            },
+
+        }).focus(function () {
+            $(this).autocomplete("search", "");
+        });
+
+
+        $('#IsParty').on('ifChecked', function () {
+            //console.log("checked");
+            IsParty = true;
+            $("#PartyName").val("All");
+            $("#PartyName").prop("readonly", "readonly");
+            $("#PartyCode").val(0);
+
+        });
+
+        $('#IsParty').on('ifUnchecked', function () {
+            //console.log("checked");
+            IsParty = false;
+            $("#PartyName").val("");
+            $("#PartyName").prop("readonly", "");
+            $("#PartyCode").val("");
+
+        });
+
+        $('#IsDateFilter').on('ifChecked', function () {
+            //console.log("checked");
+            IsDateFilter = true;
+            $("#StartDate").val("All");
+            $("#StartDate").prop("readonly", "readonly");
+            FromDate = "";
+            ToDate = "";
+            $("#EndDate").val("All");
+            $("#EndDate").prop("readonly", "readonly");
+            //var CustomerId = $('#CustCode').val();
+            // GetSalesDetails($("#StartDate").val(), $("#EndDate").val(), CustomerId, '@CurrentPartyCode', "S");
+        });
+        $('#IsDateFilter').on('ifUnchecked', function () {
+            //console.log("checked");
+            IsDateFilter = false;
+            $("#StartDate").val("");
+            $("#StartDate").prop("readonly", "");
+            $("#EndDate").val("");
+            $("#EndDate").prop("readonly", "");
+            FromDate = "";
+            ToDate = "";
+        });
+
+        $("#StartDate").datetimepicker({
+
+
+            format: 'DD-MM-YYYY'
+            ,
+            // todayHighlight:true,
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            // console.log(e.date);
+            // fromDate = $('#FromDatePickerWidget').val();
+            var selectedDate = e.date._d;
+            console.log(selectedDate.getMonth());
+            console.log(selectedDate.getMonth() + 1);
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            console.log(lengthOfMonth);
+            var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+
+            var newFromDate = selectedDate.getDate() + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+            console.log("newDate", newFromDate);
+            FromDate = newFromDate;
+            PreviouslySelectedFromPickerDate = newFromDate;
+            console.log("FromDate", FromDate);
+            ToDate = PreviouslySelectedToPickerDate;
+
+        });
+    $("#EndDate").datetimepicker({
+
+
+        format: 'DD-MM-YYYY'
+        ,
+        // todayHighlight:true,
+        widgetPositioning: {
+            horizontal: 'auto',
+            vertical: 'bottom'
+        }
+
+    }).on('dp.change', function (e) {
+        // console.log(e.date);
+        // fromDate = $('#FromDatePickerWidget').val();
+        var selectedDate = e.date._d;
+        console.log(selectedDate.getMonth() + 1);
+        var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+        console.log(lengthOfMonth);
+        var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+
+        var newToDate = selectedDate.getDate() + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+        console.log("newToDate", newToDate);
+        ToDate = newToDate;
+        PreviouslySelectedToPickerDate = newToDate;
+        console.log("ToDate in picker", ToDate);
+        FromDate = PreviouslySelectedFromPickerDate;
+
+    });
+
+    $("#SupplierWise").click(function () {
+        ViewType = "Supplier";
+        var PartyCode = $("#PartyCode").val();
+        var SupplierCode = $("#SupplierCode").val();
+        GetPurchaseSummary(FromDate, ToDate, PartyCode, SupplierCode, ViewType);
+    });
+    $("#InvoiceWise").click(function () {
+        ViewType = "Invoice";
+        var PartyCode = $("#PartyCode").val();
+        var SupplierCode = $("#SupplierCode").val();
+        console.log("SupplierCode", SupplierCode);
+        GetPurchaseSummary(FromDate, ToDate, PartyCode, SupplierCode, ViewType);
+    });
+
+    });
+    function toFormatDate(dateStrToFormat) {
+       // console.log("dateStr", dateStr);
+        var parts = dateStrToFormat.split("-");
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    function SetSpecificCode(type, label) {
+
+        if (type == "Party") {
+            for (var i = 0; i < FullPartyList.length; i++) {
+                if (FullPartyList[i].PartyName == label) {
+                    $("#PartyCode").val(FullPartyList[i].PartyCode);
+                    break;
+                }
+            }
+        }
+        else if (type == "Supplier") {
+            console.log("in supplier");
+            for (var i = 0; i < FullSupplierList.length; i++) {
+                if (FullSupplierList[i].PartyName == label) {
+                    $("#SupplierCode").val(FullSupplierList[i].PartyCode);
+                    break;
+                }
+            }
+            console.log($("#SupplierCode").val());
+        }
+    }
+
+    function GetAllSupplier(){
+        $.ajax({
+            url: '/Report/GetSupplier',
+            dataType: 'JSON',
+            method: 'GET',
+            //data: { 'LedgerName': '' },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                FullSupplierList = data;
+                SupplierList = [];
+                if (data != null) {
+                    var i = 0;
+                    for (i = 0; i < data.length; i++) {
+                        //console.log("data[i]", data[i]);
+                        SupplierList.push(data[i].PartyName);
+                    }
+                }
+                console.log("SupplierList in function", SupplierList);
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+
+
+    function GetAllParty() {
+        $.ajax({
+            url: '/Report/GetAllWareHouse',
+            dataType: 'JSON',
+            method: 'GET',
+            //data: { 'LedgerName': '' },
+            success: function (data) {
+                console.log("data:", data);
+                //response(data);
+                FullPartyList = data;
+                PartyList = [];
+                if (data != null) {
+                    var i = 0;
+                    for (i = 0; i < data.length; i++) {
+                        //console.log("data[i]", data[i]);
+                        PartyList.push(data[i].PartyName);
+                    }
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+
+
+    function OpenDialog(dialogId, Message, isConfirmation) {
+        $("#" + dialogId).empty();
+        $("#" + dialogId).append('<p>' + Message + '</p>');
+        if (isConfirmation == "true") {
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "Yes",
+                    id: "btnYes" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = true;
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                },
+                {
+                    text: "No",
+                    id: "btnNo" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = false;
+                        $("#" + dialogId).dialog("close");
+                    }
+                }
+                ]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+        else {
+
+
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "OK",
+                    id: "btn" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                }]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+
+    }
+    function fillGrid() {
+        console.log("StockGrid", StockGrid);
+
+               // StockGrid = StockGrid.splice(1);
+
+        $("#noRecord").hide();
+        //console.log("ProductGrid", ProductGrid);
+        if (grid != null) {
+            grid.destroy();
+            $('#grid').empty();
+
+        }
+        if (ViewType == "Supplier") {
+            grid = $('#grid').grid({
+                dataSource: StockGrid,
+                uiLibrary: 'bootstrap',
+                headerFilter: true,
+                columns: [
+                    { field: 'SNo', title: 'S.No.', width: 100, sortable: true, hidden: false, filterable: false },
+                     { field: 'SupplierCode', width: 100, title: 'Code', sortable: true, hidden: false, filterable: true },
+                      { field: 'SupplierName', width: 200, title: 'Name', sortable: true, hidden: false, filterable: true },
+                       { field: 'TotalQty', width: 80, title: 'Total Qty', sortable: true, hidden: false, filterable: true },
+                        { field: 'Amount', width: 80, title: 'Amount', sortable: true, hidden: false, filterable: true },
+                        { field: 'TradeDisc', width: 80, title: 'Trade Disc.', sortable: true, hidden: false, filterable: true },
+                        { field: 'TaxAmount', width: 80, title: 'Tax Amount', sortable: true, hidden: false, filterable: true },
+                        { field: 'CashDisc', width: 80, title: 'Cash Disc', sortable: true, hidden: false, filterable: true },
+                         { field: 'NetAmount', width: 80, title: 'Net Amount', sortable: true, hidden: false, filterable: true },
+
+                ],
+                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+            });
+        }
+        else {
+            grid = $('#grid').grid({
+                dataSource: StockGrid,
+                uiLibrary: 'bootstrap',
+                headerFilter: true,
+                columns: [
+                   { field: 'SNo', width: 80, title: 'S.No.', sortable: true, hidden: false, filterable: false },
+                   { field: 'InvoiceFor', width: 100, title: 'Invoice For', sortable: true, hidden: false, filterable: true },
+                   { field: 'InvoiceNo', width: 100, title: 'Invoice No.', sortable: true, hidden: false, filterable: true, tmpl: '<a target="_blank" style="text-decoration:underline;color:blue" href={InvoicePath}>{InvoiceNo}</a>', align: 'center' },
+                   { field: 'RefNo', width: 100, title: 'Ref No', sortable: true, hidden: false, filterable: true },
+                   { field: 'InvoiceDateStr', width: 100, title: 'Date', sortable: true, hidden: false, filterable: true },
+                    { field: 'SupplierCode', width: 100, title: 'Code', sortable: true, hidden: false, filterable: true },
+                     { field: 'SupplierName', width: 200, title: 'Name', sortable: true, hidden: false, filterable: true },
+                      { field: 'TotalQty', width: 80, title: 'Total Qty', sortable: true, hidden: false, filterable: true },
+                       { field: 'Amount',width: 80, title: 'Amount', sortable: true, hidden: false, filterable: true },
+                       { field: 'TradeDisc',width: 80, title: 'Trade Disc.', sortable: true, hidden: false, filterable: true },
+                       { field: 'TaxAmount', width: 80, title: 'Tax Amount', sortable: true, hidden: false, filterable: true },
+                       { field: 'CashDisc', width: 80, title: 'Cash Disc', sortable: true, hidden: false, filterable: true },
+                        { field: 'NetAmount', width: 80, title: 'Net Amount', sortable: true, hidden: false, filterable: true },
+
+                ],
+                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+            });
+        }
+
+    }
+
+    function GetPurchaseSummary(FromDate, ToDate, PartyCode, SupplierCode, ViewType) {
+        $(".preloader").hide();
+        var DateError = false;
+
+        if (FromDate != "" && FromDate != null && ToDate != null && ToDate != "") {
+            //var d1 = new Date(FromDate);
+            //var d2 = new Date(ToDate);
+            console.log("FromDate in get", FromDate);
+            console.log("ToDate in get", ToDate);
+            var d1 = toFormatDate(FromDate);
+            var d2 = toFormatDate(ToDate);
+            console.log("d1", d1);
+            console.log("d2", d2);
+            if (d1 > d2) {
+                DateError = true;
+                $(".preloader").hide();
+                OpenDialog("dialogMessage", "From Date should be less than ToDate!", "false");
+                //$("#StartDate").focus();
+            }
+            else {
+                DateError = false;
+                console.log("in else");
+
+            }
+        }
+        else {
+            DateError = false;
+            console.log("PreviouslySelectedFromDate", PreviouslySelectedFromDate);
+            console.log("PreviouslySelectedToDate", PreviouslySelectedToDate);
+
+            if (FromDate == "" || FromDate == null) {
+                FromDate = "All";
+            } if (ToDate == "" || ToDate == null) {
+                ToDate = "All";
+            }
+        }
+
+
+        if (PartyCode=="" || PartyCode == null) {
+            if (PartyCode == "") {
+                PartyCode = 0;
+            }
+
+        }
+        if (SupplierCode == "" || SupplierCode == null) {
+            if (SupplierCode == "") {
+                SupplierCode = 0;
+            }
+
+        }
+        if (DateError == false) {
+            //if (FromDate != "All") {
+            //    PreviouslySelectedFromDate = FromDate;
+            //    var splitDate = FromDate.split("-");
+            //    FromDate = splitDate[2] + "-" + splitDate[1] + "-" + splitDate[0];
+            //}
+            //if (ToDate != "All") {
+            //    PreviouslySelectedToDate = ToDate;
+            //    var splitToDate = ToDate.split("-");
+            //    ToDate = splitToDate[2] + "-" + splitToDate[1] + "-" + splitToDate[0];
+            //}
+            console.log("FromDate", FromDate);
+            console.log("ToDate", ToDate);
+
+                $.ajax({
+                    url: '@Url.Action("GetPurchaseSummary", "Report")',
+                    type: 'POST',
+                    data: { "FromDate": FromDate, "ToDate": ToDate, "PartyCode": PartyCode, "SupplierCode": SupplierCode, "ReportType": ViewType },
+
+                    dataType: "json",
+                    success: function (objResult) {
+                        StockGrid = [{}];
+                        if (objResult.length > 0) {
+
+                            StockGrid = StockGrid.splice(1);
+
+                            if (ViewType == "Supplier") {
+                                for (var i = 0; i < objResult.length; i++) {
+
+                                    StockGrid.push({"SNo": i + 1, "SupplierCode": objResult[i].SupplierCode, "SupplierName": objResult[i].SupplierName, "TotalQty": objResult[i].TotalQty, "Amount": objResult[i].Amount, "NetAmount": objResult[i].NetAmount, "TaxAmount": objResult[i].TaxAmount, "TradeDisc": objResult[i].TradeDisc, "CashDisc": objResult[i].CashDisc });
+                                }
+                            }
+                            else {
+                                for (var i = 0; i < objResult.length; i++) {
+                                    var dateObj = new Date(objResult[i].InvoiceDateStr.match(/\d+/)[0] * 1);
+                                    var myDate = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
+                                    var InvoicePath = '@Url.Action("PurchaseInvoicePrint", "Report", new {Pm="-1"})';
+                                    var encodedparameters = objResult[i].InvoiceNo;
+                                    //console.log("encodedparameters", encodedparameters);
+                                    //encodedparameters="uid=testuser&pwd=test123456&Id=84503&Name=tes&Email=abc@xyz.com&MobileNo=9829898298&Address=Bhl";
+                                    var EncryptedB64Url = window.btoa(encodedparameters);
+                                    console.log("EncryptedB64Url", EncryptedB64Url);
+                                    InvoicePath = InvoicePath.replace("-1", EncryptedB64Url);
+                                    StockGrid.push({ "InvoicePath": InvoicePath,"SNo": i + 1, "InvoiceFor": objResult[i].InvoiceFor, "InvoiceNo": objResult[i].InvoiceNo, "RefNo": objResult[i].RefNo, "InvoiceDateStr": myDate, "SupplierCode": objResult[i].SupplierCode, "SupplierName": objResult[i].SupplierName, "TotalQty": objResult[i].TotalQty, "Amount": objResult[i].Amount, "NetAmount": objResult[i].NetAmount, "TaxAmount": objResult[i].TaxAmount, "TradeDisc": objResult[i].TradeDisc, "CashDisc": objResult[i].CashDisc });
+
+                                }
+                            }
+                                tableStockGrid = StockGrid;
+
+                            $("#noRecord").hide();
+
+                        }
+                        else {
+
+                            $("#noRecord").show();
+                        }
+                        fillGrid();
+                        $(".preloader").hide();
+
+                    },
+                    error: function (xhr, data) {
+                        //  return false;
+                        console.log(xhr);
+                        console.log("Error:", data);
+                    }
+                });
+
+        }
+
+
+    }
+
+</script>
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Report</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Purchase Summary</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form id="distributorForm" method="post" name="distributorForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                        @Html.HiddenFor(m => m.SupplierCode, new { id = "SupplierCode", name = "SupplierCode" })
+                        @Html.HiddenFor(m => m.PartyCode, new { id = "PartyCode", name = "PartyCode" })
+                        @Html.Hidden("SelectedViewType", new { id = "SelectedViewType", name = "SelectedViewType" })
+                        <div class="row" style="margin-top:1%">
+                            <div class="col-lg-8">
+                                <div class="col-lg-6">
+                                  
+                                        <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name" style="padding-left:1.5px">
+                                            From Date @*<span class="required">*</span>*@
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                            @Html.TextBoxFor(m => m.StartDate, new { name = "StartDate", id = "StartDate", tabindex = "1", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                   
+                                </div>
+                                <div class="col-lg-6">
+                                    
+                                        <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            To Date @*<span class="required">*</span>*@
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;padding-right:0px">
+
+                                            @Html.TextBoxFor(m => m.EndDate, new { name = "EndDate", id = "EndDate", tabindex = "2", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                   
+                                </div>
+
+                            </div>
+                            <div class="col-lg-4">
+                                <div id="IsDateDiv">
+                                    <label>
+                                        <input type="checkbox" id="IsDateFilter" name="IsDateFilter" class="flat" tabindex="0" />
+
+
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="row" style="margin-top:1%">
+                            <div class="col-lg-8">
+                                <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                    Supplier @*<span class="required">*</span>*@
+                                </label>
+                                <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0px;">
+
+                                    @Html.TextBoxFor(m => m.SupplierName, new { name = "SupplierName", id = "SupplierName", tabindex = "0", @class = "form-control col-md-7 col-xs-12" })
+                                </div>
+
+                            </div>
+                          <div class="col-lg-4">
+                              <div id="IsSupplierDiv">
+                                  <label>
+                                      <input type="checkbox" id="IsSupplier" name="IsSupplier" class="flat" tabindex="0" />
+
+
+                                  </label>
+
+                              </div>
+                          </div>
+
+                        </div>
+
+                        <div class="row" style="margin-top:1%">
+                            <div class="col-lg-8">
+                                <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                    For Party @*<span class="required">*</span>*@
+                                </label>
+                                <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left:0px">
+
+                                    @Html.TextBoxFor(m => m.PartyName, new { name = "PartyName", id = "PartyName", tabindex = "0", @class = "form-control col-md-7 col-xs-12" })
+                                </div>
+
+                            </div>
+                            <div class="col-lg-4">
+                                <div id="IsPartyDiv">
+                                    <label>
+                                        <input type="checkbox" id="IsParty" name="IsParty" class="flat" tabindex="0" />
+
+
+                                    </label>
+
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row" style="margin-top:1%">
+                            <div class="col-lg-8">
+                                <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                    Report Type @*<span class="required">*</span>*@
+                                </label>
+                                <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12">
+                                    <a style="cursor:pointer;color:blue;text-decoration:underline" id="SupplierWise">Supplier Wise</a>
+                                    <span><b>|</b></span>
+                                    <a style="cursor:pointer;color:blue;text-decoration:underline" id="InvoiceWise">Invoice Wise</a>   
+                                </div>
+
+                            </div>
+                            <div class="col-lg-4">
+                                &nbsp;
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top:1%">
+                            <br />
+                            <div>
+                                <b><span id="StockTypeLabel"></span></b>
+                            </div>
+                            <br />
+
+                            <br />@*<br /><br /><center><div class="loader" style="display:none"></div></center>*@
+                            <table class="table bootstrap-datatable" id="grid"></table>
+                            <center><span style="display:none" id="noRecord">No Stock Found</span></center>
+
+
+                        </div>
+
+
+                        <table id="gridExport" style="display:none"></table>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+
+</div>
+
+
+
+

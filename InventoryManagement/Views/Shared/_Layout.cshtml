@@ -1,0 +1,692 @@
+﻿@using InventoryManagement.Common
+@using InventoryManagement.Entity.Common
+@using InventoryManagement.Entity.Common
+@{ 
+    string CurrentPasswordValue = (Session["LoginUser"] as User).Password;
+    string partyCode = (Session["LoginUser"] as User).PartyCode;
+    string Username= (Session["LoginUser"] as User).UserName;
+    string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
+    List<MenuMasterModel> objMenuList = new List<MenuMasterModel>();
+    objMenuList = Session["MenuList"] != null ? Session["MenuList"] as List<MenuMasterModel> : new List<MenuMasterModel>();
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - BKDH Kitchen</title>
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    <link href="~/Content/themes/base/jquery-ui.css" rel="stylesheet" />
+    <link href="~/Content/jquery-ui-1.10.4.min.css" rel="stylesheet" />
+   <!--<link href="~/Content/Site.css" rel="stylesheet" />--> 
+    <!-- Bootstrap -->
+    <link href="~/Content/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="~/Content/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- NProgress -->
+    @*<link href="~/Content/vendors/nprogress/nprogress.css" rel="stylesheet">*@
+    <!-- iCheck -->
+    <link href="~/Content/vendors/iCheck/skins/flat/green.css" rel="stylesheet">
+
+    
+    <link href ="~/Content/bootstrap-datetimepicker.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    @*<link href="~/Content/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">*@
+
+    
+
+    <link href="~/Content/gijgo/modular/grid.min.css" rel="stylesheet" />
+
+    <link href="~/Content/gijgo/modular/datepicker.min.css" rel="stylesheet" />
+    <link href="~/Content/gijgo/modular/checkbox.min.css" rel="stylesheet" />
+    <!-- Custom Theme Style -->
+    <link href="~/Content/css/custom.min.css" rel="stylesheet">
+    <link href="~/Content/spinners.css" rel="stylesheet" />
+    <style type="text/css">
+        .control-label{
+        text-align:left!important;
+    }
+        a:focus,select:focus,button:focus,input:focus { 
+            border-color: lightblue; 
+
+        }
+
+        a:not(:focus),select:not(:focus),button:not(:focus),input:not(:focus) { 
+            border-color: none; 
+
+        }
+    </style>
+
+</head>
+<body class="nav-md">
+    <div class="preloader">
+        <div class="cssload-speeding-wheel"></div>
+    </div>
+        <div class="container body">
+            <div class="main_container">
+
+                <div class="col-md-3 left_col">
+                    <div class="left_col scroll-view">
+                        <div class="navbar nav_title" style="border: 0;">
+                            <a href="#" class="site_title"><i class="fa fa-paw"></i> <span>BKDH Kitchen</span></a>
+                        </div>
+                        <div class="clearfix"></div>
+                        <!-- menu profile quick info -->
+                        <div class="profile clearfix">
+                            <div class="profile_pic">
+                                <img src="~/images/img.jpg" alt="..." class="img-circle profile_img">
+                            </div>
+                            <div class="profile_info">
+                                <span>Welcome,</span>
+                                <h2>@if (User.Identity.IsAuthenticated)
+                                {@User.Identity.Name }</h2>
+                            </div>
+                        </div>
+                        <!-- /menu profile quick info -->
+                        <br />
+                        <!-- sidebar menu -->
+                        <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+                            <div class="menu_section">
+                                @*<h3>General</h3>*@
+                                <ul class="nav side-menu">
+                                    <li>
+                                        <a href="/Home/Dashboard"><i class="fa fa-home"></i> Dashboard</a>
+                                        @*<ul class="nav child_menu">
+                                            <li><a href="index.html">Dashboard</a></li>
+                                            <li><a href="index2.html">Dashboard2</a></li>
+                                            <li><a href="index3.html">Dashboard3</a></li>
+                                        </ul>*@
+                                    </li>
+                                    @*<li>
+                                        <a><i class="fa fa-edit"></i> Product <span class="fa fa-chevron-down"></span></a>
+                                        <ul class="nav child_menu">
+                                            <li><a href="~/Product/CategoryMaster">Category Master</a></li>
+                                            <li><a href="~/Product/SubCategoryMaster">SubCategory Master</a></li>
+                                            <li><a href="~/Product/ProductMaster">Product Master</a></li>
+                                           
+                                        </ul>
+                                    </li>*@
+
+
+                                    @{
+                                        if (objMenuList != null && objMenuList.Count > 0)
+                                        {
+                                            var ParentList = objMenuList.Where(m => m.ParentId == 0).ToList();
+                                            foreach (var menu in ParentList)
+                                            {
+                                                <li>
+                                                    <a><i class="fa fa-edit"></i> @menu.MenuName <span class="fa fa-chevron-down"></span></a>
+                                                    @{
+                                                        var FirstLevelChildList = objMenuList.Where(m => m.ParentId == menu.MenuId).OrderBy(m=>m.ChildSequence).ToList();
+                                                        if (FirstLevelChildList.Count > 0)
+                                                        {
+                                                            <ul class="nav child_menu">
+                                                                @foreach (var child in FirstLevelChildList)
+                                                                {
+                                                                    var SecondLevelChild = objMenuList.Where(m => m.ParentId == child.MenuId).OrderBy(m => m.ChildSequence).ToList();
+                                                                    if (SecondLevelChild.Count > 0)
+                                                                    {
+                                                                        <li>
+                                                                            <a>@child.MenuName<span class="fa fa-chevron-down"></span></a>
+                                                                            <ul class="nav child_menu">
+                                                                                @foreach (var subChild in SecondLevelChild)
+                                                                                {
+                                                                                    var splitValues = subChild.OnSelect.Split('/');
+                                                                                    var link = Url.Action(splitValues[1], splitValues[0]);
+                                                                                    link = link.Replace("%3f","?");
+                                                                                    link = link.Replace("%3d", "=");
+                                                                                    <li class="sub_menu">
+                                                                                        <a href=@link>@subChild.MenuName</a>
+                                                                                    </li>
+                                                                                }
+                                                                            </ul>
+                                                                        </li>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        var splitValues = child.OnSelect.Split('/');
+                                                                        var link = Url.Action(splitValues[1], splitValues[0]);
+                                                                        link = link.Replace("%3f", "?");
+                                                                        link = link.Replace("%3d", "=");
+                                                                        <li><a href="@link">@child.MenuName</a></li>
+                                                                    }
+
+                                                                }
+                                                            </ul>
+                                                        }
+                                                    }
+
+
+                                                </li>
+                                                            }
+                                                        }
+                                    }
+
+
+
+                                    @*<li>
+                                        <a><i class="fa fa-edit"></i> Transaction <span class="fa fa-chevron-down"></span></a>
+                                        <ul class="nav child_menu">
+                                            <li><a href="~/Transaction/DistributorBill">Distributor Bill</a></li>
+                                            <li><a href="~/Transaction/PartyBill">Party Bill</a></li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <a><i class="fa fa-edit"></i> Report <span class="fa fa-chevron-down"></span></a>
+                                        <ul class="nav child_menu">
+                                            <li><a href="~/Report/StockReport">Stock Report</a></li>
+
+                                        
+                                            <li>
+                                                <a>Sales Report<span class="fa fa-chevron-down"></span></a>
+                                                <ul class="nav child_menu">
+                                                    <li class="sub_menu">
+                                                        <a href="~/Report/SalesReport">Bill Wise</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="~/Report/DateSalesReport">Date Wise</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="~/Report/ProductSalesReport">Product Wise</a>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>*@
+                                    
+                                    
+                                    
+                                </ul>
+                            </div>
+                            
+                        </div>
+                        <!-- /sidebar menu -->
+                        <!-- /menu footer buttons -->
+                        <div class="sidebar-footer hidden-small">
+                            @*<a data-toggle="tooltip" data-placement="top" title="Settings">
+                                <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+                            </a>
+                            <a data-toggle="tooltip" data-placement="top" title="FullScreen">
+                                <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
+                            </a>
+                            <a data-toggle="tooltip" data-placement="top" title="Lock">
+                                <span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
+                            </a>*@
+                            <a data-toggle="tooltip" data-placement="top" title="Logout" href="~/Login/Login">
+                                <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
+                            </a>
+                        </div>
+                        <!-- /menu footer buttons -->
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                        <!-- top navigation -->
+                        <div class="top_nav">
+                            <div class="nav_menu">
+                                <nav>
+                                    <div class="nav toggle">
+                                        <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+                                    </div>
+                                    <ul class="nav navbar-nav navbar-right">
+                                        <li class="">
+                                            <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                <img src="~/images/img.jpg" alt="">@if (User.Identity.IsAuthenticated)
+                                                {@User.Identity.Name }
+                                                <span class="fa fa-angle-down"></span>
+                                            </a>
+                                            <ul class="dropdown-menu dropdown-usermenu pull-right">
+                                                @*<li><a href="javascript:;"> Profile</a></li>
+                <li>
+                    <a href="javascript:;">
+                        <span class="badge bg-red pull-right">50%</span>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <li><a href="javascript:;">Help</a></li>*@
+                                                <li><a id="ChangePassword" style="cursor:pointer"><i class="fa fa-sign-out pull-right"></i> Change Password</a></li>
+                                                <li><a href="~/Login/Login"><i class="fa fa-sign-out pull-right"></i> Log Out</a></li>
+                                            </ul>
+                                        </li>
+                                        @*<li role="presentation" class="dropdown">
+                                            <a href="javascript:;" class="dropdown-toggle info-number" data-toggle="dropdown" aria-expanded="false">
+                                                <i class="fa fa-envelope-o"></i>
+                                                <span class="badge bg-green">6</span>
+                                            </a>
+                                            <ul id="menu1" class="dropdown-menu list-unstyled msg_list" role="menu">
+                                                <li>
+                                                    <a>
+                                                        <span class="image"><img src="images/img.jpg" alt="Profile Image" /></span>
+                                                        <span>
+                                                            <span>John Smith</span>
+                                                            <span class="time">3 mins ago</span>
+                                                        </span>
+                                                        <span class="message">
+                                                            Film festivals used to be do-or-die moments for movie makers. They were where...
+                                                        </span>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a>
+                                                        <span class="image"><img src="images/img.jpg" alt="Profile Image" /></span>
+                                                        <span>
+                                                            <span>John Smith</span>
+                                                            <span class="time">3 mins ago</span>
+                                                        </span>
+                                                        <span class="message">
+                                                            Film festivals used to be do-or-die moments for movie makers. They were where...
+                                                        </span>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a>
+                                                        <span class="image"><img src="images/img.jpg" alt="Profile Image" /></span>
+                                                        <span>
+                                                            <span>John Smith</span>
+                                                            <span class="time">3 mins ago</span>
+                                                        </span>
+                                                        <span class="message">
+                                                            Film festivals used to be do-or-die moments for movie makers. They were where...
+                                                        </span>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a>
+                                                        <span class="image"><img src="images/img.jpg" alt="Profile Image" /></span>
+                                                        <span>
+                                                            <span>John Smith</span>
+                                                            <span class="time">3 mins ago</span>
+                                                        </span>
+                                                        <span class="message">
+                                                            Film festivals used to be do-or-die moments for movie makers. They were where...
+                                                        </span>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <div class="text-center">
+                                                        <a>
+                                                            <strong>See All Alerts</strong>
+                                                            <i class="fa fa-angle-right"></i>
+                                                        </a>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </li>*@
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                        <!-- /top navigation -->
+
+                        <!-- page content -->
+                        <div class="right_col" role="main">
+                            @RenderBody()
+                            <div class="clearfix"></div>
+                        </div>
+                        <!-- /page content -->
+
+
+                        <!-- footer content -->
+                        <footer>
+                            <div class="pull-right">
+                                Copyright &copy; 2017-2018
+                                @*Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>*@
+                            </div>
+                            <div class="clearfix"></div>
+                        </footer>
+                        <!-- /footer content -->
+                    
+               
+
+
+
+
+            </div>
+        </div>
+                @*<div class="navbar navbar-inverse navbar-fixed-top">
+                        <div class="container">
+                            <div class="navbar-header">
+                                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                                    <span class="icon-bar"></span>
+                                    <span class="icon-bar"></span>
+                                    <span class="icon-bar"></span>
+                                </button>
+                                @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+                            </div>
+                            <div class="navbar-collapse collapse">
+                                <ul class="nav navbar-nav">
+                                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
+                                    <li>@Html.ActionLink("About", "About", "Home")</li>
+                                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                                </ul>
+                                @Html.Partial("_LoginPartial")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container body-content">
+                        @RenderBody()
+                        <hr />
+                        <footer>
+                            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+                        </footer>
+                    </div>*@
+
+               
+                <!-- jQuery -->    
+    <script src="~/Scripts/jquery-ui-1.12.1.min.js"></script>    
+    <script src="~/Scripts/jquery.validate.min.js"></script>     
+    <script src="~/Content/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+
+    <script src="~/Scripts/gijgo/modular/core.min.js"></script>
+    <script src="~/Scripts/gijgo/modular/grid.min.js"></script>
+    <script src="~/Scripts/gijgo/modular/checkbox.min.js"></script>
+    <script src="~/Scripts/gijgo/modular/datepicker.min.js"></script>
+     <!-- FastClick -->
+                @*<script src="~/Content/vendors/fastclick/lib/fastclick.js"></script>
+                <!-- NProgress -->
+                <script src="~/Content/vendors/nprogress/nprogress.js"></script>
+                <!-- Chart.js -->
+                <script src="~/Content/vendors/Chart.js/dist/Chart.min.js"></script>
+                <!-- gauge.js -->
+                <script src="~/Content/vendors/gauge.js/dist/gauge.min.js"></script>
+                <!-- bootstrap-progressbar -->
+                <script src="~/Content/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>*@
+                <!-- iCheck -->
+                <script src="~/Content/vendors/iCheck/icheck.min.js"></script>
+                <!-- Skycons -->
+                @*<script src="~/Content/vendors/skycons/skycons.js"></script>
+                <!-- Flot -->
+                <script src="~/Content/vendors/Flot/jquery.flot.js"></script>
+                <script src="~/Content/vendors/Flot/jquery.flot.pie.js"></script>
+                <script src="~/Content/vendors/Flot/jquery.flot.time.js"></script>
+                <script src="~/Content/vendors/Flot/jquery.flot.stack.js"></script>
+                <script src="~/Content/vendors/Flot/jquery.flot.resize.js"></script>
+                <!-- Flot plugins -->
+                <script src="~/Content/vendors/flot.orderbars/js/jquery.flot.orderBars.js"></script>
+                <script src="~/Content/vendors/flot-spline/js/jquery.flot.spline.min.js"></script>
+                <script src="~/Content/vendors/flot.curvedlines/curvedLines.js"></script>
+                <!-- DateJS -->
+                <script src="~/Content/vendors/DateJS/build/date.js"></script>
+                <!-- JQVMap -->
+                <script src="~/Content/vendors/jqvmap/dist/jquery.vmap.js"></script>
+                <script src="~/Content/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
+                <script src="~/Content/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>*@
+                <!-- bootstrap-daterangepicker -->
+                <script src="~/Content/vendors/moment/min/moment.min.js"></script>
+    <!-- bootstrap-wysiwyg -->
+    @*<script src="~/Content/vendors/bootstrap-wysiwyg/js/bootstrap-wysiwyg.min.js"></script>
+    <script src="~/Content/vendors/jquery.hotkeys/jquery.hotkeys.js"></script>
+    <script src="~/Content/vendors/google-code-prettify/src/prettify.js"></script>*@
+    <!-- jQuery Tags Input -->
+    @*<script src="~/Content/vendors/jquery.tagsinput/src/jquery.tagsinput.js"></script>*@
+    <!-- Switchery -->
+    @*<script src="~/Content/vendors/switchery/dist/switchery.min.js"></script>*@
+    <!-- Select2 -->
+    @*<script src="~/Content/vendors/select2/dist/js/select2.full.min.js"></script>*@
+    <!-- Parsley -->
+    <script src="~/Content/vendors/parsleyjs/dist/parsley.js"></script>
+    <script src="~/Content/vendors/parsleyjs/dist/parsley.min.js"></script>
+    <!-- Autosize -->
+    <script src="~/Content/vendors/autosize/dist/autosize.min.js"></script>
+    
+    <script src="~/Scripts/moment.js"></script>    
+    <script src="~/Scripts/bootstrap-datetimepicker.min.js"></script>
+      
+    <script src="~/Scripts/TableToExcel.js"></script>
+         <!-- Custom Theme Scripts -->
+                    <script src="~/Scripts/js/custom.min.js"></script>
+
+        <div id="dialogResetPassword" class="ui-dialog-content-Change" title="Reset Password" style="height:235px!important">
+
+        </div>
+        <script type="text/javascript">
+            jQuery.extend(jQuery.expr[':'], {
+                focusable: function (el, index, selector) {
+                    //console.log("el", el);
+                    return $(el).is('a,button,select,input,[tabindex]');
+                }
+            });
+
+            $(document).on('keypress', 'input,select', function (e) {
+                var className = $(this).attr("class");
+                console.log("className", className)
+                if (className.indexOf("form-control") > -1 || className.indexOf("checkbox") > -1 || className.indexOf("btn") > -1) {
+                    if (e.which == 13) {
+                        e.preventDefault();
+                        // Get all focusable elements on the page
+                        var CanFocusList = $(':focusable');
+                        var templist = [];
+                        //var $canfocus=$(CanFocusList).find(':visible:enabled:not([readonly])');
+                        var $canfocus = CanFocusList.filter(':visible');
+                        $canfocus = $canfocus.filter(':not([readonly])');
+                        //$canfocus = $canfocus.filter(':not(button)');
+                        $canfocus = $canfocus.filter(':not([id=SearchText])');
+                        $canfocus = $canfocus.filter(':not([class=paymode])');
+                        $canfocus = $canfocus.filter(':not([class=gj-width-full])');
+                        $canfocus = $canfocus.filter(':not([class~=input-sm])');
+                        //$canfocus = $canfocus.filter('not([readonly])');
+                        //for (var i = 9; i < CanFocusList.length; i++)
+                        //{
+                        //    if (($(CanFocusList[i]).is(':visible')) && (!($(CanFocusList[i]).prop('disabled'))) && (!($(CanFocusList[i]).is('[readonly="readonly"]')))) {
+                        //        templist.push(CanFocusList[i]);
+                        //    }
+                        //}
+                        //var $canfocus = templist;
+                        //console.log("CanFocusList", CanFocusList);
+                        console.log("$canfocus", $canfocus);
+                        //console.log("document.activeElement", document.activeElement);
+
+                        var index = $canfocus.index(document.activeElement) + 1;
+                        //var currentEle = $canfocus.find(document.activeElement);
+
+                        //var index = $canfocus.index(currentEle) + 1;
+                        console.log("index", index);
+                        if (index >= $canfocus.length) { index = 9; $canfocus.eq(index).focus(); }
+
+                        var ActiveEleId = document.activeElement.id;
+                        var ToBefocusedEle = $canfocus.eq(index);
+                        var ToBefocusedId = $(ToBefocusedEle).attr("id");
+                        console.log("ToBefocusedId",ToBefocusedId);
+                        var eleWidth = $("#" + ToBefocusedId).css("width");
+                        var ActiveEleWidth = $("#" + ActiveEleId).css("width");
+                        console.log("ActiveEleId", ActiveEleId);
+                        //$("#"+ActiveEleId).attr('style', 'border-color:none');
+
+                        //var ToBefocusedId = $canfocus.eq(index).id;
+                        //if (($("#" + ToBefocusedId).prop("readonly")) == '') {
+                            $canfocus.eq(index).focus();
+                            //$canfocus.eq(index).attr("style", "border-color:lightblue");
+                        //}
+                        //else {
+                        //    //to add code to focus on next enabled element
+                        //}
+                            console.log("eleWidth", eleWidth);
+                            if (ToBefocusedId == "BillDateStr") {
+                                $("#PartyName").focus();
+                            }
+                            if (ToBefocusedId == "Quantity" || ToBefocusedId == "SearchText") {
+                                if (eleWidth != null && eleWidth != undefined && eleWidth != "") {
+                                    $("#" + ToBefocusedId).css("width", eleWidth);
+                                }
+                            }
+                            if (ActiveEleId == "Quantity" || ActiveEleId == "ProductNameList") {
+                                if (ActiveEleWidth != null && ActiveEleWidth != undefined && ActiveEleWidth != "") {
+                                    $("#" + ActiveEleId).css("width", ActiveEleWidth);
+                                }
+                            }
+                    }
+                }
+            });
+
+            $(document).ready(function () {
+                $('.dropdown-toggle').dropdown();
+                $(".onlyNumeric").keydown(function (e) {
+                        //if the letter is not digit then display error and don't type anything
+                       // if (e.keyCode != 13 && e.keyCode != 8 && e.keyCode != 0 && (e.keyCode < 48 || e.keyCode > 57)) {
+                            //display error message
+                            // $("#errmsg").html("Digits Only").show().fadeOut("slow");
+                         //   return false;
+                        //}
+                        // Allow: backspace, delete, tab, escape, enter
+                    if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110]) !== -1 ||
+                        // Allow: Ctrl+A, Command+A
+                        (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+                        // Allow: home, end, left, right, down, up
+                        (e.keyCode >= 35 && e.keyCode <= 40)) {
+                        // let it happen, don't do anything
+                        return;
+                    }
+                    // Ensure that it is a number and stop the keypress
+                    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                        e.preventDefault();
+                    }
+
+                });
+                $(".onlyDecimalValues").keydown(function (event) {
+
+
+                    if (event.shiftKey == true) {
+                        event.preventDefault();
+                    }
+
+                    if ((event.keyCode >= 48 && event.keyCode <= 57) ||
+                        (event.keyCode >= 96 && event.keyCode <= 105) ||
+                        event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 37 ||
+                        event.keyCode == 39 || event.keyCode == 46 || event.keyCode == 190 || event.keyCode==13|| (event.keyCode >= 35 && event.keyCode <= 40)) {
+
+                    } else {
+                        event.preventDefault();
+                    }
+
+                    if ($(this).val().indexOf('.') !== -1 && event.keyCode == 190)
+                        event.preventDefault();
+                    //if a decimal has been added, disable the "."-button
+
+                });
+
+                function ValidatePassword() {
+
+                    var txtCurrentPasword = $("#CurrentPassword").val();
+                    var NewPasswordTxt = $("#NewPassword").val();
+                    var ConfirmPasswordTxt = $("#ConfirmPassword").val();
+                    console.log('@CurrentPasswordValue');
+                    console.log("txtCurrentPasword", txtCurrentPasword);
+                    if (txtCurrentPasword != '@CurrentPasswordValue') {
+                        OpenDialog("dialogWarning", "Current Password does not match!", "false");
+                        reset();
+                        return false;
+                    }
+                    else if ((NewPasswordTxt != null && NewPasswordTxt != "") && (ConfirmPasswordTxt != null && ConfirmPasswordTxt != "")) {
+                        if (NewPasswordTxt != ConfirmPasswordTxt) {
+                            OpenDialog("dialogWarning", "New Password and Confirm Password does not match!", "false");
+                            reset();
+                            return false;
+                        }
+                    }
+                    else {
+                        return true;
+                    }
+                    return true;
+                }
+
+                function OpenDialog(dialogId, Message, isConfirmation) {
+                    if (isConfirmation == "true") {
+
+                    }
+                    else {
+                        $("#" + dialogId).empty();
+                        $("#" + dialogId).append('<p>' + Message + '</p>');
+
+                        $("#" + dialogId).dialog({
+                            modal: true,
+                            buttons: [{
+                                text: "OK",
+                                id: "btn" + dialogId,
+                                click: function () {
+                                    //var isOpen = $("#dialog").dialog("isOpen");
+                                    //if (isOpen == true) {
+                                    //    okCallBack();
+                                    //}
+
+                                    $("#" + dialogId).dialog("close");
+
+
+                                }
+                            }]
+                        });
+                        $(".ui-dialog-titlebar-close").empty();
+                        $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+                    }
+
+                }
+                $("#ChangePassword").click(function () {
+                    $("#dialogResetPassword").dialog({
+                        autoOpen: true,
+                        position: { my: "center", at: "top+150", of: window },
+                        width: 500,
+
+                        resizable: false,
+                        title: 'Change Password',
+                        modal: true,
+                        open: function () {
+                            $(this).load('@Url.Action("ChangePassword", "Login")');
+                        },
+                        buttons: {
+                            "Change": function () {
+                                ChangePasswordInfo();
+                            },
+                            Cancel: function () {
+                                $(this).dialog("close");
+                            }
+                        }
+                    });
+                    return false;
+                });
+
+                function ChangePasswordInfo() {
+                    $("#hiddenPartyCode").val('@partyCode');
+                    $("#hiddenUserName").val('@Username');
+                    var formdata = new FormData($("#changePasswordForm")[0]);
+                    var F = ValidatePassword();
+                    console.log("F", F);
+                    if (F) {
+                        $.ajax({
+                            url: '@Url.Action("ChangePassword", "Login")',
+                            type: 'POST',
+                            data: formdata,
+                            processData: false,
+                            contentType: false,
+                            dataType: "json",
+                            success: function (objResponse) {
+                                if (objResponse != null) {
+                                    if (objResponse.ResponseStatus == "FAILED") {
+                                        OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                                        reset();
+                                    }
+                                    else {
+                                        $("#dialogResetPassword").dialog("close");
+                                        window.location.href = '@Url.Action("Login","Login")';
+                                    }
+                                }
+                            },
+                            error: function (xhr, data) {
+                                //  return false;
+                                console.log(xhr);
+                                console.log("Error:", data);
+                            }
+                        });
+                    }
+                }
+            });
+            function reset() {
+
+                $("#CurrentPassword").val('');
+                $("#NewPassword").val('');
+                $("#ConfirmPassword").val('');
+            }
+        </script>
+    </body>
+    </html>

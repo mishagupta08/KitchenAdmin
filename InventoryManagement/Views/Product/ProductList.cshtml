@@ -1,0 +1,210 @@
+﻿
+@{
+    ViewBag.Title = "ProductList";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string CVCaption = System.Configuration.ConfigurationManager.AppSettings["CVCaption"];
+    string BVCaption = System.Configuration.ConfigurationManager.AppSettings["BVCaption"];
+    string PVCaption = System.Configuration.ConfigurationManager.AppSettings["PVCaption"];
+    string RPCaption = System.Configuration.ConfigurationManager.AppSettings["RPCaption"];
+}
+<style type="text/css">
+    .gj-grid-wrapper {
+    min-width:100%!important;
+    overflow-x:scroll!important;
+    }
+</style>
+<script type="text/javascript">
+    var ErrorFlag = true;
+    var SizeOfImage;
+    var ProductGrid = [{}];
+    var ProductModel = null;
+    var grid, dialog;
+    $(document).ready(function () {
+        $(".preloader").hide();
+        fillGrid();
+        $("#btnAdd").click(function () {
+            ProductModel = null;
+            var link = '@Url.Action("ProductMaster", "Product",new { ActionName = "Add", ProductCode = "-1"})';
+            link=link.replace("-1",ProductModel);
+            window.location.href = link;
+        });
+        function Edit(ev) {
+            var SingleProduct = $.grep(ProductModel, function (e) {
+                return e.ProductCode == ev.data.record.ProductCode;
+            });
+            console.log(" ev.data.record.ProductCode", ev.data.record.ProductCode);
+            var prodcode = ev.data.record.ProductCode;
+            var link = '@Url.Action("ProductMaster", "Product",new { ActionName = "Edit", ProductCode = "-1" })';
+            link = link.replace("-1", ev.data.record.ProductCode);
+            console.log("link",link);
+            window.location.href = "/Product/ProductMaster?ActionName=Edit&ProductCode=" + ev.data.record.ProductCode;
+        }
+        function Delete(ev) {
+            var SingleProduct = $.grep(ProductModel, function (e) {
+                return e.ProductCode == ev.data.record.ProductCode;
+            });
+            var link = '@Url.Action("DeleteProductMaster", "Product",new { ProductCode = "-1"})';
+            link = link.replace("-1", ev.data.record.ProductCode);
+            if (confirm('Are you sure?')) {
+                console.log(ev);
+                $.ajax({
+                    type: 'POST',
+                    url: link,
+                    success: function (resultData) {
+                        if (resultData.ResponseStatus == "OK") {
+                            fillGrid();
+                        }
+                    }
+                });
+                
+                //load the new data from the server after the deletion
+            }
+        }
+        function fillGrid(){
+            var link = '@Url.Action("GetProductList", "Product")';
+            ProductGrid = [{}];
+
+            $.ajax({
+                type: 'POST',
+                url: link,
+                success: function (resultData) {
+                    $(".preloader").hide();
+                    if (ProductGrid[0].ProductCode == undefined)
+                        ProductGrid = ProductGrid.splice(1);
+                    $("#noRecord").hide();
+                    console.log("ProductGrid", ProductGrid);
+                    if (grid != null) {
+                        grid.destroy();
+                        $('#grid').empty();
+
+                    }
+
+                    if (resultData != null) {
+                        var i = 0;
+                        ProductModel = resultData;
+                        for (i = 0; i < resultData.length; i++) {
+                            //var test = '@Url.Action("GetImage", "Common", new { imageName = "-1" })';
+                            var productPic = "/Images/ProductImages/" + resultData[i].ProductImagePath;//test.replace("-1", "~/images/ProductImages/" + resultData[i].ProductImagePath);
+                          //  var productPicFileName = productPic.replace(/^.*[\\\/]/, '');
+                            var catname = resultData[i].ProductCategoryDetails.CategoryName;
+                            var subcatname = resultData[i].ProductSubCategoryDetails.subCategoryName;
+                            //var path = resultData[i].ProductCategoryDetails.CategoryName + " >> " + resultData[i].ProductSubCategoryDetails.subCategoryName + " >>" + resultData[i].ProductName;
+                            var path =   resultData[i].ProductName;
+                            var dateObj = new Date(resultData[i].ProductBarcodeDetails.GenerateDate.match(/\d+/)[0] * 1);
+                            var generatedDate = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
+                            var mfgdateObj = new Date(resultData[i].ProductBarcodeDetails.MfgDate.match(/\d+/)[0] * 1);
+                            var mfgDate = (mfgdateObj.getDate()) + "/" + (mfgdateObj.getMonth() + 1) + "/" + mfgdateObj.getFullYear();
+                            var expdateObj = new Date(resultData[i].ProductBarcodeDetails.ExpDate.match(/\d+/)[0] * 1);
+                            var expDate = (expdateObj.getDate()) + "/" + (expdateObj.getMonth() + 1) + "/" + expdateObj.getFullYear();
+                            ProductGrid.push({ "SNo": (i + 1), "ProductId": resultData[i].ProductId, "ProductImage": productPic, "GSTTax": resultData[i].ProductTaxDetails.GSTTax, "OpeningStockQty": resultData[i].ProductCurrentStockDetails.OpeningStockQty, "MinQty": resultData[i].MinQtyStr, "ProductCode": resultData[i].ProductCode, "ProductDescription": resultData[i].ProductDescription, "ProductCommission": resultData[i].ProductCommission,"CatName":catname,"SubCatName":subcatname, "CategoryId": resultData[i].CategoryId, "SubCategoryId": resultData[i].SubCatId, "CategoryName": resultData[i].ProductCategoryDetails.CategoryName, "SubCategoryName": resultData[i].ProductSubCategoryDetails.subCategoryName, "Product": path, "DiscountInRs": resultData[i].DiscountInRs, "DiscountPer": resultData[i].DiscountPer, "UserDefinedCode": resultData[i].UserDefinedCode, "Barcode": resultData[i].ProductBarcodeDetails.Barcode, "BarcodeType": resultData[i].ProductBarcodeDetails.BarcodeType, "ExpDate": expDate, "MfgDate": mfgDate, "MRP": resultData[i].ProductBarcodeDetails.MRP, "PurchaseRate": resultData[i].ProductBarcodeDetails.PurchaseRate, "GenerateDate": generatedDate, "DP": resultData[i].ProductBarcodeDetails.DP, "Status": (resultData[i].IsActive) ? "Active" : "Inactive","HSNCode": resultData[i].HSNCode });
+                        }
+                        console.log("ProductModel", ProductModel);
+                        // CategoryGrid = CategoryGrid.splice(1);
+                        $("#noRecord").hide();
+                        grid = $('#grid').grid({
+                            dataSource: ProductGrid,
+                            uiLibrary: 'bootstrap',
+                            headerFilter: true,
+                            columns: [
+                                { field: 'SNo', title: 'SNo.', sortable: false, hidden: false,width: 50, cssClass: "noExl", filterable: false },
+                                { field: 'ProductId', title: 'ProductId', sortable: false, width: 70, hidden: true, cssClass: "noExl", filterable: false },
+                                { field: 'ProductCode', title: 'Product Code', width: 70, sortable: true, hidden: false, cssClass: "noExl", filterable: true },
+                                { field: 'CatName', title: 'Category', width: 100, sortable: true, hidden: false, cssClass: "noExl", filterable: true },
+                                { field: 'SubCatName', title: 'Sub Category', width: 100, sortable: true, hidden: false, cssClass: "noExl", filterable: true },
+                                { field: 'Product', title: 'Product', width: 100, sortable: true, hidden: false, cssClass: "noExl", filterable: true },
+                                { title: 'Product Image', width: 70, tmpl: '<a target="_blank" style="text-decoration:underline;" href={ProductImage} rel="group" class="fbox"><img src= {ProductImage} style="height:50px;" /></a>', align: 'center', filterable: false },
+                                { field: 'MRP', title: 'MRP', width: 70, sortable: true, filterable: true },
+                                { field: 'MfgDate', title: 'Mfg. Date', width: 70, sortable: true, filterable: true },
+                                  { field: 'ExpDate', title: 'Exp. Date', width: 70, sortable: true, filterable: true },
+                                  { field: 'ProductCommission', title: 'Prod. Commssn.', width: 70, sortable: true, filterable: true },
+                                  { field: 'ProductDescription', title: 'Prod. Desc.', width:100, sortable: true, filterable: true },
+                                  { field: 'UserDefinedCode', title: 'User Defined Code', width: 70, sortable: true, filterable: true },
+                                  { field: 'MinQty', title: 'Min. Qty.', sortable: true, width: 70, filterable: true },
+                                 //  { field: 'OpeningStockQty', title: 'Op. Stock. Qty.', width: 70, sortable: true, filterable: true },
+                                   { field: 'DP', title: 'DP', sortable: true, width: 70, filterable: true },
+                                   { field: 'PurchaseRate', title: 'Purchase Rate', width: 70, sortable: true, filterable: true },
+                                   { field: 'GSTTax', title: 'GST Tax', width: 70, sortable: true, filterable: true },
+                                     { field: 'HSNCode', title: 'HSN Code', width: 70, sortable: true, filterable: true },
+                                   { field: 'Barcode', title: 'Barcode', width: 70, sortable: true, filterable: true },
+                                   { field: 'BarcodeType', title: 'Barcode Type', width: 70, sortable: true, filterable: true },
+                                   //{ field: 'GenerateDate', title: 'Generate Date', width: 70, sortable: true, filterable: true },
+                                { field: 'Status', title: 'Status', sortable: true, width: 70, filterable: true },
+                    { title: '', field: 'Edit', width: 34, type: 'icon', width: 70, icon: 'glyphicon-pencil', tooltip: 'Edit', events: { 'click': Edit }, filterable: false },
+                   { title: '', field: 'Delete', width: 34, type: 'icon', width: 70, icon: 'glyphicon-remove', tooltip: 'Delete', events: { 'click': Delete }, filterable: false }
+                            ],
+                            pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+                        });
+
+                    }
+                    else {
+                        $("#noRecord").show();
+                    }
+
+                }
+            });
+        }
+    });
+</script>
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Product</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+                @*<div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search for...">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="button">Go!</button>
+                        </span>
+                    </div>*@
+            </div>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Product List</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+                        @*<li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li>
+                                        <a href="#">Settings 1</a>
+                                    </li>
+                                    <li>
+                                        <a href="#">Settings 2</a>
+                                    </li>
+                                </ul>
+                            </li>*@
+                        @*<li>
+                                <a class="close-link"><i class="fa fa-close"></i></a>
+                            </li>*@
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <div id="dialogMessage" title="Message">
+
+                    </div>
+                    <div class="col-lg-offset-10 col-lg-2">
+                        <button id="btnAdd" type="button" class="btn btn-default" style="margin-top: 5%;margin-bottom: 5%">Add New Product</button>
+                        </div>
+                        <div class="col-lg-12">
+                            <table class="table bootstrap-datatable" id="grid"></table>
+                            <center><span style="display:none" id="noRecord">No Records Found</span></center>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+

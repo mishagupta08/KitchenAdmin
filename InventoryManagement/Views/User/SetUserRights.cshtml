@@ -1,0 +1,543 @@
+﻿@model InventoryManagement.Entity.Common.UserPermissionMasterModel
+@{
+    ViewBag.Title = "SetUserRights";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var CountOfUsers = Model.UserList.Count();
+}
+
+<style>
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+    /*.ui-widget-header .ui-icon {
+        background-color: black!important;
+    }*/
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+
+    .btnShowReportClass {
+        margin-left: 74%;
+    }
+
+    .btnExportClass {
+        margin-right: 5%;
+        height: 25px;
+        width: 3%;
+        cursor: pointer;
+        float: right;
+    }
+
+    @@media screen and (max-width: 640px) {
+        table {
+            display: block;
+            overflow-x: auto;
+        }
+
+        .btnShowReportClass {
+            margin-left: -3%;
+        }
+
+        .btnExportClass {
+            margin-right: 5%;
+            height: 25px;
+            width: 10%;
+            cursor: pointer;
+            float: right;
+        }
+    }
+</style>
+<script type="text/javascript">
+    var grid, dialog;
+    var IsYes = false;
+    var MenuGrid = [{}];
+    var SelectedUser = "";
+    $(document).ready(function () {
+        $(".preloader").hide();
+        SelectedUser = '@ViewBag.Selecteduser';
+        $("#UserId").val(SelectedUser);
+        console.log("SelectedUser",SelectedUser);
+        GetPermittedMenuList(SelectedUser);
+        $("#UserList").change(function () {
+            SelectedUser = $("#UserList").val();
+            $("#UserId").val(SelectedUser);
+            console.log("SelectedUser in change", SelectedUser);
+            GetPermittedMenuList(SelectedUser);
+        });
+        function GetPermittedMenuList(SelectedUser) {
+            console.log("in function get");
+            $.ajax({
+                url: '@Url.Action("GetPermissionList", "User")',
+                type: 'GET',
+                data: { 'UserId': SelectedUser },
+                dataType: "json",
+                success: function (objResponse) {
+                    MenuGrid = [{}];
+                    if(objResponse!=null&& objResponse.length>0){
+                        for (var i = 0; i < objResponse.length; i++) {
+                            console.log("objResponse[i].IsPermitted", objResponse[i].IsPermitted);
+                            if(objResponse[i].IsPermitted==true){
+                                MenuGrid.push({ "SNo": (i + 1), "ParentId": objResponse[i].ParentId, "ParentName": objResponse[i].ParentName, "MenuId": objResponse[i].MenuId, "MenuName": objResponse[i].MenuName, "IsPermitted": true, "chkstr": "checked=true" });
+                            }
+                            else{
+                                MenuGrid.push({ "SNo": (i + 1), "ParentId": objResponse[i].ParentId, "ParentName": objResponse[i].ParentName, "MenuId": objResponse[i].MenuId, "MenuName": objResponse[i].MenuName, "IsPermitted": false, "chkstr": "" });
+                            }
+                        }
+                    }
+                    fillGrid();
+                }
+            });
+        }
+
+        $("#btnSavePermission").on('click', function () {
+            $("#btnSavePermission").attr("disabled",true);
+            $(".preloader").show();
+            console.log("MenuGrid in save", MenuGrid);
+            var ListObjStr = JSON.stringify(MenuGrid);
+            $("#ListPermittedMenuList").val(ListObjStr);
+            var formdata = new FormData($("#UserPermissionForm")[0]);
+            console.log("form data = > " + formdata);
+            if ('@CountOfUsers' > 0) {
+                $.ajax({
+                    url: '@Url.Action("SaveUserRights", "User")',
+                    type: 'POST',
+                    data: formdata,
+                    processData: false,
+                    contentType: false,
+                    dataType: "json",
+                    success: function (objResponse) {
+                        $("#btnSavePermission").removeAttr("disabled");
+                        $(".preloader").hide();
+                        if (objResponse != null) {
+                            OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                            if (objResponse.ResponseStatus == "OK") {
+                                window.location.href = '@Url.Action("SetUserRights", "User")';
+                            }
+                        }
+                    }
+                });
+            }
+            else {
+                $("#btnSavePermission").removeAttr("disabled");
+                $(".preloader").hide();
+                OpenDialog("dialogMessage", "No Users Found!", "false");
+}
+        });
+
+    });
+    function OpenDialog(dialogId, Message, isConfirmation) {
+        $("#" + dialogId).empty();
+        $("#" + dialogId).append('<p>' + Message + '</p>');
+        if (isConfirmation == "true") {
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "Yes",
+                    id: "btnYes" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = true;
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                },
+                {
+                    text: "No",
+                    id: "btnNo" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+                        IsYes = false;
+                        $("#" + dialogId).dialog("close");
+                    }
+                }
+                ]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+        else {
+
+
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "OK",
+                    id: "btn" + dialogId,
+                    click: function () {
+                        //var isOpen = $("#dialog").dialog("isOpen");
+                        //if (isOpen == true) {
+                        //    okCallBack();
+                        //}
+
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                }]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+
+    }
+    function SetValuesOnChange(e) {
+        console.log("e", e);
+        console.log("$(this)", $(this));
+        var SelectedMenuId = e.data.record.MenuId;
+        console.log("SelectedMenuId:", SelectedMenuId);
+        var rowEle = $(this).closest('tr');
+        console.log("rowEle:", rowEle);
+        var Ele = $(rowEle)[0];
+        console.log("Ele:", Ele);
+        //$(Ele).attr("id", "rowCurrent");
+        var IsDataSelected = Ele.getAttribute("data-selected");
+        //$(Ele).removeAttr("id");
+        console.log("IsDataSelected:", IsDataSelected);
+        var ChildOfSelectedMenu = [];
+        var PositionOfChilds = [];
+        var IsParent = false;
+        if (IsDataSelected == "false" || IsDataSelected==null) {
+            console.log("Checked");
+            //$(this).attr("checked", returnVal);
+
+            for (var i = 0; i < MenuGrid.length; i++) {
+                if(SelectedMenuId == MenuGrid[i].ParentId)
+                {
+                    IsParent = true;
+                    ChildOfSelectedMenu.push(MenuGrid[i].MenuId);
+                    PositionOfChilds.push((i + 1));
+                    MenuGrid[i].IsPermitted = true;
+                    for (var j = i; j < MenuGrid.length; j++) {
+                        if (MenuGrid[i].MenuId == MenuGrid[j].ParentId) {
+                            ChildOfSelectedMenu.push(MenuGrid[j].MenuId);
+                            PositionOfChilds.push((j + 1));
+                            MenuGrid[j].IsPermitted = true;
+                        }
+                    }
+
+                }
+
+            }
+            for (var i = 0; i < MenuGrid.length; i++) {
+                //if (IsParent) {
+                //    for (var j = 0; j < ChildOfSelectedMenu.length; j++) {
+                //        if(MenuGrid[i].MenuId==ChildOfSelectedMenu[j])
+                //        {
+                //            MenuGrid[i].IsPermitted = true;
+                //        }
+                //    }
+                //}
+                    if (SelectedMenuId == MenuGrid[i].MenuId) {
+                        MenuGrid[i].IsPermitted = true;
+
+                    }
+
+            }
+            if (IsParent == true) {
+                fillGrid();
+                //for (var i = 0; i < PositionOfChilds.length; i++) {
+                //    console.log(parseInt(PositionOfChilds[i]));
+                //    console.log("grid", grid);
+                //    var data = grid.get(parseInt(PositionOfChilds[i]));
+                //    console.log("data", data.SNo);
+                //    $('[data-role="wrapper"] :checkbox[value=' + data.SNo + ']').closest('tr').attr("data-selected", true);
+
+                //    $('[data-role="wrapper"] :checkbox[value=' + data.SNo + ']').closest('tr').attr("class","active");
+
+                //    $('[data-role="wrapper"] :checkbox[value=' + data.SNo + ']').attr("checked", true);
+                //}
+            }
+        }
+        else {
+            console.log("UnChecked");
+            for (var i = 0; i < MenuGrid.length; i++) {
+                if (SelectedMenuId == MenuGrid[i].ParentId) {
+                    IsParent = true;
+                    ChildOfSelectedMenu.push(MenuGrid[i].MenuId);
+                    PositionOfChilds.push((i + 1));
+                    MenuGrid[i].IsPermitted = false;
+                    for (var j = i; j < MenuGrid.length; j++) {
+                        if (MenuGrid[i].MenuId == MenuGrid[j].ParentId) {
+                            ChildOfSelectedMenu.push(MenuGrid[j].MenuId);
+                            PositionOfChilds.push((j + 1));
+                            MenuGrid[j].IsPermitted = false;
+                        }
+                    }
+                }
+            }
+            for (var i = 0; i < MenuGrid.length; i++) {
+                //if (IsParent) {
+                //    for (var j = 0; j < ChildOfSelectedMenu.length; j++) {
+                //        if (MenuGrid[i].MenuId == ChildOfSelectedMenu[j]) {
+                //            MenuGrid[j].IsPermitted = false;
+                //        }
+                //    }
+                //}
+                if (SelectedMenuId == MenuGrid[i].MenuId) {
+                    MenuGrid[i].IsPermitted = false;
+                   // break;
+                }
+            }
+            if (IsParent == true) {
+                fillGrid();
+                //for (var i = 0; i < PositionOfChilds.length; i++) {
+                //    console.log(parseInt(PositionOfChilds[i]));
+                //    console.log("grid", grid);
+                //    var data = grid.get(parseInt(PositionOfChilds[i]));
+                //    console.log("data", data.SNo);
+                //    $('[data-role="wrapper"] :checkbox[value=' + data.SNo + ']').closest('tr').attr("data-selected", false);
+
+                //    $('[data-role="wrapper"] :checkbox[value=' + data.SNo + ']').closest('tr').removeAttr("class");
+
+                //    $('[data-role="wrapper"] :checkbox[value=' + data.SNo + ']').attr("checked", false);
+                //}
+            }
+        }
+
+        //if (IsParent == true) {
+        //    fillGrid();
+        //}
+    }
+    function fillGrid(){
+       // console.log("MenuGrid", MenuGrid);
+        if (MenuGrid.length >= 1) {
+            if (MenuGrid[0].SNo == "" || MenuGrid[0].SNo == null || MenuGrid[0].SNo == undefined)
+                MenuGrid = MenuGrid.splice(1);
+        }
+        $("#noRecord").hide();
+        console.log("MenuGrid", MenuGrid);
+        if (grid != null) {
+            grid.destroy();
+            $('#grid').empty();
+
+        }
+        //  var ProductGrid = [{ "SNo": "", "Code": "", "ProductName": "", "MRP": "", "DP": "", "Rate": "", "Barcode": "", "RP": "", "BV": "", "CV": "", "PV": "", "Qty": "", "RPValue": "", "BVValue": "", "CVValue": "", "PVValue": "", "CommsnPer": "", "CommsnAmt": "", "DiscPer": "", "DiscAmt": "", "Amount": "", "TaxType": "", "TaxPer": "", "TaxAmt": "", "TotalAmount": "" }];
+        grid = $('#grid').grid({
+            dataSource: MenuGrid,
+            uiLibrary: 'bootstrap',
+            headerFilter: true,
+            columns: [
+                { field: 'SNo', title: 'S.No.', sortable: true, hidden: false, filterable: false },
+                { field: 'MenuId', title: 'Menu Id', sortable: true, hidden: false, filterable: false },
+                 { field: 'ParentId', title: 'Parent Id', sortable: true, hidden: true, filterable: false },
+                { field: 'ParentName', title: 'Parent Menu Name', sortable: true, hidden: false, filterable: true },
+                { field: 'MenuName', title: 'Menu Name', sortable: true, hidden: false, filterable: true },
+                 { field: 'IsPermitted', title: 'Permission', hidden: false, tmpl: '<input type="checkbox" {chkstr} value="{MenuId}" onchange="ChkMenus(this,{MenuId});" >', align: 'center' },
+                 //{ field: 'IsPermitted', title: '', hidden: false, filterable: false, type: "checkbox", events: { 'click': SetValuesOnChange }, align: 'center' },
+
+
+            ]
+           // //initialized: function (e) {
+           // //    console.log("e",e);
+           // //    alert('The grid is initialized.');
+           // //},
+           //// pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] },
+           // rowDataBound: function (e, $row, id, record) {
+
+           //     //if ('IsPermitted' === column.field) {
+           //         console.log("hi");
+           //         console.log("record.IsPermitted", record.IsPermitted);
+           //         var $wrapper = $('[data-role="wrapper"]');
+           //         console.log("$wrapper", $wrapper);
+           //         //console.log("$wrapper[0]", $wrapper[0]);
+
+           //         $('[data-role="wrapper"] :checkbox[value=' + record.SNo + ']').closest('tr').attr("data-selected", record.IsPermitted);
+           //         if (record.IsPermitted) {
+           //             $('[data-role="wrapper"] :checkbox[value=' + record.SNo + ']').closest('tr').attr("class", "active");
+           //         }
+           //         else {
+           //             $('[data-role="wrapper"] :checkbox[value=' + record.SNo + ']').closest('tr').removeAttr("class");
+           //         }
+           //         $('[data-role="wrapper"] :checkbox[value='+record.SNo+']').attr("checked", record.IsPermitted);
+
+           //         //alert(checkbox);
+           //         //.prop("checked", record.IsPermitted);
+           //     //}
+           // }
+        });
+
+        //grid.on('cellDataBound', function (e, $displayEl, id, column, record) {
+        //    console.log("hi");
+        //    console.log("record.IsPermitted", record.IsPermitted);
+        //    if ('IsPermitted' === column.field) {
+        //            $wrapper.find('input[type="checkbox"]').prop("checked", record.IsPermitted);
+        //        }
+        //});
+    }
+    function ChkMenus(chkbox, SelectedMenuId) {
+
+        var prmitted = false;
+        if (chkbox.checked)
+        { prmitted = true; }
+        //$('input[name="freeproduct"]:checked').attr("value");
+        //var  = chkbox.attributes("value");
+        for (var i = 0; i < MenuGrid.length; i++) {
+            if (SelectedMenuId == MenuGrid[i].MenuId) {
+                MenuGrid[i].IsPermitted = prmitted;
+                if (prmitted)
+                    MenuGrid[i].chkstr = "checked=true";
+                else
+                    MenuGrid[i].chkstr = "";
+                break;
+            }
+        }
+        for (var i = 0; i < MenuGrid.length; i++) {
+            if (SelectedMenuId == MenuGrid[i].ParentId) {
+                IsParent = true;
+                //ChildOfSelectedMenu.push(MenuGrid[i].MenuId);
+                //PositionOfChilds.push((i + 1));
+                MenuGrid[i].IsPermitted = prmitted;
+                if (prmitted)
+                    MenuGrid[i].chkstr = "checked=true";
+                else
+                    MenuGrid[i].chkstr = "";
+                //for (var j = i; j < MenuGrid.length; j++) {
+                //    if (MenuGrid[i].MenuId == MenuGrid[j].ParentId) {
+                //        ChildOfSelectedMenu.push(MenuGrid[j].MenuId);
+                //        PositionOfChilds.push((j + 1));
+                //        MenuGrid[j].IsPermitted = true;
+                //    }
+                //}
+
+            }
+        }
+
+        if (IsParent == true)
+            fillGrid();
+    }
+</script>
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>User</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>User Permission</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form id="UserPermissionForm" method="post" name="UserPermissionForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+
+                        @Html.HiddenFor(m => m.ListPermittedMenuList, new { id = "ListPermittedMenuList", name = "ListPermittedMenuList" })
+                        @Html.HiddenFor(m => m.UserId, new { id = "UserId", name = "UserId" })
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="col-lg-4">
+                                    &nbsp;
+                                </div>
+                                <div class="col-lg-4">
+
+
+                                    <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Select User @*<span class="required">*</span>*@
+                                    </label>
+                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                        <select id="UserList" name="Userlist" class="form-control">
+                                            @{
+                                                var f = false;
+                                                foreach (var obj in Model.UserList)
+                                                {
+                                                    if (f == false)
+                                                    {
+                                                        f = true;
+                                                        <option value="@obj.UserId" selected="selected">@obj.UserName</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@obj.UserId">@obj.UserName</option>
+                                                    }
+
+
+                                                }
+                                            }
+                                        </select>
+
+                                    </div>
+
+
+
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                        <div class="row" style="margin-top:1%">
+
+
+                            <div class="col-lg-12">
+                                <table class="table bootstrap-datatable" id="grid"></table>
+                                <center><span style="display:none" id="noRecord">No Records Found</span></center>
+
+                            </div>
+
+
+
+
+
+                        </div>
+                        <div class="row" style="margin-top:1%">
+                            <div class="col-lg-3">&nbsp;</div>
+                            <div class="col-lg-6">
+                                <center>   <input type="button" id="btnSavePermission" name="btnSavePermission" value="Save" class="" /></center>
+                                @*<img src="~/images/ExcelImage.jpg" id="btnExport" class="btnExportClass" />*@
+                            </div>
+                            <div class="col-lg-3">&nbsp;</div>
+                        </div>
+
+
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+
+</div>

@@ -1,0 +1,786 @@
+﻿
+@{
+    ViewBag.Title = "UpdateDeliveryDetails";
+}
+<style>
+    .ui-widget-header {
+        margin-top: -1% !important;
+        width: 102% !important;
+        margin-left: -1% !important;
+    }
+
+    .gj-grid-wrapper {
+        min-width: 100% !important;
+        overflow-x: scroll !important;
+    }
+
+    .ui-dialog-titlebar-close {
+        margin-right: 1% !important;
+    }
+
+    .ui-widget-content {
+        background: white !important;
+        border-radius: 15px !important;
+        -webkit-border-radius: 4px !important;
+    }
+
+    ui-autocomplete-input {
+        z-index: 100;
+    }
+
+    .input-readonly {
+        background-color: #EBEBE4;
+    }
+</style>
+
+
+<script>
+    var IsDateFilter = false;
+    var FromDate = "", ToDate = "";
+    var IsParty = false;
+    var PartyList = [];
+    var FullPartyList;    
+    var BillWiseGrid = [];
+    var NewBillWiseGrid = [];
+    var UpdatedGridRows = [];
+    var PreviouslySelectedFromPickerDate = "";
+    var PreviouslySelectedToPickerDate = "";
+    var grid, dialog,formdata;
+    var IsCustomerFilter = false;
+    var CustomerId = "";
+
+    
+
+    $(document).ready(function () {
+        $(".preloader").hide();
+
+        GetAllParty();
+
+        $("#btnExportReport").on('click', function () {
+            var UserTypeStr = "UpdateDeliveryDetails";
+            var tableString = "";           
+                tableString = "<thead><tr>";
+                tableString += "<th>Bill No</th>";
+                tableString += "<th>Bill Date</th>";
+                tableString += "<th>Bill By</th>";
+                tableString += "<th>Party Name</th>";
+                tableString += "<th>ID No</th>";
+                tableString += "<th>Name</th>";
+                tableString += "<th>Courier</th>";
+                tableString += "<th>Weight</th>";
+                tableString += "<th>Docket No</th>";
+                tableString += "<th>Docket Date</th>";                
+                tableString += "<th>Delv Address</th>";                
+                tableString += "<th>Disp Date</th>";
+                tableString += "<th>Net Pay</th>";
+                tableString += "<th>Mobile No</th>";
+                tableString += "<th>Order No</th>";
+                tableString += "</tr></thead><tbody>";
+                for (var i = 0; i < BillWiseGrid.length; i++) {
+                    tableString += "<tr>";
+                    tableString += "<td>" + BillWiseGrid[i].BillNo + "</td>";
+                    tableString += "<td>" + getDateString(BillWiseGrid[i].BillDate) + "</td>";
+                    tableString += "<td>" + BillWiseGrid[i].SoldBy + "</td>";
+                    tableString += "<td>" + BillWiseGrid[i].PartyName + "</td>";
+                    tableString += "<td>" + BillWiseGrid[i].PartyCode + "</td>";
+                    tableString += "<td>" + BillWiseGrid[i].Name + "</td>";
+                    tableString += "<td>" + BillWiseGrid[i].CourierName + "</td>";
+                    tableString += "<td>" + BillWiseGrid[i].DocWeight + "</td>";
+                    tableString += "<td>" + BillWiseGrid[i].DocketNo + "</td>";
+                    tableString += "<td>" + getDateString(BillWiseGrid[i].DocketDate) + "</td>";                    
+                    tableString += "<td>" + BillWiseGrid[i].DelvAddress + "</td>";                    
+                    tableString += "<td>" + getDateString(BillWiseGrid[i].DispDate) + "</td>";
+                    tableString += "<td>" + BillWiseGrid[i].NetPayable + "</td>";
+                    tableString += "<td>" + BillWiseGrid[i].MobileNO + "</td>";
+                    tableString += "<td>" + BillWiseGrid[i].OrderNo + "</tr>";
+                    tableString += "</tr>";
+                }                       
+            tableString += "</tbody>";
+            $("#gridExport").empty();
+            $("#gridExport").append(tableString);            
+            tableToExcel('gridExport', UserTypeStr + "_Export");
+        });
+
+
+        $("#btnShowReport").on('click', function () {
+            $('#grid').empty();
+            var PartyCode = $("#PartyCode").val();
+            var FCode = $("#CustCode").val();
+            var Status = $("#status").val();
+            var DateError = false;
+            if (FromDate != "" && FromDate != null && ToDate != null && ToDate != "") {
+                var d1 = toDate(FromDate);
+                var d2 = toDate(ToDate);
+                if (d1 > d2) {
+                    DateError = true;
+                    $(".preloader").hide();
+                    OpenDialog("dialogMessage", "From Date should be less than ToDate!", "false");                   
+                }
+                else {
+                    DateError = false;
+                    $(".preloader").show();
+                }
+            }
+            else {
+                DateError = true;
+                $(".preloader").hide();
+                if (FromDate == "" || FromDate == null) {
+                    OpenDialog("dialogMessage", "Please enter from date!", "false");
+                } if (ToDate == "" || ToDate == null) {
+                    OpenDialog("dialogMessage", "Please enter to date!", "false");
+                }               
+            }
+            if (DateError == false) {
+                $.ajax({
+                    url: '@Url.Action("GetRecordToUpdateDelDetails", "Transaction")',
+                    type: 'POST',
+                    data: { "FromDate": FromDate, "ToDate": ToDate, "PartyCode": PartyCode, "Fcode": FCode, "status": Status },
+                    dataType: "json",
+                    success: function (objResult) {
+                        BillWiseGrid = [];
+                        if (objResult.length > 0) {
+                            $("#noRecord").hide();
+                            $("#ActionsDiv").show();
+
+                            for (var i = 0; i < objResult.length; i++) {
+                                var InvoicePath = '@Url.Action("InvoicePrint", "Transaction", new {Pm="-1"})';
+
+                                var encodedparameters = objResult[i].BillNo;
+                                var EncryptedB64Url = window.btoa(encodedparameters);
+                                InvoicePath = InvoicePath.replace("-1", EncryptedB64Url);
+                                BillWiseGrid.push({ "InvoicePath": InvoicePath, "BillNo": objResult[i].BillNo, "BillDate": objResult[i].BillDate, "SoldBy": objResult[i].SoldBy, "PartyName": objResult[i].PartyName, "PartyCode": objResult[i].PartyCode, "Name": objResult[i].Name, "CourierName": objResult[i].CourierName, "DocWeight": objResult[i].DocWeight, "DocketNo": objResult[i].DocketNo, "DocketDate": objResult[i].DocketDate, "DOD": objResult[i].DOD, "DelvAddress": objResult[i].DelvAddress, "CID": objResult[i].CID, "DispDate": objResult[i].DispDate, "NetPayable": objResult[i].NetPayable, "MobileNO": objResult[i].MobileNO, "OrderNo": objResult[i].OrderNo });
+                            }
+                            fillGrid(BillWiseGrid);
+                        }
+                        else {
+                            $("#noRecord").show();
+                            $("#ActionsDiv").hide();
+                            
+                        }
+
+                        $(".preloader").hide();
+                    },
+                    error: function (xhr, data) {
+                        console.log(xhr);
+                        console.log("Error:", data);
+                    }
+                });
+            }
+            });
+
+        $('#IsDateFilter').on('ifChecked', function () {
+            IsDateFilter = true;
+            FromDate = "";
+            ToDate = "";
+            $("#StartDate").val("All");
+            $("#StartDate").prop("readonly", "readonly");
+            $("#EndDate").val("All");
+            $("#EndDate").prop("readonly", "readonly");
+        });
+
+        $('#IsDateFilter').on('ifUnchecked', function () {
+            FromDate = "";
+            ToDate = "";
+            IsDateFilter = false;
+            $("#StartDate").val("");
+            $("#StartDate").prop("readonly", "");
+            $("#EndDate").val("");
+            $("#EndDate").prop("readonly", "");
+        });
+
+        $("#StartDate").datetimepicker({
+            format: 'DD-MM-YYYY',
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            var selectedDate = e.date._d;
+            if (selectedDate != undefined && selectedDate != null && selectedDate != "") {
+                var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+                var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+                var lengthOfDate = ((selectedDate.getDate()).toString()).length;
+                var twoDigitdate = (lengthOfDate > 1) ? (selectedDate.getDate()) : '0' + (selectedDate.getDate());
+
+                var newFromDate = twoDigitdate + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+
+                FromDate = newFromDate;
+                PreviouslySelectedFromPickerDate = newFromDate;
+                ToDate = PreviouslySelectedToPickerDate;
+            }
+            else {
+                FromDate = "";
+            }
+        });
+
+        $("#EndDate").datetimepicker({
+            format: 'DD-MM-YYYY',
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            var selectedDate = e.date._d;
+            if (selectedDate != undefined && selectedDate != null && selectedDate != "") {
+                var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+                var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+                var lengthOfDate = ((selectedDate.getDate()).toString()).length;
+                var twoDigitdate = (lengthOfDate > 1) ? (selectedDate.getDate()) : '0' + (selectedDate.getDate());
+                var newFromDate = twoDigitdate + "-" + twoDigitMonth + "-" + selectedDate.getFullYear();
+                ToDate = newFromDate;
+                PreviouslySelectedToPickerDate = newFromDate;
+                FromDate = PreviouslySelectedFromPickerDate;
+            }
+            else {
+                ToDate = "";
+            }
+        });
+
+        $('#IsParty').on('ifChecked', function () {
+            IsParty = true;
+            $("#PartyName").val('All');
+            $("#PartyName").prop("readonly", "readonly");
+            $("#PartyCode").val('0');
+        });
+
+        $('#IsParty').on('ifUnchecked', function () {
+            IsParty = false;
+            $("#PartyName").val('');
+            $("#PartyName").prop("readonly", "");
+            $("#PartyCode").val('');
+        });
+
+        $("#PartyName").autocomplete({
+            source: function (request, response) {
+                var results = $.ui.autocomplete.filter(PartyList, request.term);
+                response(results.slice(0, 50));
+
+            },
+            minLength: 1,
+            scroll: true,
+            select: function (event, ui) {
+                $("#PartyName").val(ui.item.label);
+                SetSpecificCode("Party", ui.item.label);
+                return false;
+            },
+        }).focus(function () {
+            $(this).autocomplete("search", "");
+        });
+
+
+        $("form[name=UpdateDeliveryDetailsForm]").unbind("submit");
+        $(UpdateDeliveryDetailsForm).bind('submit', function (e) {
+            $(".preloader").show();
+            $("#UpdateDeliveryDetails").attr("disabled", true);
+
+            var val = $("#updateType").val(); 
+            if (val == "file") {
+                UpdatedGridRows = [];                
+                for (var i = 0; i < NewBillWiseGrid.length ; i++) {
+                    var objIndex = BillWiseGrid.findIndex((obj => obj.BillNo == NewBillWiseGrid[i].BillNo));
+                    if (BillWiseGrid[objIndex].CourierName != NewBillWiseGrid[i].CourierName ||
+                        BillWiseGrid[objIndex].DocWeight != NewBillWiseGrid[i].DocWeight ||
+                        BillWiseGrid[objIndex].DocketNo != NewBillWiseGrid[i].DocketNo ||
+                        BillWiseGrid[objIndex].DocketDate != NewBillWiseGrid[i].DocketDate ||
+                        BillWiseGrid[objIndex].DelvAddress != NewBillWiseGrid[i].DelvAddress)
+                    {                        
+                        UpdatedGridRows.push(NewBillWiseGrid[i]);
+                    }                    
+                }                                                                  
+            }            
+
+            if (UpdatedGridRows.length > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                var ListObjStr = JSON.stringify(UpdatedGridRows);
+                $("#ListObjHidden").val(ListObjStr);
+                formdata = new FormData($(this)[0]);
+                SaveBill();
+            }
+            else {
+                $(".preloader").hide();
+                $("#UpdateDeliveryDetails").removeAttr("disabled");
+                OpenDialog("dialogMessage", "No bill updated in grid", "false");
+            }
+            return false;
+        });
+
+        $('#btnUpload').click(function () {  
+            $(".preloader").show();
+            $('#grid').empty();
+            // Checking whether FormData is available in browser  
+            if (window.FormData !== undefined) {  
+  
+                var fileUpload = $("#FileUpload1").get(0);  
+                var files = fileUpload.files;  
+              
+                // Create FormData object  
+                var fileData = new FormData();  
+  
+                // Looping over all files and add it to FormData object  
+                for (var i = 0; i < files.length; i++) {  
+                    fileData.append(files[i].name, files[i]);  
+                }  
+                                
+                $.ajax({  
+                    url: '/Transaction/Upload',  
+                    type: "POST",  
+                    contentType: false, // Not to set any content header  
+                    processData: false, // Not to process data  
+                    data: fileData,
+                    dataType: "json",
+                    success: function (objResult) {
+                        NewBillWiseGrid = [];
+                        if (objResult.ErrorMessage == "OK") {
+                            if (objResult.DeliverDetailList.length > 0) {
+                                $("#noRecord").hide();
+                                $("#ActionsDiv").show();
+
+                                for (var i = 0; i < objResult.DeliverDetailList.length; i++) {
+                                    var InvoicePath = '@Url.Action("InvoicePrint", "Transaction", new {Pm="-1"})';
+
+                                    var encodedparameters = objResult.DeliverDetailList[i].BillNo;
+                                    var EncryptedB64Url = window.btoa(encodedparameters);
+                                    InvoicePath = InvoicePath.replace("-1", EncryptedB64Url);
+                                    NewBillWiseGrid.push({ "InvoicePath": InvoicePath, "BillNo": objResult.DeliverDetailList[i].BillNo, "BillDate": objResult.DeliverDetailList[i].BillDate, "SoldBy": objResult.DeliverDetailList[i].SoldBy, "PartyName": objResult.DeliverDetailList[i].PartyName, "PartyCode": objResult.DeliverDetailList[i].PartyCode, "Name": objResult.DeliverDetailList[i].Name, "CourierName": objResult.DeliverDetailList[i].CourierName, "DocWeight": objResult.DeliverDetailList[i].DocWeight, "DocketNo": objResult.DeliverDetailList[i].DocketNo, "DocketDate": objResult.DeliverDetailList[i].DocketDate, "DOD": objResult.DeliverDetailList[i].DOD, "DelvAddress": objResult.DeliverDetailList[i].DelvAddress, "CID": objResult.DeliverDetailList[i].CID, "DispDate": objResult.DeliverDetailList[i].DispDate, "NetPayable": objResult.DeliverDetailList[i].NetPayable, "MobileNO": objResult.DeliverDetailList[i].MobileNO, "OrderNo": objResult.DeliverDetailList[i].OrderNo });
+                                }
+                                fillGrid(NewBillWiseGrid);
+                            }
+                            else {
+                                $("#noRecord").show();
+                                $("#ActionsDiv").hide();
+                                $('#grid').empty();
+                            }
+                        }
+                        else {
+                            console.log("Error:", objResult.ErrorMessage);
+                        }
+
+                        $(".preloader").hide();
+                    },
+                    error: function (xhr, data) {
+                        console.log(xhr);
+                        console.log("Error:", data);
+                    }                      
+                });  
+            } else {  
+                alert("FormData is not supported.");  
+            }  
+        });  
+    });                   
+
+    function SetSpecificCode(type, label) {       
+        if (type == "Party") {
+            for (var i = 0; i < FullPartyList.length; i++) {
+                if (FullPartyList[i].PartyName == label) {
+                    $("#PartyCode").val(FullPartyList[i].PartyCode);
+                    break;
+                }
+            }
+        }
+    }
+
+    function fillGrid(griddata) {
+        if (grid != null) {
+            grid.destroy();
+            $('#grid').empty();
+        }
+        $("#noRecord").hide();
+        var renderer = function (value, record, $cell, $displayEl, id) {
+            var $editBtn = $('<i class="fa fa-pencil gj-cursor-pointer" data-key="' + id + '"></i>'),
+                $updateBtn = $('<i class="fa fa-save gj-cursor-pointer" data-key="' + id + '"></i>').hide();
+            $editBtn.on('click', function (e) {
+                grid.edit($(this).data('key'));
+                $editBtn.hide();
+                $updateBtn.show();
+            });
+            $updateBtn.on('click', function (e) {
+                grid.update($(this).data('key'));
+                $editBtn.show();
+                $updateBtn.hide();
+            });
+            $displayEl.html("");
+            $displayEl.append($editBtn).append($updateBtn);
+        }
+
+        var editcol = false;
+
+        var val = $("#updateType").val();
+        if (val == "file") {
+            editcol = true;
+        }
+
+
+
+        grid = $('#grid').grid({
+            dataSource: griddata,
+            primaryKey: 'BillNo',
+                uiLibrary: 'bootstrap',                                
+                columns: [                   
+                    { field: 'BillNo', title: 'Bill No', width: 120, sortable: true, hidden: false, filterable: false, tmpl: '<a target="_blank" style="text-decoration:underline;color:blue" href={InvoicePath}>{BillNo}</a>', align: 'center' },
+                    { field: 'BillDate', width: 100, title: 'Bill Date', sortable: true, hidden: false, filterable: false, type: 'date', format: 'dd/mm/yyyy' },
+                    { field: 'SoldBy', width: 150, title: 'Bill By', sortable: true, hidden: false, filterable: false },
+                    { field: 'PartyName', width: 200, title: 'Party Name', sortable: true, hidden: false, filterable: false },
+                    { field: 'PartyCode', width: 80, title: 'ID No', sortable: true, hidden: false, filterable: false },
+                    { field: 'Name', width: 150, title: 'Name', sortable: true, hidden: false, filterable: false },
+                    
+				    { field: 'CourierName', width: 100, title: 'Courier', editor: true, sortable: true, hidden: false, filterable: false },
+                    { field: 'DocWeight', width: 100, title: 'Weight', editor: true, sortable: true, hidden: false, filterable: false },
+                    { field: 'DocketNo', width: 80, title: 'Docket No', editor: true, sortable: true, hidden: false, filterable: false },
+                    { field: 'DocketDate', title: 'Docket Date', width: 100, sortable: true, type: 'date', format: 'dd/mm/yyyy', editor: true, hidden: false, filterable: false },
+                    { field: 'DOD', width: 100, title: 'DOD', sortable: true, type: 'date', format: 'dd/mm/yyyy', editor: true, hidden: true, filterable: false },
+                    { field: 'DelvAddress', width: 200, title: 'Delv Address', editor: true, sortable: true, hidden: false, filterable: false },
+                    { field: 'CID', width: 80, title: 'CID', sortable: true, editor: true, hidden: true, filterable: false },
+
+					{ field: 'DispDate', title: 'Disp Date', width: 80, sortable: true, hidden: false, filterable: false, type: 'date', format: 'dd/mm/yyyy' },
+                    { field: 'NetPayable', width: 80, title: 'Net Pay', sortable: true, hidden: false, filterable: false },
+                    { field: 'MobileNO', width: 200, title: 'Mobile NO', sortable: true, hidden: false, filterable: false },
+                    { field: 'OrderNo', width: 80, title: 'OrderNo', sortable: true, hidden: false, filterable: false }                               
+                ],
+                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
+
+        });       
+        grid.on('cellDataChanged', function (e, $cell, column, record, oldValue, newValue) {
+            if (UpdatedGridRows.length > 0) {
+                var objIndex = UpdatedGridRows.findIndex((obj => obj.BillNo == record.BillNo));
+                if (objIndex === -1) {
+                    UpdatedGridRows.push(record);
+                }
+                else {
+                    UpdatedGridRows[objIndex] = record;
+                }
+            }
+            else {
+                UpdatedGridRows.push(record);
+            }
+          
+        });
+                
+        $(".loader").hide();
+    }
+
+    function SaveBill() {
+        $(".preloader").show();
+        $.ajax({
+            url: '@Url.Action("UpdateDeliveryDetails", "Transaction")',
+            type: 'POST',
+            data: formdata,
+            processData: false,
+            contentType: false,
+            dataType: "json",
+            success: function (objResponse) {
+                $(".preloader").hide();
+                $("#UpdateDeliveryDetails").removeAttr("disabled");
+                if (objResponse != null) {
+                    if (objResponse.ResponseStatus == "OK") {
+                        window.location.href = '@Url.Action("UpdateDeliveryDetail", "Transaction")';
+                    }
+                    else {
+                        $(".preloader").hide();
+                        OpenDialog("dialogMessage", objResponse.ResponseMessage, "false");
+                    }
+                }
+            },
+            error: function (xhr, data) {
+                $(".preloader").hide();
+                console.log(xhr);
+                console.log("Error:", data);
+            }
+        });
+        return false;
+    }
+
+    function OpenDialog(dialogId, Message, isConfirmation) {
+        $("#" + dialogId).empty();
+        $("#" + dialogId).append('<p>' + Message + '</p>');
+        if (isConfirmation == "true") {
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "Yes",
+                    id: "btnYes" + dialogId,
+                    click: function () {
+                        IsYes = true;
+                        $("#" + dialogId).dialog("close");
+
+
+                    }
+                },
+                {
+                    text: "No",
+                    id: "btnNo" + dialogId,
+                    click: function () {
+                        IsYes = false;
+                        $("#" + dialogId).dialog("close");
+                    }
+                }
+                ]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+        else {
+            $("#" + dialogId).dialog({
+                modal: true,
+                buttons: [{
+                    text: "OK",
+                    id: "btn" + dialogId,
+                    click: function () {
+                       $("#" + dialogId).dialog("close");
+                    }
+                }]
+            });
+            $(".ui-dialog-titlebar-close").empty();
+            $(".ui-dialog-titlebar-close").append('<i class="fa fa-close"></i>');
+        }
+    }
+
+    function GetAllParty() {
+        $.ajax({
+            url: '/Report/GetAllPartyListForReports',
+            dataType: 'JSON',
+            method: 'GET',
+            success: function (data) {
+                FullPartyList = data;
+                PartyList = [];
+                if (data != null) {
+                    var i = 0;
+                    for (i = 0; i < data.length; i++) {
+                        PartyList.push(data[i].PartyName);
+                    }
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    }
+
+    function toDate(dateStr) {
+        if (dateStr != "" && dateStr != undefined && dateStr != null) {
+            var parts = dateStr.split("-");           
+            return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        }
+        return "";
+    }
+
+    function getDateString(dateString) {
+        var date = "";
+        if (dateString != "" && dateString != undefined && dateString != null) {
+            dateString = dateString.substr(6);
+            var currentTime = new Date(parseInt(dateString));
+            var month = currentTime.getMonth() + 1;
+            var day = currentTime.getDate();
+            var year = currentTime.getFullYear();
+
+            var lengthOfMonth = (month.toString()).length;
+            var twoDigitMonth = (lengthOfMonth > 1) ? (month) : '0' + (month);
+            var lengthOfDate = (day.toString()).length;
+            var twoDigitdate = (lengthOfDate > 1) ? (day) : '0' + (day);
+
+            date = twoDigitdate + "-" + twoDigitMonth + "-" + year;
+        }
+        return date;
+    }
+
+    function updateTypeChange() {
+        var val = $("#updateType").val();
+        if (val == "mannual") {
+            $("#btnExportReport").hide();
+            $("#btnImportReport").hide();
+        }
+        else {
+            $("#btnExportReport").show();
+            $("#btnImportReport").show();
+        }
+    }
+</script>
+
+
+<div class="row">
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Transaction</h3>
+        </div>
+        <div class="title_right">
+            <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>Update Delivery Details</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+                        <li>
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <br />
+                    <form enctype="multipart/form-data" id="UpdateDeliveryDetailsForm" method="post" name="UpdateDeliveryDetailsForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+                        
+                        <input type="hidden"  id = "PartyCode" name = "PartyCode" >
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Update Type
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                        <select class="form-control" id="updateType" name="updateType" onchange="updateTypeChange()">
+                                            <option value="mannual">Mannual</option>
+                                            <option value="file">Through File</option>
+                                            
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>                            
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            From Date
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                            @Html.TextBox("StartDate","", new { name = "StartDate", id = "StartDate", tabindex = "1", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                            To Date
+                                        </label>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                            @Html.TextBox("EndDate","", new { name = "EndDate", id = "EndDate", tabindex = "2", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                           
+                        </div>
+
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Enter Party
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                        @Html.TextBox("PartyName","", new { name = "PartyName", id = "PartyName", tabindex = "5", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-group">
+                                    <div id="IsPartyDiv">
+                                        <label>
+                                            <input type="checkbox" id="IsParty" name="IsParty" class="flat" tabindex="6" />
+
+
+                                        </label>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        CustomerId No 
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                        @Html.TextBox("CustCode","", new { name = "CustCode", id = "CustCode", tabindex = "4", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-12" for="category-name">
+                                        Select Status
+                                    </label>
+                                    <div class="col-lg-9 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                       <select id ="status" class = "form-control">
+                                           <option value="All">All</option>
+                                           <option value="Pendng">Pending</option>
+                                           <option value="Clear">Clear</option>
+                                       </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-12">
+                            <br />
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <div class="col-lg-12">
+                                    <div class="col-lg-2">&nbsp;</div>
+                                    <div class="col-lg-10">
+                                        <div class="col-lg-2"><a id="btnShowReport" style="cursor:pointer;color:blue;text-decoration:underline" name="btnShowReport" data-type="P" class="getReport">Get Report</a></div>
+                                            <div class="col-lg-1">
+                                                <img src="~/images/ExcelImage.jpg" id="btnExportReport" style="margin-right: 6%;height: 25px;cursor:pointer;display:none;" /></div>
+                                        <div class="col-lg-9" id="btnImportReport" style="display:none;">
+                                            <div class="col-lg-6"><input type="file" id="FileUpload1" /></div>
+                                            <div class="col-lg-6">
+                                                <input type="button" id="btnUpload" value="Upload Files" />
+                                            </div>
+                                                </div>
+                                            </div>
+                                   
+                                </div>
+                                <br /><br /><br /><center><div class="loader" style="display:none"></div></center>
+                                <table class="table bootstrap-datatable" id="grid"></table>
+                                <center><span style="display:none" id="noRecord">No Records Found</span></center>
+                            </div>
+                        </div>
+
+                        <table id="gridExport" style="display:none"></table>
+                       
+                        <input type="hidden" name = "ListObjHidden" id = "ListObjHidden"/>
+
+                        <div class="row RowMargin" id="ActionsDiv" style="display:none;">
+                            <div class="col-lg-6 col-md-offset-3">
+                                <button type="submit" id="UpdateDeliveryDetails" class="btn btn-success" tabindex="0">Update</button>
+                                <button class="btn btn-primary" type="button" tabindex="0" id="cancelClick">Cancel</button>
+                            </div>
+                        </div>                        
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="dialogMessage" title="Message">
+
+    </div>
+</div>
+

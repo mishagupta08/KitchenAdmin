@@ -1,0 +1,29 @@
+﻿@model InventoryManagement.Entity.Common.LoginModel
+@{
+    ViewBag.Title = "Session Expire";
+    Layout = "~/Views/Shared/_LayoutLogin.cshtml";
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(".preloader").hide();
+    });
+</script>
+
+<div class="animate form login_form">
+    <section class="login_content">
+        <form name="LoginForm" id="LoginForm" method="post" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
+
+            <h1>Session Expired</h1>
+            <div>
+                <h3>Your session has expired. Please <a href="login" style="text-decoration:underline;font-size:24px;">login</a> again.</h3>
+                </div>
+                <div class="clearfix"></div>
+
+</form>
+    </section>
+</div>
+
+
+
+
