@@ -19,12 +19,14 @@ namespace InventoryManagement.Controllers
         [SessionExpire]
         public ActionResult PartyRegistration()
         {
-           
+            ViewBag.IsStallCounter = false;
             return View();
         }
+
         [SessionExpire]
         public ActionResult SupplierRegistration()
         {
+            ViewBag.IsStallCounter = true;
             return View();
         }
         public ActionResult GetAllPartyList(bool IsSupplier)
@@ -37,24 +39,22 @@ namespace InventoryManagement.Controllers
         }
 
         [SessionExpire]
-        public ActionResult AddEditPartyRegistration(string IsActionName,string PartyCode)
+        public ActionResult AddEditPartyRegistration(string IsActionName,string PartyCode,bool? IsStallCounter)
         {
             PartyModel objModel = new PartyModel();
             objModel.GroupList = objRegistrationManager.GetGroupList();
+            objModel.GroupList = objModel.GroupList.Where(r => r.GroupId == 100).ToList();
             objModel.IsSupplier = false;
             List<SelectListItem> GroupList = new List<SelectListItem>();
             foreach(var obj in objModel.GroupList)
-            {
-                if (obj.GroupId == 0)
-                {
+            {                
                     GroupList.Add(new SelectListItem
                 {
                     
                     Text = obj.GroupName,
                     Value = obj.GroupId.ToString()
                         
-                });
-                }
+                });                
             }
             ViewBag.GroupList = GroupList;
 
@@ -136,7 +136,7 @@ namespace InventoryManagement.Controllers
             List<PartyModel> objParentPartyList = new List<PartyModel>();
             if (objModel.GroupList.Count > 0)
             {
-                objParentPartyList = objRegistrationManager.GetParentParty(objModel.GroupList[0].GroupId);
+                objParentPartyList = objRegistrationManager.GetParentParty(objModel.GroupList[0].GroupId, IsStallCounter??false);
             }
                 List<SelectListItem> ParentParty = new List<SelectListItem>();
                 foreach (var obj in objParentPartyList)
@@ -174,6 +174,122 @@ namespace InventoryManagement.Controllers
                 }
             }
             return View(objModel);
+        }
+
+
+        [SessionExpire]
+        public ActionResult AddEditStallRegistration(string IsActionName, string PartyCode)
+        {
+            PartyModel objModel = new PartyModel();
+            objModel.GroupList = objRegistrationManager.GetGroupList();
+            objModel.GroupList = objModel.GroupList.Where(r => r.GroupId == 105).ToList();
+            objModel.IsSupplier = false;
+            List<SelectListItem> GroupList = new List<SelectListItem>();
+            foreach (var obj in objModel.GroupList)
+            {                
+                    GroupList.Add(new SelectListItem
+                    {
+
+                        Text = obj.GroupName,
+                        Value = obj.GroupId.ToString()
+
+                    });                
+            }
+            ViewBag.GroupList = GroupList;
+
+            
+            List<SelectListItem> objActiveStatus = new List<SelectListItem>();
+            objActiveStatus.Add(new SelectListItem
+            {
+                Text = "Yes",
+                Value = "Y"
+            });
+
+            objActiveStatus.Add(new SelectListItem
+            {
+                Text = "No",
+                Value = "N"
+            });
+            ViewBag.ActiveStatus = objActiveStatus;
+
+            objModel.StateList = objRegistrationManager.GetStateList();
+            List<SelectListItem> StateList = new List<SelectListItem>();
+            foreach (var obj in objModel.StateList)
+            {
+                if (obj.StateCode != 0)
+                {
+                    StateList.Add(new SelectListItem
+                    {
+                        Text = obj.StateName,
+                        Value = obj.StateCode.ToString()
+                    });
+                }
+            }
+            ViewBag.StateList = StateList;
+            objModel.StateCode = objModel.StateList.Where(r => r.IsCompanyState == true).Select(m => m.StateCode).FirstOrDefault();
+
+            objModel.CityList = objRegistrationManager.GetCityList();
+            List<SelectListItem> CityList = new List<SelectListItem>();
+            foreach (var obj in objModel.CityList)
+            {
+                if (obj.StateCode == objModel.StateCode)
+                {
+                    if (obj.CityCode != 0)
+                    {
+                        CityList.Add(new SelectListItem
+                        {
+                            Text = obj.CityName,
+                            Value = obj.CityCode.ToString()
+                        });
+                    }
+                }
+            }
+            objModel.CityCode = objModel.CityList.Where(r => r.IsCompanyCity == true).Select(m => m.CityCode).FirstOrDefault();
+            objModel.CityName = objModel.CityList.Where(r => r.IsCompanyCity == true).Select(m => m.CityName).FirstOrDefault();
+            ViewBag.CityList = CityList;
+
+            List<PartyModel> objParentPartyList = new List<PartyModel>();
+            if (objModel.GroupList.Count > 0)
+            {
+                objParentPartyList = objRegistrationManager.GetParentParty(objModel.GroupList[0].GroupId,true);
+            }
+            List<SelectListItem> ParentParty = new List<SelectListItem>();
+            foreach (var obj in objParentPartyList)
+            {
+                ParentParty.Add(new SelectListItem
+                {
+                    Text = obj.PartyName,
+                    Value = obj.PartyCode.ToString()
+                });
+            }
+
+            ViewBag.ParentPartyList = ParentParty;
+
+
+            if (IsActionName == "Add")
+            {
+                if (objParentPartyList.Count > 0 && objModel.GroupList.Count > 0)
+                {
+                    objModel.PartyCode = objRegistrationManager.GetPartyCode(objParentPartyList[0].PartyCode.ToString(), objModel.GroupList[0].GroupId.ToString());
+                }
+                objModel.GroupId = objModel.GroupList[0].GroupId;
+                objModel.ParentPartyCode = objParentPartyList[0].PartyCode;
+
+                //objModel.BankCode = objModel.BankList[0].BankCode;
+                //objModel.BankName = objModel.BankList[0].BankName;
+                objModel.OnWebsite = "Y";
+                objModel.ActiveStatus = "Y";
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(PartyCode))
+                {
+
+                    objModel = objRegistrationManager.GetParyOnPartyCode(PartyCode, false);
+
+                }
+            }
+            return View("AddEditSupplierRegistration",objModel);
         }
 
         [SessionExpire]
@@ -314,10 +430,10 @@ namespace InventoryManagement.Controllers
         {
             return Json(objRegistrationManager.GetCityList(), JsonRequestBehavior.AllowGet);
         }
-        public ActionResult GetParentPartyList(decimal GroupId)
+        public ActionResult GetParentPartyList(decimal GroupId,bool forStall)
         {
             List<PartyModel> objParentPartyList = new List<PartyModel>();
-            objParentPartyList= objRegistrationManager.GetParentParty(GroupId);
+            objParentPartyList= objRegistrationManager.GetParentParty(GroupId, forStall);
             return Json(objParentPartyList,JsonRequestBehavior.AllowGet);
         }
     }

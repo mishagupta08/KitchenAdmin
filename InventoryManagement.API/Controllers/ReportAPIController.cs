@@ -2440,118 +2440,7 @@ namespace InventoryManagement.API.Controllers
                 throw;
             }
             return objSumm;
-        }
-
-        public List<SalesReturnReport> GetPurchaseReturnReport(string FromDate, string ToDate, string ProductCode, string CategoryCode, string SupplierCode, string Type)
-        {
-            var report = new List<SalesReturnReport>();
-            try
-            {
-                DateTime StartDate = DateTime.Now.Date;
-                DateTime EndDate = DateTime.Now.Date;
-                if (!string.IsNullOrEmpty(FromDate) && FromDate != "All")
-                {
-                    var SplitDate = FromDate.Split('-');
-                    string NewDate = SplitDate[1] + "/" + SplitDate[0] + "/" + SplitDate[2];
-                    StartDate = Convert.ToDateTime(DateTime.ParseExact(NewDate, "MM/dd/yyyy", CultureInfo.InvariantCulture));
-                    StartDate = StartDate.Date;
-                }
-                if (!string.IsNullOrEmpty(ToDate) && ToDate != "All")
-                {
-                    var SplitDate = ToDate.Split('-');
-                    string NewDate = SplitDate[1] + "/" + SplitDate[0] + "/" + SplitDate[2];
-                    EndDate = Convert.ToDateTime(DateTime.ParseExact(NewDate, "MM/dd/yyyy", CultureInfo.InvariantCulture));
-                    EndDate = EndDate.Date;
-                }
-
-                string NewFromDate = StartDate.Date.ToString("dd-MMM-yyyy");
-                string NewToDate = EndDate.Date.ToString("dd-MMM-yyyy");
-
-                string WhereCondition = string.Empty;
-
-                if (!string.IsNullOrEmpty(FromDate) && FromDate.ToUpper() != "ALL")
-                {
-                    WhereCondition = WhereCondition + " and c.ReturnDate>='" + NewFromDate + "'";
-                }
-                if (!string.IsNullOrEmpty(ToDate) && ToDate.ToUpper() != "ALL")
-                {
-                    WhereCondition = WhereCondition + " and c.ReturnDate<='" + NewToDate + "'";
-                }
-                if (!string.IsNullOrEmpty(ProductCode) && ProductCode.ToUpper() != "0")
-                {
-                    WhereCondition = WhereCondition + " and a.ProdId ='" + ProductCode + "'";
-                }
-                if (!string.IsNullOrEmpty(CategoryCode) && CategoryCode.ToUpper() != "0")
-                {
-                    WhereCondition = WhereCondition + " and b.CatId = '" + CategoryCode + "'";
-                }
-                if (!string.IsNullOrEmpty(SupplierCode) && SupplierCode.ToUpper() != "0")
-                {
-                    WhereCondition = WhereCondition + " and a.ReturnTo ='" + SupplierCode + "'";
-                }
-
-
-                string Sql = string.Empty;
-
-
-                if (Type.ToLower() == "detail")
-                {
-                    Sql = "Select c.ReturnNo,Replace(Convert(varchar,c.ReturnDate,106),' ','-') as GRDate,c.ReturnBy,c.ReturnByName,a.ProdId ,a.ProductName,Sum(a.ReturnQty) as Qty,a.Rate as Rate,a.Tax as TaxPer,Sum(a.TaxAmount) as TaxAmount,Sum(a.Amount) as Amount,";
-                    Sql = Sql + "Sum(a.Amount)+Sum(a.TaxAmount) as NetPayable,c.OrderNo as STNo,c.ReturnNo,'' as PartyType,ReturnToName,'' StateName";
-                    Sql = Sql + " From TrnPurchaseReturnDetail as a,TrnPurchaseReturnMain as c,M_ProductMaster as b where  a.ReturnNo=c.ReturnNo And a.ProdId=b.ProdId";
-                    Sql = Sql + WhereCondition;
-                    Sql = Sql + " Group By c.ReturnNo,c.ReturnDate,a.ProdId,a.ProductName,a.Tax,a.Rate,c.ReturnBy,c.ReturnByName,ReturnToName,c.OrderNo Order By a.ProdId,c.ReturnBy";
-                }
-
-                else
-                {
-                    Sql = "Select '' as ReturnNo,'' as GRDate, a.ReturnBy, '' As PartyName,'' As ReturnByName,'' As STNo, a.ProdId,c.ReturnToName,";
-                    Sql = Sql + " a.ProductName,Sum(a.ReturnQty) as Qty,b.Dp as Rate,0 As TaxPer,Sum(a.TaxAmount) as TaxAmount, Sum(A.Amount) As Amount,";
-                    Sql = Sql + " Sum(a.Amount+A.TaxAmount) as NetPayable,'' as STNNo,'' as BillNo, '' As PartyType,d.PartyCode + ' - ' + d.PartyName as SoldPartyName,'' StateName ";
-                    Sql = Sql + " From TrnPurchaseReturnDetail as a,M_ProductMaster as b,TrnPurchaseReturnMain as c ,M_LedgerMaster as d ";
-                    Sql = Sql + " Where c.ReturnTo=d.PartyCode And a.ReturnNo=c.ReturnNo And a.ProdId=b.ProdId ";
-                    Sql = Sql + WhereCondition;
-                    Sql = Sql + " Group By a.ReturnBy,c.ReturnDate,c.ReturnToName,a.ProdId,a.ProductName,b.Dp,d.PartyCode + ' - ' + d.PartyName Order By a.ProdId";
-                }
-
-                string InvConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["InventoryServices"].ConnectionString;
-                SqlConnection SC = new SqlConnection(InvConnectionString);
-                SqlCommand cmd = new SqlCommand();
-                cmd.CommandText = Sql;
-                cmd.Connection = SC;
-                SC.Close();
-                SC.Open();
-
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        SalesReturnReport tempobj = new SalesReturnReport();
-
-                        tempobj.ProductCode = reader["ProdId"] != null ? reader["ProdId"].ToString() : "";
-                        tempobj.ProductName = reader["ProductName"] != null ? reader["ProductName"].ToString() : "";
-                        tempobj.STRNo = reader["ReturnNo"] != null ? reader["ReturnNo"].ToString() : "";
-                        tempobj.STRDate = reader["GRDate"] != null ? reader["GRDate"].ToString() : "";
-                        tempobj.ReturnBy = reader["ReturnBy"] != null ? reader["ReturnBy"].ToString() : "";
-                        tempobj.ReturnByName = reader["ReturnByName"] != null ? reader["ReturnByName"].ToString() : "";
-                        tempobj.Quantity = reader["Qty"] != null ? reader["Qty"].ToString() : "0";
-                        tempobj.BasicAmt = reader["Amount"] != null ? reader["Amount"].ToString() : "0";
-                        tempobj.TaxAmt = reader["TaxAmount"] != null ? reader["TaxAmount"].ToString() : "0";
-                        tempobj.Tax = reader["TaxPer"] != null ? reader["TaxPer"].ToString() : "0";
-                        tempobj.TotalAmt = reader["NetPayable"] != null ? reader["NetPayable"].ToString() : "";
-                        tempobj.Rate = reader["Rate"] != null ? reader["Rate"].ToString() : "";
-                        tempobj.ReturnTo = reader["ReturnToName"] != null ? reader["ReturnToName"].ToString() : "";
-                        tempobj.BillNo = reader["STNo"] != null ? reader["STNo"].ToString() : "";
-                        report.Add(tempobj);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-
-            }
-            return report;
-        }
+        }     
 
         public List<SalesReturnReport> GetSalesReturnReport(string FromDate, string ToDate, string ProductCode, string CategoryCode, string PartyCode, string PartyType, string Type)
         {
@@ -2676,6 +2565,123 @@ namespace InventoryManagement.API.Controllers
 
             }
             return report;
+        }
+     
+        public List<FoodOrderMain> GetOrderReport( string FromDate, string ToDate)
+        {
+            List<FoodOrderMain> objorders = new List<FoodOrderMain>();            
+            DateTime StartDate = DateTime.Now.AddYears(-1);
+            DateTime EndDate = DateTime.Now;
+            try
+            {
+
+                if (!string.IsNullOrEmpty(FromDate) && FromDate != "All")
+                {
+                    var SplitDate = FromDate.Split('-');
+                    string NewDate = SplitDate[1] + "/" + SplitDate[0] + "/" + SplitDate[2];
+                    StartDate = Convert.ToDateTime(DateTime.ParseExact(NewDate, "MMM/dd/yyyy", CultureInfo.InvariantCulture));
+                    StartDate = StartDate.Date;
+                }
+                if (!string.IsNullOrEmpty(ToDate) && ToDate != "All")
+                {
+                    var SplitDate = ToDate.Split('-');
+                    string NewDate = SplitDate[1] + "/" + SplitDate[0] + "/" + SplitDate[2];
+                    EndDate = Convert.ToDateTime(DateTime.ParseExact(NewDate, "MMM/dd/yyyy", CultureInfo.InvariantCulture));
+                    EndDate = EndDate.Date;
+                }
+                using (var entities = new BKDHEntities11())
+                {
+                     objorders = (from r in entities.trnFoodOrderMains
+                                     where r.OrderDate >= StartDate.Date && r.OrderDate <= EndDate.Date
+                                     join u in entities.Inv_M_UserMaster on r.userId equals u.UserId
+                                     select new FoodOrderMain {
+                                       OrderId = r.OrderId,
+                                       OrderBy = r.OrderBy,
+                                       OrderDate = r.OrderDate,
+                                       OrderToKitchen = r.OrderToKitchen,
+                                       TotalOrdQty = r.TotalOrdQty,
+                                       Status = r.Status,
+                                       Remarks = r.Remarks,
+                                       NetPayable = r.NetPayable,
+                                       TotalAmount = r.TotalAmount,
+                                       TotalTaxAmt = r.TotalTaxAmt
+                                      }).ToList();
+                }                
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return objorders;
+        }
+
+        public string GetOrderProductList(string OrderId)
+        {
+            string productList = string.Empty;            
+            decimal no = 0;
+            if (!string.IsNullOrEmpty(OrderId))
+            {
+                no = Convert.ToDecimal(OrderId);
+            }
+            try
+            {
+                using (var entity = new BKDHEntities11())
+                {
+                    var list = (from r in entity.trnFoodOrderDetails
+                                where r.OrderId == no
+                                join p in entity.M_ProductMaster on r.ProductCode equals p.ProductCode
+                                select new FoodOrderDetail
+                                {
+                                    ProductCode = r.ProductCode,
+                                    CookStatus = r.CookStatus,
+                                    SuperVisiorStatus = r.SuperVisiorStatus,
+                                    DeliveryStatus = r.DeliveryStatus,
+                                    CookID = r.CookID,
+                                    PckID = r.PckID,
+                                    DelvID = r.DelvID,
+                                    KitchenID = r.KitchenID,
+                                    ProductName = p.ProductName,                                                                                                                     
+                                    Quantity = r.Quantity,
+                                    TotalAmount =r.TotalAmount
+                                }).ToList();
+
+                    productList = "<table border=1 style='width:100%'><tr><th>Product Code</th><th>Product Name</th><th>Quantity</th><th>Kitchen</th><th>Cook</th><th>Cook Status</th><th>Supervisor</th><th>Supervisor Status</th><th>DeliveryBoy</th><th>Delivery Status</th></tr>";
+                    foreach (var product in list)
+                    {
+                        string cName = string.Empty;
+                        string kName = string.Empty;
+                        string supName = string.Empty;
+                        string DName = string.Empty;
+                        if (!string.IsNullOrEmpty(product.CookID))
+                        {
+                            int id = Convert.ToInt16(product.CookID);
+                            cName = (from r in entity.Inv_M_UserMaster where r.UserId == id select r.Name).FirstOrDefault();
+                        }
+                        if (!string.IsNullOrEmpty(product.KitchenID))
+                        {
+                            int id = Convert.ToInt16(product.KitchenID);
+                            kName = (from r in entity.Inv_M_UserMaster where r.UserId == id select r.Name).FirstOrDefault();
+                        }
+                        if (!string.IsNullOrEmpty(product.DelvID))
+                        {
+                            int id = Convert.ToInt16(product.DelvID);
+                            DName = (from r in entity.Inv_M_UserMaster where r.UserId == id select r.Name).FirstOrDefault();
+                        }
+                        //if (!string.IsNullOrEmpty(product.CookID))
+                        //{
+                        //    int id = Convert.ToInt16(product.CookID);
+                        //    cName = (from r in entity.Inv_M_UserMaster where r.UserId == id select r.Name).FirstOrDefault();
+                        //}
+                        productList += "<tr><td>" + product.ProductCode + "</td><td>" + product.ProductName + "</td><td>" + product.Quantity + "</td><td>" +kName + "</td><td>" + cName + "</td><td>" + product.CookStatus + "</td><td>" + product.PckID + "</td><td>" + product.SuperVisiorStatus + "</td><td>" + DName + "</td><td>" + product.DeliveryStatus + "</td></tr>";                       
+                    }
+                    productList += "</table>"; ;
+                }
+            }
+            catch (Exception Ex)
+            {
+
+            }
+            return productList;
         }
     }
 }

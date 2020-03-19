@@ -16,9 +16,9 @@ namespace InventoryManagement.Business
         {
             return (objRegistrationRepo.GetPartyCode(SelectedParentPartyCode, SelectedGroupId));
         }
-        public List<PartyModel> GetParentParty(decimal GroupId)
+        public List<PartyModel> GetParentParty(decimal GroupId,bool ForStall)
         {
-            return (objRegistrationRepo.GetParentParty(GroupId));
+            return (objRegistrationRepo.GetParentParty(GroupId, ForStall));
         }
         public List<CityModel> GetCityList()
         {

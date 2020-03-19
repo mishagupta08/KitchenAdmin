@@ -35,5 +35,7 @@ namespace InventoryManagement.API.Models
         public decimal LUserId { get; set; }
         public string LastModified { get; set; }
         public string IsAdmin { get; set; }
+        public Nullable<int> KitchenID { get; set; }
+        public string Name { get; set; }
     }
 }

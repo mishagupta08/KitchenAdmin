@@ -79,7 +79,7 @@ namespace InventoryManagement.Controllers
             List<SelectListItem> GroupList = new List<SelectListItem>();
             foreach (var obj in GroupLists)
             {
-                if (obj.GroupId != 0)
+                if (obj.GroupId != 0 && obj.GroupId != 100 && obj.GroupId != 105)
                 {
                     GroupList.Add(new SelectListItem
                     {

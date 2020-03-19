@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="BKDHModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="BKDHModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <!--Errors Found During Generation:
 warning 6002: The table/view 'BKDH.dbo.BankBranch' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
         <EntityType Name="BankBranch">
@@ -1612,6 +1612,8 @@ warning 6002: The table/view 'BKDH.dbo.Inv_M_ThemeMaster' does not have a primar
           <Property Name="LUserId" Type="numeric" Precision="18" Scale="0" Nullable="false" />
           <Property Name="LastModified" Type="varchar" MaxLength="150" Nullable="false" />
           <Property Name="IsAdmin" Type="char" MaxLength="1" Nullable="false" />
+          <Property Name="KitchenID" Type="int" />
+          <Property Name="Name" Type="nvarchar" MaxLength="1000" />
         </EntityType>
         <EntityType Name="Inv_M_UserPermissionMaster">
           <Key>
@@ -5830,6 +5832,14 @@ warning 6002: The table/view 'BKDH.dbo.TransMaster' does not have a primary key 
           <Property Name="TotalPrice" Type="numeric" Precision="18" Scale="2" />
           <Property Name="TotalTax" Type="numeric" Precision="18" Scale="2" />
           <Property Name="TotalAmount" Type="numeric" Precision="18" Scale="2" />
+          <Property Name="CookStatus" Type="bit" />
+          <Property Name="SuperVisiorStatus" Type="bit" />
+          <Property Name="DeliveryStatus" Type="bit" />
+          <Property Name="CookRemark" Type="nvarchar" MaxLength="1000" />
+          <Property Name="SuperVisorRemark" Type="nvarchar" MaxLength="1000" />
+          <Property Name="DeliveryRemark" Type="nvarchar" MaxLength="1000" />
+          <Property Name="SCID" Type="int" />
+          <Property Name="AssignTo" Type="int" />
         </EntityType>
         <EntityType Name="trnFoodOrderMain">
           <Key>
@@ -7112,6 +7122,12 @@ warning 6002: The table/view 'BKDH.dbo.TrnVoucher' does not have a primary key d
           <Property Name="UserId" Type="numeric" Precision="18" Scale="0" Nullable="false" />
           <Property Name="IsEdit" Type="char" MaxLength="1" />
         </EntityType>
+        <Function Name="sp_GetOrderList" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="UserID" Type="int" Mode="In" />
+        </Function>
+        <Function Name="sp_GetOrderStatus" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="UserID" Type="int" Mode="In" />
+        </Function>
         <EntityContainer Name="BKDHModelStoreContainer">
           <EntitySet Name="ChildProductRegistration" EntityType="Self.ChildProductRegistration" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="DeletedChallanDetail" EntityType="Self.DeletedChallanDetail" Schema="dbo" store:Type="Tables" />
@@ -9258,8 +9274,7 @@ warning 6002: The table/view 'BKDH.dbo.TrnVoucher' does not have a primary key d
     FROM [dbo].[TrnVoucher] AS [TrnVoucher]</DefiningQuery>
           </EntitySet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="BKDHModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -9872,6 +9887,8 @@ warning 6002: The table/view 'BKDH.dbo.TrnVoucher' does not have a primary key d
           <Property Name="LUserId" Type="Decimal" Precision="18" Scale="0" Nullable="false" />
           <Property Name="LastModified" Type="String" MaxLength="150" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="IsAdmin" Type="String" MaxLength="1" FixedLength="true" Unicode="false" Nullable="false" />
+          <Property Name="KitchenID" Type="Int32" />
+          <Property Name="Name" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="Inv_M_UserPermissionMaster">
           <Key>
@@ -11779,6 +11796,14 @@ warning 6002: The table/view 'BKDH.dbo.TrnVoucher' does not have a primary key d
           <Property Name="TotalPrice" Type="Decimal" Precision="18" Scale="2" />
           <Property Name="TotalTax" Type="Decimal" Precision="18" Scale="2" />
           <Property Name="TotalAmount" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="CookStatus" Type="Boolean" />
+          <Property Name="SuperVisiorStatus" Type="Boolean" />
+          <Property Name="DeliveryStatus" Type="Boolean" />
+          <Property Name="CookRemark" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Name="SuperVisorRemark" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Name="DeliveryRemark" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Name="SCID" Type="Int32" />
+          <Property Name="AssignTo" Type="Int32" />
         </EntityType>
         <EntityType Name="trnFoodOrderMain">
           <Key>
@@ -16407,6 +16432,12 @@ warning 6002: The table/view 'BKDH.dbo.TrnVoucher' does not have a primary key d
           <EntitySet Name="TrnPurchaseReqDetails" EntityType="Self.TrnPurchaseReqDetail" />
           <EntitySet Name="TrnPurchaseReqMains" EntityType="Self.TrnPurchaseReqMain" />
           <EntitySet Name="TrnVouchers" EntityType="Self.TrnVoucher" />
+          <FunctionImport Name="sp_GetOrderList">
+            <Parameter Name="UserID" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <FunctionImport Name="sp_GetOrderStatus">
+            <Parameter Name="UserID" Mode="In" Type="Int32" />
+          </FunctionImport>
         </EntityContainer>
       </Schema>
     </edmx:ConceptualModels>
@@ -17009,6 +17040,8 @@ warning 6002: The table/view 'BKDH.dbo.TrnVoucher' does not have a primary key d
           <EntitySetMapping Name="Inv_M_UserMaster">
             <EntityTypeMapping TypeName="BKDHModel.Inv_M_UserMaster">
               <MappingFragment StoreEntitySet="Inv_M_UserMaster">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="KitchenID" ColumnName="KitchenID" />
                 <ScalarProperty Name="UId" ColumnName="UId" />
                 <ScalarProperty Name="UserId" ColumnName="UserId" />
                 <ScalarProperty Name="BranchCode" ColumnName="BranchCode" />
@@ -18972,6 +19005,14 @@ warning 6002: The table/view 'BKDH.dbo.TrnVoucher' does not have a primary key d
           <EntitySetMapping Name="trnFoodOrderDetails">
             <EntityTypeMapping TypeName="BKDHModel.trnFoodOrderDetail">
               <MappingFragment StoreEntitySet="trnFoodOrderDetail">
+                <ScalarProperty Name="AssignTo" ColumnName="AssignTo" />
+                <ScalarProperty Name="SCID" ColumnName="SCID" />
+                <ScalarProperty Name="DeliveryRemark" ColumnName="DeliveryRemark" />
+                <ScalarProperty Name="SuperVisorRemark" ColumnName="SuperVisorRemark" />
+                <ScalarProperty Name="CookRemark" ColumnName="CookRemark" />
+                <ScalarProperty Name="DeliveryStatus" ColumnName="DeliveryStatus" />
+                <ScalarProperty Name="SuperVisiorStatus" ColumnName="SuperVisiorStatus" />
+                <ScalarProperty Name="CookStatus" ColumnName="CookStatus" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="OrderId" ColumnName="OrderId" />
                 <ScalarProperty Name="OrderDate" ColumnName="OrderDate" />
@@ -22070,6 +22111,8 @@ warning 6002: The table/view 'BKDH.dbo.TrnVoucher' does not have a primary key d
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="sp_GetOrderList" FunctionName="BKDHModel.Store.sp_GetOrderList" />
+          <FunctionImportMapping FunctionImportName="sp_GetOrderStatus" FunctionName="BKDHModel.Store.sp_GetOrderStatus" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

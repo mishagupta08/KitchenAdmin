@@ -91,14 +91,20 @@ namespace InventoryManagement.Business
         {
             return (objReportRepo.GetSalesReturnReport(FromDate, ToDate, ProductCode, CategoryCode, PartyCode, PartyType, Type));
         }
-
-        public List<SalesReturnReport> GetPurchaseReturnReport(string FromDate, string ToDate, string ProductCode, string CategoryCode, string SupplierCode, string Type)
-        {
-            return (objReportRepo.GetPurchaseReturnReport(FromDate, ToDate, ProductCode, CategoryCode, SupplierCode, Type));
-        }
+        
         public List<MonthlySumm> GetMonthlyReport(string PartyCode, string BillType)
         {
             return (objReportRepo.GetMonthlyReport(PartyCode, BillType));
+        }
+
+        public string GetOrderProductList(string OrderId)
+        {
+            return (objReportRepo.GetOrderProductList(OrderId));
+        }
+
+        public List<FoodOrderMain> GetOrderReport(string FromDate, string ToDate)
+        {
+            return (objReportRepo.GetOrderReport(FromDate, ToDate));
         }
     }
 }

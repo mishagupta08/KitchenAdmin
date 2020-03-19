@@ -320,7 +320,7 @@ namespace InventoryManagement.API.Controllers
                 using(var entity=new BKDHEntities11())
                 {
                     objListParty = (from r in entity.M_LedgerMaster
-                                    where r.ActiveStatus == "Y" && r.GroupId != 5 && r.GroupId != 6 && r.GroupId != 21
+                                    where r.ActiveStatus == "Y" && r.GroupId != 0 && r.GroupId != 105
                                     select new PartyModel
                                     {
                                         PartyCode = r.PartyCode,

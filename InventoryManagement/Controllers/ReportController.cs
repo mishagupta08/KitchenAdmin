@@ -519,7 +519,7 @@ namespace InventoryManagement.Controllers
         public ActionResult GetPurchaseReturnReport(string FromDate, string ToDate, string ProductCode, string CategoryCode, string SupplierCode, string Type)
         {
             List<SalesReturnReport> objWalletDetails = new List<SalesReturnReport>();
-            objWalletDetails = objReportManager.GetPurchaseReturnReport(FromDate, ToDate, ProductCode, CategoryCode, SupplierCode, Type);
+            objWalletDetails = null;//objReportManager.GetPurchaseReturnReport(FromDate, ToDate, ProductCode, CategoryCode, SupplierCode, Type);
             var jsonProduct = Json(objWalletDetails, JsonRequestBehavior.AllowGet);
             jsonProduct.MaxJsonLength = int.MaxValue;
             return jsonProduct;
@@ -564,5 +564,39 @@ namespace InventoryManagement.Controllers
             return View();
         }
 
+        [SessionExpire]
+        public ActionResult OrderStatus()
+        {
+            try
+            {
+                if (Session["LoginUser"] != null)
+                {
+                    string LoginPartyCode = (Session["LoginUser"] as User).PartyCode;
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult GetOrderStatusReport(string FromDate, string ToDate)
+        {
+            List<FoodOrderMain> objWalletDetails = new List<FoodOrderMain>();
+            objWalletDetails = objReportManager.GetOrderReport(FromDate, ToDate);
+            var jsonProduct = Json(objWalletDetails, JsonRequestBehavior.AllowGet);
+            jsonProduct.MaxJsonLength = int.MaxValue;
+            return jsonProduct;
+        }
+
+        [HttpGet]
+        public ActionResult GetOrderProductList(string OrderNo)
+        {
+            string CurrentPartyCode = "";           
+            string list = objReportManager.GetOrderProductList(OrderNo);
+            return Json(list, JsonRequestBehavior.AllowGet);
+        }
     }
 }

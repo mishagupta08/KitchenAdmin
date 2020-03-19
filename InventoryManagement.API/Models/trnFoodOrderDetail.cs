@@ -29,5 +29,13 @@ namespace InventoryManagement.API.Models
         public Nullable<decimal> TotalPrice { get; set; }
         public Nullable<decimal> TotalTax { get; set; }
         public Nullable<decimal> TotalAmount { get; set; }
+        public Nullable<bool> CookStatus { get; set; }
+        public Nullable<bool> SuperVisiorStatus { get; set; }
+        public Nullable<bool> DeliveryStatus { get; set; }
+        public string CookRemark { get; set; }
+        public string SuperVisorRemark { get; set; }
+        public string DeliveryRemark { get; set; }
+        public Nullable<int> SCID { get; set; }
+        public Nullable<int> AssignTo { get; set; }
     }
 }

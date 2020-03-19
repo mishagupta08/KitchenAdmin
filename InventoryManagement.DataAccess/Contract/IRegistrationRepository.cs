@@ -9,7 +9,7 @@ namespace InventoryManagement.DataAccess.Contract
     public interface IRegistrationRepository
     {
        string GetPartyCode(string SelectedParentPartyCode, string SelectedGroupId);
-       List<PartyModel> GetParentParty(decimal GroupId);
+       List<PartyModel> GetParentParty(decimal GroupId,bool ForStall);
         List<CityModel> GetCityList();
         List<StateModel> GetStateList();
         PartyModel GetParyOnPartyCode(string PartyCode, bool IsSupplier);

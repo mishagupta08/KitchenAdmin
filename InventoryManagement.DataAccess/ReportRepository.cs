@@ -88,13 +88,20 @@ namespace InventoryManagement.DataAccess
         {
             return (objReportAPI.GetSalesReturnReport(FromDate, ToDate, ProductCode, CategoryCode, PartyCode, PartyType, Type));
         }
-        public List<SalesReturnReport> GetPurchaseReturnReport(string FromDate, string ToDate, string ProductCode, string CategoryCode, string SupplierCode, string Type)
-        {
-            return (objReportAPI.GetPurchaseReturnReport(FromDate, ToDate, ProductCode, CategoryCode, SupplierCode, Type));
-        }
+       
         public List<MonthlySumm> GetMonthlyReport(string PartyCode, string BillType)
         {
             return (objReportAPI.GetMonthlyReport(PartyCode,  BillType));
+        }
+
+        public string GetOrderProductList(string OrderId)
+        {
+            return (objReportAPI.GetOrderProductList(OrderId));
+        }
+
+        public List<FoodOrderMain> GetOrderReport(string FromDate, string ToDate)
+        {
+            return (objReportAPI.GetOrderReport(FromDate,ToDate));
         }
     }
 }

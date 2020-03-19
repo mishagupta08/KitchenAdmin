@@ -9,7 +9,7 @@ namespace InventoryManagement.Business.Contract
     public interface IRegistrationManager
     {
         string GetPartyCode(string SelectedParentPartyCode, string SelectedGroupId);
-        List<PartyModel> GetParentParty(decimal GroupId);
+        List<PartyModel> GetParentParty(decimal GroupId,bool ForStall);
         List<CityModel> GetCityList();
         List<StateModel> GetStateList();
         ResponseDetail SavePartyDetails(PartyModel objPartyModel);

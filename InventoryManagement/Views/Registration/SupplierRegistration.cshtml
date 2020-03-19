@@ -2,7 +2,8 @@
 @using InventoryManagement.Common
 @using InventoryManagement.Entity.Common
 @{
-    ViewBag.Title = "SupplierRegistration";
+    ViewBag.Title = "StallCounterRegistration";
+    bool IsStallCounter = ViewBag.IsStallCounter;
     Layout = "~/Views/Shared/_Layout.cshtml";
     string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
     string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
@@ -34,6 +35,7 @@
     .input-readonly {
         background-color: #EBEBE4;
     }
+
     .gj-grid-wrapper {
         min-width: 100% !important;
         overflow-x: scroll !important;
@@ -54,9 +56,11 @@
         $("#btnAdd").click(function () {
             ActionType = "Add";
             PartyCode = "";
-            var link='@Url.Action("AddEditSupplierRegistration", "Registration",new { IsActionName = "-1", PartyCode = "-2" })';
+            var link='@Url.Action("AddEditStallRegistration", "Registration",new { IsActionName = "-1", PartyCode = "-2" })';
             link=link.replace("-1",ActionType);
-            link=link.replace("-2",PartyCode);
+            link = link.replace("-2", PartyCode);
+            link = link.replace("-3", "true");
+            
             window.location.href = link;
         });
     });
@@ -65,9 +69,10 @@
         ActionType="Edit";
         PartyCode = e.data.record.PartyCode;
         console.log("PartyCode", PartyCode);
-        var link = '@Url.Action("AddEditSupplierRegistration", "Registration",new { IsActionName = "-1", PartyCode = "-2" })';
+        var link = '@Url.Action("AddEditStallRegistration", "Registration",new { IsActionName = "-1", PartyCode = "-2" })';
         link = link.replace("-1", ActionType);
         link = link.replace("-2", PartyCode);
+        link = link.replace("-3", "true");
         link = link.replace("&amp;", "&");
         window.location.href = link;
     }
@@ -103,11 +108,13 @@
     }
 
     function GetAllParty() {
+        $(".preloader").show();
+
         $.ajax({
             url: '/Registration/GetAllPartyList',
             dataType: 'JSON',
             method: 'GET',
-            data: { 'IsSupplier': true },
+            data: { 'IsSupplier':true },
             success: function (objResult) {
                 console.log("objResult:", objResult);
                 PartyGrid=[{}];
@@ -122,13 +129,13 @@
                             address = objResult[i].Address1+",";
                         }
                         if (objResult[i].Address2 != "" && objResult[i].Address2 != null) {
-                            address = address+objResult[i].Address2+",";
+                            address = address+ objResult[i].Address2+",";
                         }
                         if (address == "") {
                             address = objResult[i].CityName+","+objResult[i].StateName;
                         }
                         else{
-                            address = address + objResult[i].CityName+","+objResult[i].StateName;
+                            address = address +objResult[i].CityName+","+objResult[i].StateName;
                         }
 
 
@@ -138,10 +145,14 @@
                         PartyGrid = PartyGrid.splice(1);
                     }
                     console.log("PartyGrid", PartyGrid);
-                    fillGrid();
+
                 }
+
+                fillGrid();
+                $(".preloader").hide();
             },
             error: function (error) {
+                $(".preloader").hide();
                 console.log(error);
             }
         });
@@ -230,17 +241,17 @@
                 uiLibrary: 'bootstrap',
                 headerFilter: true,
                 columns: [
-                    { field: 'SNo', title: 'S.No.', sortable: true,width:100, hidden: false, filterable: false },
-                        { field: 'PartyCode', title: 'Code', sortable: true, width: 100, hidden: false, filterable: true },
-                        { field: 'PartyName', title: 'Supplier Name', width: 250, sortable: true, hidden: false, filterable: true },
-                        
+                    { field: 'SNo', title: 'S.No.',width:50, sortable: true, hidden: false, filterable: false },
+                        { field: 'PartyCode', title: 'Code', width: 70, sortable: true, hidden: false, filterable: true },
+                        { field: 'PartyName', title: 'Stall Name', width: 200, sortable: true, hidden: false, filterable: true },
+                        { field: 'Group', title: 'Group', sortable: true, width: 100, hidden: true, filterable: true },
+                        { field: 'ParentParty', title: 'Parent Party', width: 200, sortable: true, hidden: true, filterable: true },
                         { field: 'GSTIN', title: 'GSTIN', sortable: true, width: 150, hidden: false, filterable: true },
-                        { field: 'BankAccNo', title: 'Bank A/c No.', width: 150, sortable: true, hidden: false, filterable: true },
-                        { field: 'EmailAddress', title: 'Email', width: 150, sortable: true, hidden: false, filterable: true },
-                        
-                        { field: 'Address1', title: 'Address', width: 250, sortable: true, hidden: false, filterable: true },
-                        { field: 'Tehsil', title: 'Tehsil', width: 100, sortable: true, hidden: false, filterable: true },
-                        { field: 'PinCode', title: 'PinCode', width: 100, sortable: true, hidden: false, filterable: true },
+                        { field: 'BankAccNo', title: 'Bank A/c No.', width: 150, sortable: true, hidden: true, filterable: true },
+                        { field: 'EmailAddress', title: 'Email', width: 200, sortable: true, hidden: false, filterable: true },
+                        { field: 'Address1', title: 'Address', width: 300, sortable: true, hidden: false, filterable: true },
+                        { field: 'Tehsil', title: 'Tehsil', width: 70, sortable: true, hidden: false, filterable: true },
+                        { field: 'PinCode', title: 'PinCode', width: 70, sortable: true, hidden: false, filterable: true },
                         { field: 'MobileNo', title: 'Mobile No.', width: 100, sortable: true, hidden: false, filterable: true },
                         { field: 'ActiveStatus', title: 'Active Status', width: 100, sortable: true, hidden: false, filterable: true },
                         { title: '', field: 'Edit', width: 30, type: 'icon', icon: 'glyphicon-pencil', tooltip: 'Edit', events: { 'click': Edit }, filterable: false },
@@ -273,7 +284,7 @@
         <div class="col-md-12 col-sm-12 col-xs-12">
             <div class="x_panel">
                 <div class="x_title">
-                    <h2>Supplier Registration</h2>
+                    <h2>Stall Counter Registration</h2>
                     <form id="form_party" name="form_party">
                         @Html.HiddenFor(m => m.IsActionName, new { id = "IsActionName", name = "IsActionName" })
                         @Html.HiddenFor(m => m.PartyCode, new { id = "PartyCode", name = "PartyCode" })
@@ -291,7 +302,7 @@
 
                     <div class="row" style="margin-top:1%">
                         <div class="col-lg-12">
-                            <button id="btnAdd" type="button" class="btn btn-default pull-right">Add New Supplier</button>
+                            <button id="btnAdd" type="button" class="btn btn-default pull-right">Add New Counter</button>
                         </div>
                     </div>
 
@@ -319,6 +330,4 @@
     </div>
 
 </div>
-
-
 

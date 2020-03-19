@@ -430,21 +430,35 @@ namespace InventoryManagement.API.Controllers
             return objCityModel;
         }
 
-        public List<PartyModel> GetParentParty(decimal GroupId)
+        public List<PartyModel> GetParentParty(decimal GroupId,bool ForStall)
         {
             List<PartyModel> objParentParty = new List<PartyModel>();
             try
             {
                 using(var entity=new BKDHEntities11())
                 {
-                    objParentParty = (from r in entity.M_LedgerMaster
-                                      where r.GroupId < GroupId
-                                      select new PartyModel
-                                      {
-                                          PartyCode = r.PartyCode,
-                                          PartyName = r.PartyName
-                                      }
-                                    ).ToList();
+                    if (ForStall == true)
+                    {
+                        objParentParty = (from r in entity.M_LedgerMaster
+                                          where r.GroupId == 100
+                                          select new PartyModel
+                                          {
+                                              PartyCode = r.PartyCode,
+                                              PartyName = r.PartyName
+                                          }
+                                        ).ToList();
+                    }
+                    else
+                    {
+                        objParentParty = (from r in entity.M_LedgerMaster
+                                          where r.GroupId ==0
+                                          select new PartyModel
+                                          {
+                                              PartyCode = r.PartyCode,
+                                              PartyName = r.PartyName
+                                          }
+                                        ).ToList();
+                    }
                 }
             }
             catch(Exception ex)
@@ -872,8 +886,7 @@ namespace InventoryManagement.API.Controllers
                 using (var entity=new BKDHEntities11())
                 {
 
-                    if (IsSupplier == false)
-                    {
+                    
                         //(from profile in entity.M_LedgerMaster
                         // where profile.ActiveStatus == "Y"
                                         
@@ -883,7 +896,7 @@ namespace InventoryManagement.API.Controllers
                         //     new { param.StateCode }
                         // select profile).ToList();
                         objPartyList = (from p in (from r in entity.M_LedgerMaster
-                                        where  r.GroupId != 5 && r.PartyCode != "WR"
+                                        where  r.PartyCode != "WR"
                                                    from g in entity.M_GroupMaster
                                         where g.GroupId == r.GroupId
                                         from s in entity.M_LedgerMaster
@@ -998,7 +1011,13 @@ namespace InventoryManagement.API.Controllers
                                         }
                        ).ToList();
                     }
-                   
+                if (IsSupplier == false)
+                {
+                    objPartyList = objPartyList.Where(r => r.GroupId == 100).ToList();
+                }
+                else
+                {
+                    objPartyList = objPartyList.Where(r => r.GroupId == 105).ToList();
                 }
 
             }

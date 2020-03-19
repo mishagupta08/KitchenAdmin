@@ -3,6 +3,7 @@
 @using InventoryManagement.Entity.Common
 @{
     ViewBag.Title = "KitchenRegistration";
+    bool IsStallCounter = ViewBag.IsStallCounter;
     Layout = "~/Views/Shared/_Layout.cshtml";
     string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
     string CurrentPartyName = (Session["LoginUser"] as User).PartyName;
@@ -54,9 +55,11 @@
         $("#btnAdd").click(function () {
             ActionType = "Add";
             PartyCode = "";
-            var link='@Url.Action("AddEditPartyRegistration", "Registration",new { IsActionName = "-1", PartyCode = "-2" })';
+            var link='@Url.Action("AddEditPartyRegistration", "Registration",new { IsActionName = "-1", PartyCode = "-2"})';
             link=link.replace("-1",ActionType);
-            link=link.replace("-2",PartyCode);
+            link = link.replace("-2", PartyCode);
+            
+            
             window.location.href = link;
         });
     });
@@ -68,6 +71,7 @@
         var link = '@Url.Action("AddEditPartyRegistration", "Registration",new { IsActionName = "-1", PartyCode = "-2" })';
         link = link.replace("-1", ActionType);
         link = link.replace("-2", PartyCode);
+        
         link = link.replace("&amp;", "&");
         window.location.href = link;
     }
@@ -104,11 +108,12 @@
 
     function GetAllParty() {
         $(".preloader").show();
+         
         $.ajax({
             url: '/Registration/GetAllPartyList',
             dataType: 'JSON',
             method: 'GET',
-            data: { 'IsSupplier': false },
+            data: { 'IsSupplier': '@IsStallCounter' },
             success: function (objResult) {
                 console.log("objResult:", objResult);
                 PartyGrid=[{}];

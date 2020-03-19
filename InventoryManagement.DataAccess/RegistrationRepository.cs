@@ -16,9 +16,9 @@ namespace InventoryManagement.DataAccess
         {
             return (objRegistrationAPI.GetPartyCode(SelectedParentPartyCode, SelectedGroupId));
         }
-        public List<PartyModel> GetParentParty(decimal GroupId)
+        public List<PartyModel> GetParentParty(decimal GroupId,bool ForStall)
         {
-            return (objRegistrationAPI.GetParentParty(GroupId));
+            return (objRegistrationAPI.GetParentParty(GroupId, ForStall));
         }
         public List<CityModel> GetCityList()
         {

@@ -96,6 +96,7 @@
     <Compile Include="Common\MonthlySumm.cs" />
     <Compile Include="Common\OfferProducts.cs" />
     <Compile Include="Common\OldBills.cs" />
+    <Compile Include="Common\OrderStatus.cs" />
     <Compile Include="Common\PackUnpack.cs" />
     <Compile Include="Common\PartyOrderModel.cs" />
     <Compile Include="Common\PartyModel.cs" />

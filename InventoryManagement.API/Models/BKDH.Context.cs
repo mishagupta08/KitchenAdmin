@@ -12,6 +12,8 @@ namespace InventoryManagement.API.Models
     using System;
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
+    using System.Data.Entity.Core.Objects;
+    using System.Linq;
     
     public partial class BKDHEntities11 : DbContext
     {
@@ -221,5 +223,23 @@ namespace InventoryManagement.API.Models
         public virtual DbSet<TrnPurchaseReqDetail> TrnPurchaseReqDetails { get; set; }
         public virtual DbSet<TrnPurchaseReqMain> TrnPurchaseReqMains { get; set; }
         public virtual DbSet<TrnVoucher> TrnVouchers { get; set; }
+    
+        public virtual int sp_GetOrderList(Nullable<int> userID)
+        {
+            var userIDParameter = userID.HasValue ?
+                new ObjectParameter("UserID", userID) :
+                new ObjectParameter("UserID", typeof(int));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("sp_GetOrderList", userIDParameter);
+        }
+    
+        public virtual int sp_GetOrderStatus(Nullable<int> userID)
+        {
+            var userIDParameter = userID.HasValue ?
+                new ObjectParameter("UserID", userID) :
+                new ObjectParameter("UserID", typeof(int));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("sp_GetOrderStatus", userIDParameter);
+        }
     }
 }
