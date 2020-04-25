@@ -12,7 +12,6 @@ namespace InventoryManagement.Business.Contract
     {
         List<ProductDetails> GetAllProducts(decimal CategoryCode);
         List<PartyModel> GetAllParty();
-        List<StockReportModel> GetStockReport(string CategoryCode, string ProductCode, string PartyCode, bool IsBatchWise, string StockType);
         List<SalesReport> GetSalesReport(string FromDate, string ToDate, string CustomerId, string ProductCode, string CategoryCode, string PartyCode, string BType, string SalesType, string InvoiceType,string BillNo, string FType);
         List<StockJv> GetStockJvReport(string FromDate, string ToDate, string PartyCode,string ViewType);
         List<PurchaseReport> GetPurchaseSummary(string FromDate, string ToDate, string PartyCode, string SupplierCode, string ReportType, string InvoiceNo);

@@ -143,7 +143,9 @@ namespace InventoryManagement.API.Models
         public virtual DbSet<WalletReq> WalletReqs { get; set; }
         public virtual DbSet<Web_M_MenuMaster> Web_M_MenuMaster { get; set; }
         public virtual DbSet<Web_M_UserPermissionMaster> Web_M_UserPermissionMaster { get; set; }
+        public virtual DbSet<Agent> Agents { get; set; }
         public virtual DbSet<BankBranch> BankBranches { get; set; }
+        public virtual DbSet<Customer> Customers { get; set; }
         public virtual DbSet<D_sessnmaster> D_sessnmaster { get; set; }
         public virtual DbSet<DeletedBillDetail> DeletedBillDetails { get; set; }
         public virtual DbSet<DeletedBillMain> DeletedBillMains { get; set; }
@@ -240,6 +242,23 @@ namespace InventoryManagement.API.Models
                 new ObjectParameter("UserID", typeof(int));
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("sp_GetOrderStatus", userIDParameter);
+        }
+    
+        public virtual ObjectResult<StockDetail_Result> StockDetail(string stall, Nullable<System.DateTime> fromDate, Nullable<System.DateTime> toDate)
+        {
+            var stallParameter = stall != null ?
+                new ObjectParameter("Stall", stall) :
+                new ObjectParameter("Stall", typeof(string));
+    
+            var fromDateParameter = fromDate.HasValue ?
+                new ObjectParameter("FromDate", fromDate) :
+                new ObjectParameter("FromDate", typeof(System.DateTime));
+    
+            var toDateParameter = toDate.HasValue ?
+                new ObjectParameter("ToDate", toDate) :
+                new ObjectParameter("ToDate", typeof(System.DateTime));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<StockDetail_Result>("StockDetail", stallParameter, fromDateParameter, toDateParameter);
         }
     }
 }

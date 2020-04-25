@@ -21,9 +21,9 @@ namespace InventoryManagement.Business
         {
             return (objReportRepo.GetAllParty());
         }
-        public List<StockReportModel> GetStockReport(string CategoryCode, string ProductCode, string PartyCode, bool IsBatchWise, string StockType)
+        public List<StockDetailList> GetStockReport(string FromDate, string ToDate, string ProductCode, string PartyCode)
         {
-            return (objReportRepo.GetStockReport(CategoryCode, ProductCode, PartyCode, IsBatchWise, StockType));
+            return (objReportRepo.GetStockReport(FromDate, ToDate, ProductCode, PartyCode));
         }
         public List<SalesReport> GetSalesReport(string FromDate, string ToDate, string CustomerId, string ProductCode, string CategoryCode, string PartyCode, string BType, string SalesType, string InvoiceType,string BillNo, string FType)
         {
@@ -102,9 +102,9 @@ namespace InventoryManagement.Business
             return (objReportRepo.GetOrderProductList(OrderId));
         }
 
-        public List<FoodOrderMain> GetOrderReport(string FromDate, string ToDate)
+        public List<FoodOrderMain> GetOrderReport(string FromDate, string ToDate, string Stall, string Kitchen, string Status)
         {
-            return (objReportRepo.GetOrderReport(FromDate, ToDate));
+            return (objReportRepo.GetOrderReport(FromDate, ToDate,Stall,Kitchen,Status));
         }
     }
 }

@@ -3,6 +3,7 @@ using InventoryManagement.Entity.Common;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Entity;
 using System.Data.Entity.Core.Objects;
 using System.Data.SqlClient;
 using System.Globalization;
@@ -70,7 +71,8 @@ namespace InventoryManagement.API.Controllers
                                     select new PartyModel
                                     {
                                         PartyCode=party.PartyCode,
-                                        PartyName=party.PartyName
+                                        PartyName=party.PartyName,
+                                        GroupId=party.GroupId
                                     }
                                  ).ToList();
                 }
@@ -84,10 +86,53 @@ namespace InventoryManagement.API.Controllers
         }
 
 
-        public List<StockReportModel> GetStockReport(string CategoryCode, string ProductCode, string PartyCode, bool IsBatchWise, string StockType)
+        public List<StockDetailList> GetStockReport(string FromDate, string ToDate, string ProductCode, string PartyCode)
         {
-            List<StockReportModel> objStockModel = new List<StockReportModel>();
-           
+            List<StockDetailList> objStockModel = new List<StockDetailList>();
+            DateTime StartDate = DateTime.Now;
+            DateTime EndDate = DateTime.Now;
+            try
+            {
+              
+                if (!string.IsNullOrEmpty(FromDate) && FromDate != "All")
+                {
+                    var SplitDate = FromDate.Split('-');
+                    string NewDate = SplitDate[1] + "/" + SplitDate[0] + "/" + SplitDate[2];
+                    StartDate = Convert.ToDateTime(NewDate);
+                    StartDate = StartDate.Date;
+                }
+                if (!string.IsNullOrEmpty(ToDate) && ToDate != "All")
+                {
+                    var SplitDate = ToDate.Split('-');
+                    string NewDate = SplitDate[1] + "/" + SplitDate[0] + "/" + SplitDate[2];
+                    EndDate = Convert.ToDateTime(NewDate);
+                    EndDate = EndDate.Date;
+                }
+
+                
+
+                using (var entity = new BKDHEntities11())
+                {
+                      objStockModel = (from r in entity.StockDetail(PartyCode, StartDate, EndDate)
+                                      where ProductCode!="0" && ProductCode !="All" ? r.ProductCode == ProductCode : 1==1
+                                      select new StockDetailList
+                                      {
+                                          ClsStock = r.ClsStock,
+                                          OpStock = r.OpStock,
+                                          InStock = r.InStock,
+                                          ProductCode = r.ProductCode,
+                                          StockWaste = r.StockWaste,
+                                          ProductName = r.ProductName,
+
+                                          StockDate = r.StockDate,
+                                          StockOut= r.StockOut                                          
+                                      }).ToList();                    
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
             return objStockModel;
         }
 
@@ -2567,7 +2612,7 @@ namespace InventoryManagement.API.Controllers
             return report;
         }
      
-        public List<FoodOrderMain> GetOrderReport( string FromDate, string ToDate)
+        public List<FoodOrderMain> GetOrderReport( string FromDate, string ToDate, string Stall, string Kitchen, string Status)
         {
             List<FoodOrderMain> objorders = new List<FoodOrderMain>();            
             DateTime StartDate = DateTime.Now.AddYears(-1);
@@ -2592,20 +2637,24 @@ namespace InventoryManagement.API.Controllers
                 using (var entities = new BKDHEntities11())
                 {
                      objorders = (from r in entities.trnFoodOrderMains
-                                     where r.OrderDate >= StartDate.Date && r.OrderDate <= EndDate.Date
-                                     join u in entities.Inv_M_UserMaster on r.userId equals u.UserId
+                                     where DbFunctions.TruncateTime(r.OrderDate) >= StartDate.Date && DbFunctions.TruncateTime(r.OrderDate) <= EndDate.Date 
+                                     &&(Stall!="All" && Stall != "0" && Stall != "" ? r.OrderByStall == Stall : 1==1)
+                                     && (Kitchen != "All" && Kitchen != "0" && Kitchen != "" ? r.OrderToKitchen == Kitchen : 1 == 1)
+                                     && (Status != "All" ? r.Remarks == Status : 1 == 1)
+                                     join su in entities.M_LedgerMaster on r.OrderByStall equals su.PartyCode
+                                     join kk in entities.M_LedgerMaster on r.OrderToKitchen equals kk.PartyCode
+
                                      select new FoodOrderMain {
                                        OrderId = r.OrderId,
-                                       OrderBy = r.OrderBy,
+                                       OrderBy = su.PartyName,
                                        OrderDate = r.OrderDate,
-                                       OrderToKitchen = r.OrderToKitchen,
+                                       OrderToKitchen = kk.PartyName,
                                        TotalOrdQty = r.TotalOrdQty,
-                                       Status = r.Status,
-                                       Remarks = r.Remarks,
+                                       Status = r.Remarks,                                       
                                        NetPayable = r.NetPayable,
                                        TotalAmount = r.TotalAmount,
                                        TotalTaxAmt = r.TotalTaxAmt
-                                      }).ToList();
+                                      }).OrderByDescending(r=>r.OrderDate).ToList();
                 }                
             }
             catch (Exception ex)
@@ -2629,50 +2678,37 @@ namespace InventoryManagement.API.Controllers
                 {
                     var list = (from r in entity.trnFoodOrderDetails
                                 where r.OrderId == no
-                                join p in entity.M_ProductMaster on r.ProductCode equals p.ProductCode
+                                join p in entity.M_ProductMaster on r.ProductCode equals p.ProductCode                                
+                                //join cu in entity.Inv_M_UserMaster on r.CookID equals cu.UserId
+                                //join su in entity.Inv_M_UserMaster on r.PckID equals su.UserId
+                                //join du in entity.Inv_M_UserMaster on r.DelvID equals du.UserId
                                 select new FoodOrderDetail
                                 {
                                     ProductCode = r.ProductCode,
-                                    CookStatus = r.CookStatus,
-                                    SuperVisiorStatus = r.SuperVisiorStatus,
-                                    DeliveryStatus = r.DeliveryStatus,
                                     CookID = r.CookID,
                                     PckID = r.PckID,
                                     DelvID = r.DelvID,
-                                    KitchenID = r.KitchenID,
+                                    CookStatus = r.CookStatus,
+                                    SuperVisiorStatus = r.SuperVisiorStatus,
+                                    DeliveryStatus = r.DeliveryStatus,
                                     ProductName = p.ProductName,                                                                                                                     
                                     Quantity = r.Quantity,
                                     TotalAmount =r.TotalAmount
                                 }).ToList();
 
-                    productList = "<table border=1 style='width:100%'><tr><th>Product Code</th><th>Product Name</th><th>Quantity</th><th>Kitchen</th><th>Cook</th><th>Cook Status</th><th>Supervisor</th><th>Supervisor Status</th><th>DeliveryBoy</th><th>Delivery Status</th></tr>";
+                    productList = "<table border=1 style='width:100%'><tr><th>Product Code</th><th>Product Name</th><th>Quantity</th><th>Cook</th><th>Cook Status</th><th>Supervisor</th><th>Supervisor Status</th><th>DeliveryBoy</th><th>Delivery Status</th></tr>";
+                    List<Inv_M_UserMaster> userList = (from r in entity.Inv_M_UserMaster select r).ToList();
                     foreach (var product in list)
                     {
-                        string cName = string.Empty;
-                        string kName = string.Empty;
+                        string cName = string.Empty;                       
                         string supName = string.Empty;
                         string DName = string.Empty;
-                        if (!string.IsNullOrEmpty(product.CookID))
-                        {
-                            int id = Convert.ToInt16(product.CookID);
-                            cName = (from r in entity.Inv_M_UserMaster where r.UserId == id select r.Name).FirstOrDefault();
-                        }
-                        if (!string.IsNullOrEmpty(product.KitchenID))
-                        {
-                            int id = Convert.ToInt16(product.KitchenID);
-                            kName = (from r in entity.Inv_M_UserMaster where r.UserId == id select r.Name).FirstOrDefault();
-                        }
-                        if (!string.IsNullOrEmpty(product.DelvID))
-                        {
-                            int id = Convert.ToInt16(product.DelvID);
-                            DName = (from r in entity.Inv_M_UserMaster where r.UserId == id select r.Name).FirstOrDefault();
-                        }
-                        //if (!string.IsNullOrEmpty(product.CookID))
-                        //{
-                        //    int id = Convert.ToInt16(product.CookID);
-                        //    cName = (from r in entity.Inv_M_UserMaster where r.UserId == id select r.Name).FirstOrDefault();
-                        //}
-                        productList += "<tr><td>" + product.ProductCode + "</td><td>" + product.ProductName + "</td><td>" + product.Quantity + "</td><td>" +kName + "</td><td>" + cName + "</td><td>" + product.CookStatus + "</td><td>" + product.PckID + "</td><td>" + product.SuperVisiorStatus + "</td><td>" + DName + "</td><td>" + product.DeliveryStatus + "</td></tr>";                       
+                        
+                        cName = (from r in userList where r.UserId == product.CookID select r.UserName).FirstOrDefault();
+                        supName = (from r in userList where r.UserId == product.PckID select r.UserName).FirstOrDefault();
+                        DName = (from r in userList where r.UserId == product.DelvID select r.UserName).FirstOrDefault();
+                        
+                        productList += "<tr><td>" + product.ProductCode + "</td><td>" + product.ProductName + "</td><td>" + product.Quantity + "</td><td>" + cName + "</td><td>" + product.CookStatus + "</td><td>" + supName + "</td><td>" + product.SuperVisiorStatus + "</td><td>" + DName + "</td><td>" + product.DeliveryStatus + "</td></tr>";                       
                     }
                     productList += "</table>"; ;
                 }

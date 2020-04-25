@@ -79,15 +79,30 @@ namespace InventoryManagement.Controllers
             List<SelectListItem> GroupList = new List<SelectListItem>();
             foreach (var obj in GroupLists)
             {
-                if (obj.GroupId != 0 && obj.GroupId != 100 && obj.GroupId != 105)
+                if (IsActionName == "Add")
                 {
-                    GroupList.Add(new SelectListItem
+                    if (obj.GroupId != 0 && obj.GroupId != 100 && obj.GroupId != 105 && obj.GroupId != 101)
                     {
+                        GroupList.Add(new SelectListItem
+                        {
 
-                        Text = obj.GroupName,
-                        Value = obj.GroupId.ToString()
+                            Text = obj.GroupName,
+                            Value = obj.GroupId.ToString()
 
-                    });
+                        });
+                    }
+                }
+                else {
+                    if (obj.GroupId != 0 && obj.GroupId != 100 && obj.GroupId != 105)
+                    {
+                        GroupList.Add(new SelectListItem
+                        {
+
+                            Text = obj.GroupName,
+                            Value = obj.GroupId.ToString()
+
+                        });
+                    }
                 }
             }
             ViewBag.GroupList = GroupList;

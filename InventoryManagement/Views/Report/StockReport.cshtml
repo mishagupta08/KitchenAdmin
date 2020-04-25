@@ -51,17 +51,22 @@
     var IsCategory = false;
     var IsProduct = false;
     var IsParty = false;
+
+    var FromDate = "", ToDate = "";
+    var PreviouslySelectedFromDate = "";
+    var PreviouslySelectedToDate = "";
+    var PreviouslySelectedToPickerDate = "";
+    var PreviouslySelectedFromPickerDate = "";
     var ProductList = [];
     var FullProductList;
     var PartyList = [];
+    var StallList = [];
     var FullPartyList;
     var CategoryList = [];
     var FullCategoryList;
-    var TotalStockIn = 0;
-    var TotalStockout = 0;
-    var TotalStockbalance = 0;
-    var NetTotal = 0;
-    var TotalRCP = 0;
+    var IsDateFilter = false;
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var TotalQty = 0;
 
     $(document).ready(function () {
 
@@ -82,6 +87,101 @@
        }
 
 
+        $('#IsDateFilter').on('ifChecked', function () {
+            IsDateFilter = true;
+            $("#StartDate").val("All");
+            $("#StartDate").prop("readonly", "readonly");
+            $("#EndDate").val("All");
+            $("#EndDate").prop("readonly", "readonly");
+            FromDate = "";
+            ToDate = "";
+
+        });
+        $('#IsDateFilter').on('ifUnchecked', function () {
+            IsDateFilter = false;
+            $("#StartDate").val("");
+            $("#StartDate").prop("readonly", "");
+            $("#EndDate").val("");
+            $("#EndDate").prop("readonly", "");
+            FromDate = "";
+            ToDate = "";
+
+        });
+
+        $("#StartDate").datetimepicker({
+            format: 'DD-MMM-YYYY'
+            ,
+            // todayHighlight:true,
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+            // console.log(e.date);
+            // fromDate = $('#FromDatePickerWidget').val();
+            var selectedDate = e.date._d;
+            console.log(selectedDate.getMonth() + 1);
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            console.log(lengthOfMonth);
+            console.log(selectedDate.getMonth() + 1);
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            console.log(lengthOfMonth);
+            var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+
+            var newFromDate = selectedDate.getDate() + "-" + months[selectedDate.getMonth()] + "-" + selectedDate.getFullYear();
+            console.log("newDate", newFromDate);
+            FromDate = newFromDate;
+            PreviouslySelectedFromPickerDate = newFromDate;
+            console.log("FromDate", FromDate);
+            ToDate = PreviouslySelectedToPickerDate;
+        });
+        $("#EndDate").datetimepicker({
+
+
+            format: 'DD-MMM-YYYY'
+            ,
+            // todayHighlight:true,
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
+
+        }).on('dp.change', function (e) {
+
+            var selectedDate = e.date._d;
+
+            console.log(selectedDate.getMonth() + 1);
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            console.log(lengthOfMonth);
+            var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+
+            var newToDate = selectedDate.getDate() + "-" + months[selectedDate.getMonth()] + "-" + selectedDate.getFullYear();
+            console.log("newToDate", newToDate);
+            ToDate = newToDate;
+            PreviouslySelectedToPickerDate = newToDate;
+            console.log("ToDate in picker", ToDate);
+            FromDate = PreviouslySelectedFromPickerDate;
+
+        });
+
+        $("#Stall").autocomplete({
+            source: function (request, response) {
+                var results = $.ui.autocomplete.filter(StallList, request.term);
+                response(results.slice(0, 50));
+            },
+            minLength: 1,
+            scroll: true,
+            select: function (event, ui) {
+                console.log("ui.item", ui.item.label);
+                $("#Stall").val(ui.item.label);
+                SetSpecificCode("stall", ui.item.label);
+                return false;
+            },
+
+        }).focus(function () {
+            $(this).autocomplete("search", "");
+        });
 
         $("#ProductName").autocomplete({
             source: function (request, response) {
@@ -169,6 +269,21 @@
 
         });
 
+        $('#IsStall').on('ifChecked', function () {
+            IsParty = true;
+            $("#Stall").val('All');
+            $("#Stall").prop("readonly", "readonly");
+            $("#StallCode").val('0');
+        });
+
+        $('#IsStall').on('ifUnchecked', function () {
+
+            IsParty = false;
+            $("#Stall").val('');
+            $("#Stall").prop("readonly", "");
+            $("#StallCode").val('0');
+        });
+
         $('#IsCategory').on('ifChecked', function () {
             //console.log("checked");
             IsCategory = true;
@@ -232,51 +347,54 @@
             //console.log("unchecked"); //Do your code
             IsBatch = false;
         });
-        $('#FinishStock').click(function () {
-            $(".preloader").show();
-            StockType = "FinishStock";
-            $("#StockTypeLabel").val("Finish Stock");
-            var CategoryCode = $("#CategoryCode").val();
-            var ProductCode = $("#ProductCode").val();
-            var PartyCode = $("#PartyCode").val();
-            console.log("PartyCode", PartyCode);
-            if (CategoryCode == "" || CategoryCode == null) {
-                CategoryCode = "0";
-            }
-            if (ProductCode == "" || ProductCode == null) {
-                ProductCode = "0";
-            }
-            GetStockDetails(CategoryCode, ProductCode, PartyCode, IsBatch, StockType);
-        });
-
+        
         $('#CurrentStock').click(function () {
-            //$(".loader").show();
             $(".preloader").show();
-            StockType = "CurrentStock";
             $("#StockTypeLabel").val("Current Stock");
-            var CategoryCode = $("#CategoryCode").val();
+            var DateError = false;
+            if (FromDate != "" && FromDate != null && ToDate != "") {
+
+                var d1 = toDate(FromDate);
+                var d2 = toDate(ToDate);
+
+                if (d1 > d2) {
+                    DateError = true;
+                    $(".preloader").hide();
+                    OpenDialog("dialogMessage", "From Date should be less than To Date!", "false");
+                }
+                else {
+                    DateError = false;
+
+                }
+            }
+            else {
+                DateError = false;
+                if (IsDateFilter == false) {
+
+                }
+                if (FromDate == "" || FromDate == null) {
+                    FromDate = "All";
+                }
+                if (ToDate == "" || ToDate == null) {
+                    ToDate = "All";
+                }
+            }
+
+
             var ProductCode = $("#ProductCode").val();
-            var PartyCode = $("#PartyCode").val();
-            if (CategoryCode == "" || CategoryCode == null) {
-                CategoryCode = "0";
+            var StallCode = $("#StallCode").val();
+            if (StallCode == "" || StallCode == null) {
+                DateError = true;
+                $(".preloader").hide();
+                OpenDialog("dialogMessage", "Please select stall", "false");
             }
             if (ProductCode == "" || ProductCode == null) {
                 ProductCode = "0";
             }
-            var PartyCode = $("#PartyCode").val();
-            console.log("in current stock");
-            console.log("CategoryCode", CategoryCode);
-            console.log("ProductCode", ProductCode);
-            console.log("PartyCode", PartyCode);
-            console.log("IsBatchWise", IsBatch);
-            console.log("StockType", StockType);
-            GetStockDetails(CategoryCode, ProductCode, PartyCode , IsBatch,StockType);
+            if (DateError == false) {
+                GetStockDetails(FromDate, ToDate, ProductCode, StallCode);
+            }
         });
-
-
-
-
-
 
         $("#btnExport").on('click', function () {
             //var tableToExcel = new TableToExcel();
@@ -429,7 +547,10 @@
 
 
     });
-
+    function toDate(dateStr) {
+        var parts = dateStr.split("-");
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
     function SetSpecificCode(type, label) {
         if (type == "Product") {
             for (var i = 0; i < FullProductList.length; i++) {
@@ -452,6 +573,14 @@
             for (var i = 0; i < FullPartyList.length; i++) {
                 if (FullPartyList[i].PartyName == label) {
                     $("#PartyCode").val(FullPartyList[i].PartyCode);
+                    break;
+                }
+            }
+        }
+        if (type == "stall") {
+            for (var i = 0; i < FullPartyList.length; i++) {
+                if (FullPartyList[i].PartyName == label) {
+                    $("#StallCode").val(FullPartyList[i].PartyCode);
                     break;
                 }
             }
@@ -518,11 +647,16 @@
                 //response(data);
                 FullPartyList = data;
                 PartyList = [];
+                StallList = [];
                 if (data != null) {
                     var i = 0;
                     for (i = 0; i < data.length; i++) {
-                        //console.log("data[i]", data[i]);
-                        PartyList.push(data[i].PartyName);
+                        if (data[i].GroupId == 100) {
+                            PartyList.push(data[i].PartyName);
+                        }
+                        else if (data[i].GroupId == 105) {
+                            StallList.push(data[i].PartyName);
+                        }
                     }
                 }
             },
@@ -531,6 +665,7 @@
             }
         });
     }
+
     function GetAllCategory() {
         $.ajax({
             url: '/Report/GetAllCategory',
@@ -631,146 +766,55 @@
             $('#grid').empty();
 
         }
-        console.log("IsBatch", IsBatch);
-        if (IsBatch == false) {
-            grid = $('#grid').grid({
-                dataSource: StockGrid,
-                uiLibrary: 'bootstrap',
-                headerFilter: true,
-                columns: [
-                    { field: 'SNo', title: 'S.No.',width:80, sortable: true, hidden: false, filterable: false },
-                     { field: 'PartyCode', width:100, title: 'Party Code', sortable: true, hidden: false, filterable: true },
-                      { field: 'PartyName', width: 150, title: 'Party Name', sortable: true, hidden: false, filterable: true },
-                       { field: 'Category', width: 100, title: 'Category', sortable: true, hidden: false, filterable: true },
-                        { field: 'ProductCode', width: 80, title: 'Code', sortable: true, hidden: false, filterable: true },
-                         { field: 'ProductName', width: 150, title: 'Product Name', sortable: true, hidden: false, filterable: true },
-                         { field: 'BatchNo', width: 100, title: 'Batch No.', sortable: true, hidden: true, filterable: true },
-                         { field: 'Barcode', width: 100, title: 'Barcode', sortable: true, hidden: true, filterable: true },
-                         
-                           { field: 'MRP', title: 'MRP', width: 80, sortable: true, hidden: true, filterable: true },
-                          
-                           { field: 'StockIn', width: 80, title: 'Stock In', sortable: true, hidden: false, filterable: true },
-                           { field: 'StockOut', width: 80, title: 'Stock Out', sortable: true, hidden: false, filterable: true },
-                            { field: 'Qty', width: 80, title: 'Stock Balance', sortable: true, hidden: false, filterable: true },
-                             { field: 'RateOrDP', width: 80, title: 'RCP', sortable: true, hidden: false, filterable: true },
-                             //{ field: 'StockValue', title: 'Stock Value',sortable: true, hidden: false, filterable: true },
-                              { field: 'DPStockValue', width: 80, title: 'Total', sortable: true, hidden: false, filterable: true },
-                               { field: 'MRPSTockValue', width: 80, title: '(MRP)Stock Value', sortable: true, hidden: true, filterable: true },
-                ],
-                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] },
-                rowDataBound: function (e, $row, id, record) {
-                    if (parseFloat(record.Qty) === 0) {
-                        $row.css('color', '#A52A2A');
-                    }                                        
-                },
-                dataBound: function (e, records, totalRecords) {
-                    
-                   
 
-                $("#totalstockIn").html(TotalStockIn);
-                $("#totalstockOut").html(TotalStockout);
-                $("#totalstockBalance").html(TotalStockbalance);
-                $("#totalstockRCPValue").html(NetTotal);
-                
-            }
-            });
-            
-
-        }
-        else {
             grid = $('#grid').grid({
                 dataSource: StockGrid,
                 uiLibrary: 'bootstrap',
                 headerFilter: true,
                 columns: [
                     { field: 'SNo',width:80, title: 'S.No.', sortable: true, hidden: false, filterable: true },
-
-                     { field: 'PartyCode', width: 100, title: 'Party Code', sortable: true, hidden: false, filterable: true },
-                      { field: 'PartyName', width: 150, title: 'Party Name', sortable: true, hidden: false, filterable: true },
-                       { field: 'Category', width: 100, title: 'Category', sortable: true, hidden: false, filterable: true },
-                        { field: 'ProductCode', width: 80, title: 'Code', sortable: true, hidden: false, filterable: true },
-                         { field: 'ProductName', width: 150, title: 'Product Name', sortable: true, hidden: false, filterable: true },
-                          //{ field: 'BatchNo', title: 'Batch No.', sortable: true, hidden: false, filterable: true },
-                               { field: 'Expired', width: 80, title: 'Expired', sortable: true, hidden: false, filterable: true },
-                               { field: 'ExpDate', width: 100, title: 'Exp. Date', sortable: true, hidden: false, filterable: true },
-                               { field: 'MfgDate', width: 100, title: 'Mfg. Date', sortable: true, hidden: false, filterable: true },
-                               { field: 'BatchNo', width: 100, title: 'Batch No.', sortable: true, hidden: true, filterable: true },
-                         { field: 'Barcode', width: 100, title: 'Barcode', sortable: true, hidden: true, filterable: true },
-                         
-                           { field: 'MRP', width: 80, title: 'MRP', sortable: true, hidden: true, filterable: true },
-                          { field: 'StockIn', width: 80, title: 'Stock In', sortable: true, hidden: false, filterable: true },
-                           { field: 'StockOut', width: 80, title: 'Stock Out', sortable: true, hidden: false, filterable: true },
-                            { field: 'Qty', width: 80, title: 'Stock Balance', sortable: true, hidden: false, filterable: true },
-                             { field: 'RateOrDP', width: 80, title: 'RCP', sortable: true, hidden: false, filterable: true },
-                             //{ field: 'StockValue', title: 'Stock Value', sortable: true, hidden: false, filterable: true },
-                              { field: 'DPStockValue', width: 80, title: 'Total', sortable: true, hidden: false, filterable: true },
-                               { field: 'MRPSTockValue', width: 80, title: '(MRP)STock Value', sortable: true, hidden: true, filterable: true },
+                    { field: 'ProductCode', width: 80, title: 'Code', sortable: true, hidden: false, filterable: true },
+                    { field: 'ProductName', width: 150, title: 'Product Name', sortable: true, hidden: false, filterable: true },
+                    { field: 'StockDate', width: 150, title: 'Stock Date', sortable: true, hidden: false, filterable: true },
+                    { field: 'OpStock', width: 80, title: 'Opening Stock', sortable: true, hidden: false, filterable: true },
+                    { field: 'InStock', width: 80, title: 'Stock In', sortable: true, hidden: false, filterable: true },
+                    { field: 'StockOut', width: 80, title: 'Stock Out', sortable: true, hidden: false, filterable: true },
+                    { field: 'StockWaste', width: 80, title: 'Stock Waste', sortable: true, hidden: false, filterable: true },
+                    { field: 'ClsStock', width: 80, title: 'Closing Stock', sortable: true, hidden: false, filterable: true }
+                            
                 ],
-                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] },
-                rowDataBound: function (e, $row, id, record) {
-                    if (parseFloat(record.Qty) === 0) {
-                        $row.css('color', '#A52A2A');
-                    }
-                },
-                dataBound: function (e, records, totalRecords) {                    
-                    $("#totalstockIn").html(TotalStockIn);
-                    $("#totalstockOut").html(TotalStockout);
-                    $("#totalstockBalance").html(TotalStockbalance);
-                    $("#totalstockRCPValue").html(NetTotal);
-
-                }
+                pager: { limit: 20, sizes: [15, 20, 35, 50, 65, 80, 95, 100] }
             });
 
 
-        }
+        
         
         $(".loader").hide();
     }
 
-    function GetStockDetails(CategoryCode, ProductCode, PartyCode, IsBatchWise, StockType) {
-        if (CategoryCode == "" || CategoryCode == null || ProductCode == "" || ProductCode==null) {
-            if (CategoryCode == "") {
-                CategoryCode = 0;
-                // OpenDialog("dialogMessage", "Please enter category!", "false");
-            }
-            if (ProductCode == "") {
-                ProductCode = 0;
-                // OpenDialog("dialogMessage", "Please enter product!", "false");
-                //else
-                //    OpenDialog("dialogMessage", "Please enter party!", "false");
-            }
-        }
-
+    function GetStockDetails(FromDate, ToDate, ProductCode, PartyCode) {       
             $.ajax({
                 url: '@Url.Action("GetStockReport", "Report")',
                 type: 'POST',
-                data: { "CategoryCode": CategoryCode, "ProductCode": ProductCode, "PartyCode": PartyCode, "IsBatchWise": IsBatchWise, "StockType": StockType},
-
+                data: { "FromDate":FromDate,"ToDate":ToDate,"ProductCode": ProductCode, "PartyCode": PartyCode},
                 dataType: "json",
                 success: function (objResult) {
                     StockGrid = [{}];
                     if (objResult.length > 0) {
-
                         StockGrid = StockGrid.splice(1);
-                        for (var i = 0; i < objResult.length; i++) {
 
-                            if (objResult[i].ExpDate != "") {
-                                var dateObj = new Date(objResult[i].ExpDateD.match(/\d+/)[0] * 1);
-                                var ExpD = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
-                                dateObj = new Date(objResult[i].MfgDateD.match(/\d+/)[0] * 1);
-                                var MfgD = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
-
-                                StockGrid.push({ "SNo": i + 1, "PartyCode": objResult[i].PartyCode, "PartyName": objResult[i].PartyName, "Category": objResult[i].Category, "ProductCode": objResult[i].ProductCode, "ProductName": objResult[i].ProductName, "RateOrDP": objResult[i].RateOrDP, "MRP": objResult[i].MRP, "Qty": objResult[i].Qty, "StockValue": objResult[i].StockValue, "DPStockValue": objResult[i].DPStockValue, "MRPSTockValue": objResult[i].MRPSTockValue, "BatchNo": objResult[i].BatchNo, "Barcode": objResult[i].Barcode, "Expired": objResult[i].Expired, "ExpDate": ExpD, "MfgDate": MfgD, "StockIn": objResult[i].InStock, "StockOut": objResult[i].OutStock, "OpeningStock": objResult[i].openingStock });
-                            }
-                            else {
-                                StockGrid.push({ "SNo": i + 1, "PartyCode": objResult[i].PartyCode, "PartyName": objResult[i].PartyName, "Category": objResult[i].Category, "ProductCode": objResult[i].ProductCode, "ProductName": objResult[i].ProductName, "RateOrDP": objResult[i].RateOrDP, "MRP": objResult[i].MRP, "Qty": objResult[i].Qty, "StockValue": objResult[i].StockValue, "DPStockValue": objResult[i].DPStockValue, "MRPSTockValue": objResult[i].MRPSTockValue, "BatchNo": objResult[i].BatchNo, "Barcode": objResult[i].Barcode, "Expired": objResult[i].Expired, "ExpDate": objResult[i].ExpDate, "MfgDate": objResult[i].MfgDate, "StockIn": objResult[i].InStock, "StockOut": objResult[i].OutStock, "OpeningStock": objResult[i].openingStock });
-                            }
-                            
-                            TotalStockIn += parseFloat(objResult[i].InStock);
-                            TotalStockout += parseFloat(objResult[i].OutStock);
-                            TotalStockbalance += parseFloat(objResult[i].Qty);
-                            NetTotal += parseFloat(objResult[i].DPStockValue);
-                            
+                        for (var i = 0; i < objResult.length; i++) {                            
+                            StockGrid.push({
+                                "SNo": i + 1,
+                                "ProductCode": objResult[i].ProductCode,
+                                "ProductName": objResult[i].ProductName,
+                                "StockDate": objResult[i].StockDate,
+                                "OpStock": objResult[i].OpStock,
+                                "InStock": objResult[i].InStock,
+                                "StockOut": objResult[i].StockOut,
+                                "StockWaste": objResult[i].StockWaste,
+                                "ClsStock": objResult[i].ClsStock
+                            });
                         }
                         tableStockGrid = StockGrid;
 
@@ -831,40 +875,76 @@
                     @Html.HiddenFor(m => m.PartyCode,new {id="PartyCode",name="PartyCode" })
                         @Html.HiddenFor(m => m.CategoryCode, new { id = "CategoryCode", name = "CategoryCode" })
                     @Html.HiddenFor(m => m.ProductCode, new { id = "ProductCode", name = "ProductCode" })
+                        @Html.HiddenFor(m => m.StallCode, new { id = "StallCode", name = "StallCode" })
+                        
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group" style="margin-bottom:0px">
+                                    <label class="control-label col-lg-2 col-md-2 col-sm-4 col-xs-12" for="category-name">
+                                        Select Date @*<span class="required">*</span>*@
+                                    </label>
+                                    <div class="col-lg-4 col-md-4 col-sm-8 col-xs-12" style="padding-left: 0.5%;">
+                                        <div class="form-group">
+                                            @Html.TextBoxFor(m => m.StartDate, new { name = "StartDate", id = "StartDate", tabindex = "1", @class = "form-control col-md-7 col-xs-12" })
+                                        </div>
+                                    </div>
+
+                                    <label class="control-label col-lg-1 col-md-2 col-sm-3 col-xs-3" for="category-name">
+                                        To  @*<span class="required">*</span>*@
+                                    </label>
+                                    <div class="col-lg-4 col-md-4 col-sm-8 col-xs-12" style="padding-left: 0.5%;">
+                                        @Html.TextBoxFor(m => m.EndDate, new { name = "EndDate", id = "EndDate", tabindex = "2", @class = "form-control col-md-7 col-xs-12" })
+                                    </div>
+                                    <div id="IsDateFilterDiv" class="col-lg-1 col-md-1 col-sm-1 col-xs-3" style="padding-left: 0.5%;">
+                                        <label>
+                                            <input type="checkbox" id="IsDateFilter" name="IsDateFilter" class="flat" tabindex="3" />
+
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        
                         <div class="col-lg-12">
                             <div class="col-lg-8">
                                 <div class="form-group">
-                                    <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
-                                        Enter Category @*<span class="required">*</span>*@
+                                    <label class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-3" for="category-name">
+                                        Select Stall
                                     </label>
-                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
-                                       
-                                        @Html.TextBoxFor(m => m.Category, new { name = "Category", id = "Category", tabindex = "1", @class = "form-control col-md-7 col-xs-12" })
+                                    <div class="col-lg-10 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                        @Html.TextBoxFor(m => m.Stall, new { name = "Stall", id = "Stall", tabindex = "5", @class = "form-control col-lg-12" })
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-4">
                                 <div class="form-group">
-                                    <div id="IsCategoryDiv">
+                                    <div id="IsPartyDiv">
                                         <label>
-                                            <input type="checkbox" id="IsCategory" name="IsCategory" class="flat" tabindex="2" />
-                                           
-                                          
+                                            @*<input type="checkbox" id="IsStall" name="IsStall" class="flat" tabindex="6" />*@
+                                            &nbsp;
+
                                         </label>
 
                                     </div>
                                 </div>
                             </div>
-                            </div>
+
+
+
+
+                        </div>
                         <div class="col-lg-12">
                             <div class="col-lg-8">
                                 <div class="form-group">
-                                    <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
-                                        Enter Product @*<span class="required">*</span>*@
+                                    <label class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-3" for="category-name">
+                                        Enter Product 
                                     </label>
-                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                    <div class="col-lg-10 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
 
-                                        @Html.TextBoxFor(m => m.ProductName, new { name = "ProductName", id = "ProductName", tabindex = "3", @class = "form-control col-md-7 col-xs-12" })
+                                        @Html.TextBoxFor(m => m.ProductName, new { name = "ProductName", id = "ProductName", tabindex = "3", @class = "form-control col-lg-12" })
                                     </div>
                                 </div>
                             </div>
@@ -881,55 +961,20 @@
                                 </div>
                             </div>
                         </div>
-                        @if (IsSoldByHo)
-                        {
-                        <div class="col-lg-12">
-                            <div class="col-lg-8">
-                                <div class="form-group">
-                                    <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
-                                        Enter Party 
-                                    </label>
-                                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
-
-                                        @Html.TextBoxFor(m => m.PartyName, new { name = "PartyName", id = "PartyName", tabindex = "5", @class = "form-control col-md-7 col-xs-12" })
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <div class="form-group">
-                                    <div id="IsPartyDiv">
-                                        <label>
-                                            <input type="checkbox" id="IsParty" name="IsParty" class="flat" tabindex="6" />
-
-
-                                        </label>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        }
+                        
                         <div class="col-lg-12">
                            <div class="col-lg-8">
                                 <div class="form-group">
-                                    <label class="control-label col-lg-6 col-md-3 col-sm-3 col-xs-12" for="category-name">
-                                        Print Type @*<span class="required">*</span>*@
-                                    </label>
-                                    <div id="IsBatchDiv">
-                                        <label>
-                                            @Html.CheckBoxFor(m => m.IsBatchWise, new { name = "IsBatchWise", id = "IsBatchWise", @class = "flat", tabindex = "7"})&nbsp; Batch Wise &nbsp;
-
-                                        </label>
-                                        <a style="cursor:pointer;color:blue;text-decoration:underline" id="FinishStock">Finish Stock</a>
-                                        <span><b>|</b></span>
-                                        <a style="cursor:pointer;color:blue;text-decoration:underline" id="CurrentStock">Current Stock</a>
-                                    </div>
-                                   
+                                    
+                                    
+                                        
+                                        <a style="cursor:pointer;color:blue;text-decoration:underline" id="CurrentStock">Get Stock</a>
+                                    
 
                                 </div>
                             </div>
                             <div class="col-lg-4" id="btnExport">
-                                <img src="~/images/ExcelImage.jpg" style="height: 25px;width: 8%;cursor:pointer" />
+                                @*<img src="~/images/ExcelImage.jpg" style="height: 25px;width: 8%;cursor:pointer" />*@
                             </div>
                             </div>
                             <div class="col-lg-12">
@@ -945,14 +990,7 @@
                                    
                                 </div>
                             </div>
-                        <div class="col-lg-12">
-                            <div class="col-lg-2">&nbsp;</div>
-                            <div class="col-lg-2">&nbsp;</div>
-                            <div class="col-lg-2">Total Stock In :- <span id="totalstockIn"></span></div>
-                            <div class="col-lg-2">Total Stock out :- <span id="totalstockOut"></span></div>
-                            <div class="col-lg-2">Total Stock Balance :- <span id="totalstockBalance"></span></div>                            
-                            <div class="col-lg-2">Total RCP Value:- <span id="totalstockRCPValue"></span></div> 
-                        </div>
+                        
                            
                        <table id="gridExport" style="display:none"></table>
                     </form>

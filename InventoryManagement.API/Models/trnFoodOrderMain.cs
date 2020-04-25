@@ -15,9 +15,10 @@ namespace InventoryManagement.API.Models
     public partial class trnFoodOrderMain
     {
         public decimal OrderId { get; set; }
-        public string OrderBy { get; set; }
-        public string PartyName { get; set; }
+        public string OrderByStall { get; set; }
         public string OrderToKitchen { get; set; }
+        public int KitchenManager { get; set; }
+        public int StallUser { get; set; }
         public System.DateTime OrderDate { get; set; }
         public string Paymode { get; set; }
         public Nullable<decimal> chNo { get; set; }
@@ -32,6 +33,5 @@ namespace InventoryManagement.API.Models
         public string Remarks { get; set; }
         public string Status { get; set; }
         public System.DateTime RecTimeStamp { get; set; }
-        public int userId { get; set; }
     }
 }

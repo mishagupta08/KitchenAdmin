@@ -2,7 +2,7 @@
 
 @using InventoryManagement.Entity.Common
 @{
-    ViewBag.Title = "SampleProductReport";
+    ViewBag.Title = "Order Status";
     Layout = "~/Views/Shared/_Layout.cshtml";
     bool IsSoldByHo = (Session["LoginUser"] as User).IsSoldByHo;
     string CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
@@ -59,6 +59,7 @@
     var ProductList = [];
     var FullProductList;
     var PartyList = [];
+    var StallList = [];
     var FullPartyList;
     var CategoryList = [];
     var FullCategoryList;
@@ -70,12 +71,12 @@
         GetAllProducts(0);
         $(".preloader").hide();
         var IsAdministrator = '@IsSoldByHo';
-        if (IsAdministrator=="True") {
+        if (IsAdministrator == "True") {
             GetAllParty();
         }
-        else{
-             $("#PartyCode").val('@CurrentPartyCode');
-       }
+        else {
+            $("#PartyCode").val('@CurrentPartyCode');
+        }
 
 
         $('#IsDateFilter').on('ifChecked', function () {
@@ -114,17 +115,17 @@
             $("#ProductCode").val("0");
         });
 
-        $("#ProductName").autocomplete({
+        $("#Stall").autocomplete({
             source: function (request, response) {
-                var results = $.ui.autocomplete.filter(ProductList, request.term);
+                var results = $.ui.autocomplete.filter(StallList, request.term);
                 response(results.slice(0, 50));
             },
             minLength: 1,
             scroll: true,
             select: function (event, ui) {
                 console.log("ui.item", ui.item.label);
-                $("#ProductName").val(ui.item.label);
-                SetSpecificCode("Product",ui.item.label);
+                $("#Stall").val(ui.item.label);
+                SetSpecificCode("stall", ui.item.label);
                 return false;
             },
 
@@ -133,7 +134,7 @@
         });
 
 
-        $("#PartyName").autocomplete({
+        $("#Kitchen").autocomplete({
             source: function (request, response) {
                 var results = $.ui.autocomplete.filter(PartyList, request.term);
                 response(results.slice(0, 50));
@@ -141,8 +142,8 @@
             minLength: 1,
             scroll: true,
             select: function (event, ui) {
-                $("#PartyName").val(ui.item.label);
-                SetSpecificCode("Party",ui.item.label);
+                $("#Kitchen").val(ui.item.label);
+                SetSpecificCode("kitchen", ui.item.label);
                 return false;
             },
 
@@ -153,17 +154,32 @@
 
         $('#IsParty').on('ifChecked', function () {
             IsParty = true;
-            $("#PartyName").val('All');
-            $("#PartyName").prop("readonly", "readonly");
+            $("#Kitchen").val('All');
+            $("#Kitchen").prop("readonly", "readonly");
             $("#PartyCode").val('0');
         });
 
         $('#IsParty').on('ifUnchecked', function () {
 
             IsParty = false;
-            $("#PartyName").val('');
-            $("#PartyName").prop("readonly", "");
+            $("#Kitchen").val('');
+            $("#Kitchen").prop("readonly", "");
             $("#PartyCode").val('0');
+        });
+
+        $('#IsStall').on('ifChecked', function () {
+            IsParty = true;
+            $("#Stall").val('All');
+            $("#Stall").prop("readonly", "readonly");
+            $("#StallCode").val('0');
+        });
+
+        $('#IsStall').on('ifUnchecked', function () {
+
+            IsParty = false;
+            $("#Stall").val('');
+            $("#Stall").prop("readonly", "");
+            $("#StallCode").val('0');
         });
 
 
@@ -202,7 +218,7 @@
             // console.log(e.date);
             // fromDate = $('#FromDatePickerWidget').val();
             var selectedDate = e.date._d;
-            console.log(selectedDate.getMonth()+1);
+            console.log(selectedDate.getMonth() + 1);
             var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
             console.log(lengthOfMonth);
             console.log(selectedDate.getMonth() + 1);
@@ -217,41 +233,45 @@
             console.log("FromDate", FromDate);
             ToDate = PreviouslySelectedToPickerDate;
         });
-    $("#EndDate").datetimepicker({
+        $("#EndDate").datetimepicker({
 
 
-        format: 'DD-MMM-YYYY'
-        ,
-        // todayHighlight:true,
-        widgetPositioning: {
-            horizontal: 'auto',
-            vertical: 'bottom'
-        }
+            format: 'DD-MMM-YYYY'
+            ,
+            // todayHighlight:true,
+            widgetPositioning: {
+                horizontal: 'auto',
+                vertical: 'bottom'
+            }
 
-    }).on('dp.change', function (e) {
+        }).on('dp.change', function (e) {
 
-        var selectedDate = e.date._d;
+            var selectedDate = e.date._d;
 
-        console.log(selectedDate.getMonth() + 1);
-        var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
-        console.log(lengthOfMonth);
-        var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
+            console.log(selectedDate.getMonth() + 1);
+            var lengthOfMonth = ((selectedDate.getMonth() + 1).toString()).length;
+            console.log(lengthOfMonth);
+            var twoDigitMonth = (lengthOfMonth > 1) ? (selectedDate.getMonth() + 1) : '0' + (selectedDate.getMonth() + 1);
 
-        var newToDate = selectedDate.getDate() + "-" + months[selectedDate.getMonth()] + "-" + selectedDate.getFullYear();
-        console.log("newToDate", newToDate);
-        ToDate = newToDate;
-        PreviouslySelectedToPickerDate = newToDate;
-        console.log("ToDate in picker", ToDate);
-        FromDate = PreviouslySelectedFromPickerDate;
+            var newToDate = selectedDate.getDate() + "-" + months[selectedDate.getMonth()] + "-" + selectedDate.getFullYear();
+            console.log("newToDate", newToDate);
+            ToDate = newToDate;
+            PreviouslySelectedToPickerDate = newToDate;
+            console.log("ToDate in picker", ToDate);
+            FromDate = PreviouslySelectedFromPickerDate;
 
-    });
+        });
 
         $('#CurrentStock').click(function () {
-            $(".preloader").show();                       
+            $(".preloader").show();
             FromDate = $("#StartDate").val();
             ToDate = $("#EndDate").val();
 
+            var Stall = $("#StallCode").val();
+            var Kitchen = $("#KitchenCode").val();
+            var Status = $("#OrderStatus").val();
             var DateError = false;
+
 
             if (FromDate != "" && FromDate != null && ToDate != "") {
 
@@ -273,7 +293,7 @@
                 if (IsDateFilter == false) {
 
                 }
-               if (FromDate == "" || FromDate == null) {
+                if (FromDate == "" || FromDate == null) {
                     FromDate = "All";
                 }
                 if (ToDate == "" || ToDate == null) {
@@ -283,7 +303,7 @@
 
 
             if (DateError == false) {
-                GetStockDetails(FromDate, ToDate);
+                GetStockDetails(FromDate, ToDate, Stall, Kitchen, Status);
             }
 
         });
@@ -293,38 +313,38 @@
         });
 
         $("#btnExport").on('click', function () {
-           var UserTypeStr = "SampleProductReport";
+            var UserTypeStr = "SampleProductReport";
 
             var tableString = "<thead><tr>";
 
-                tableString += "<th>S.No.</th>";
-                tableString += "<th>Trans No.</th>";
-                tableString += "<th>Trans Date</th>";
-                tableString += "<th>Issue Date</th>";
-                tableString += "<th>Ref no.</th>";
-                tableString += "<th>Issued To</th>";
-                tableString += "<th>Qunatity</th>";
-                tableString += "<th>Remark</th>";
-                tableString += "</tr></thead><tbody>";
-                for (var i = 0; i < StockGrid.length; i++) {
-                    tableString += "<tr>";
-                    tableString += "<td>"+StockGrid[i].SNo+"</td>";
-                    tableString += "<td>"+StockGrid[i].TransNo+"</td>";
-                    tableString += "<td>" + StockGrid[i].TransDate + "</td>";
-                    tableString += "<td>" + StockGrid[i].IssueDate + "</td>";
-                    tableString += "<td>"+StockGrid[i].RefNo+"</td>";
-                    tableString += "<td>"+StockGrid[i].PartyName+"</td>";
-                    tableString += "<td>"+StockGrid[i].Qty+"</td>";
-                    tableString += "<td>" + StockGrid[i].Remark + "</td>";
-                    tableString += "</tr>";
-                }
+            tableString += "<th>S.No.</th>";
+            tableString += "<th>Trans No.</th>";
+            tableString += "<th>Trans Date</th>";
+            tableString += "<th>Issue Date</th>";
+            tableString += "<th>Ref no.</th>";
+            tableString += "<th>Issued To</th>";
+            tableString += "<th>Qunatity</th>";
+            tableString += "<th>Remark</th>";
+            tableString += "</tr></thead><tbody>";
+            for (var i = 0; i < StockGrid.length; i++) {
+                tableString += "<tr>";
+                tableString += "<td>" + StockGrid[i].SNo + "</td>";
+                tableString += "<td>" + StockGrid[i].TransNo + "</td>";
+                tableString += "<td>" + StockGrid[i].TransDate + "</td>";
+                tableString += "<td>" + StockGrid[i].IssueDate + "</td>";
+                tableString += "<td>" + StockGrid[i].RefNo + "</td>";
+                tableString += "<td>" + StockGrid[i].PartyName + "</td>";
+                tableString += "<td>" + StockGrid[i].Qty + "</td>";
+                tableString += "<td>" + StockGrid[i].Remark + "</td>";
+                tableString += "</tr>";
+            }
 
-                tableString += "</tbody>";
-                $("#gridExport").empty();
-                $("#gridExport").append(tableString);
-                tableToExcel('gridExport', UserTypeStr + "_Export");
+            tableString += "</tbody>";
+            $("#gridExport").empty();
+            $("#gridExport").append(tableString);
+            tableToExcel('gridExport', UserTypeStr + "_Export");
 
-            });
+        });
 
     });
     function toDate(dateStr) {
@@ -333,19 +353,19 @@
     }
 
     function SetSpecificCode(type, label) {
-        if (type == "Product") {
-            for (var i = 0; i < FullProductList.length; i++) {
-                if (FullProductList[i].ProductName == label) {
-                    $("#ProductCode").val(parseFloat(FullProductList[i].ProductCodeStr));
+        if (type == "stall") {
+            for (var i = 0; i < FullPartyList.length; i++) {
+                if (FullPartyList[i].PartyName == label) {
+                    $("#StallCode").val(FullPartyList[i].PartyCode);
                     break;
                 }
             }
         }
 
-        if (type == "Party") {
+        if (type == "kitchen") {
             for (var i = 0; i < FullPartyList.length; i++) {
                 if (FullPartyList[i].PartyName == label) {
-                    $("#PartyCode").val(FullPartyList[i].PartyCode);
+                    $("#KitchenCode").val(FullPartyList[i].PartyCode);
                     break;
                 }
             }
@@ -393,11 +413,16 @@
                 //response(data);
                 FullPartyList = data;
                 PartyList = [];
+                StallList = [];
                 if (data != null) {
                     var i = 0;
                     for (i = 0; i < data.length; i++) {
-                        //console.log("data[i]", data[i]);
-                        PartyList.push(data[i].PartyName);
+                        if (data[i].GroupId == 100) {
+                            PartyList.push(data[i].PartyName);
+                        }
+                        else if (data[i].GroupId == 105) {
+                            StallList.push(data[i].PartyName);
+                        }
                     }
                 }
             },
@@ -477,25 +502,22 @@
 
         }
 
-            grid = $('#grid').grid({
-                dataSource: StockGrid,
-                uiLibrary: 'bootstrap',                
-                columns: [
-                    { field: 'SNo', title: 'S.No.', width: 50, sortable: true, hidden: false, filterable: false },
-                    { field: 'OrderId', title: 'Order No.', width: 80, sortable: true, hidden: false, filterable: true, events: { 'click': GetDetail }, tmpl: '<a style="text-decoration:underline;color:blue">{OrderId}</a>', align: 'center' },                   
-                                                                
-                                { field: 'OrderBy', width: 80, title: 'Order By', sortable: true, hidden: false, filterable: true },
-                     { field: 'OrderDate', width: 80, title: 'Order Date', sortable: true, hidden: false, filterable: true },
-    { field: 'OrderToKitchen', width: 150, title: 'Order To Kitchen', sortable: true, hidden: false, filterable: true },
-    { field: 'TotalOrdQty', width: 80, title: 'Total Qty', sortable: true, hidden: false, filterable: true },
-    { field: 'Status', width: 120, title: 'Status', sortable: true, hidden: false, filterable: true },
-    
-                    { field: 'Remark', width: 120, title: 'Remark', sortable: true, hidden: false, filterable: true },
+        grid = $('#grid').grid({
+            dataSource: StockGrid,
+            uiLibrary: 'bootstrap',
+            columns: [
+                { field: 'SNo', title: 'S.No.', width: 50, sortable: true, hidden: false, filterable: false },
+                { field: 'OrderId', title: 'Order No.', width: 80, sortable: true, hidden: false, filterable: true, events: { 'click': GetDetail }, tmpl: '<a style="text-decoration:underline;color:blue">{OrderId}</a>', align: 'center' },
+                { field: 'OrderDate', width: 80, title: 'Order Date', sortable: true, hidden: false, filterable: true },
+                { field: 'OrderBy', width: 80, title: 'Order By', sortable: true, hidden: false, filterable: true },
+                { field: 'OrderToKitchen', width: 150, title: 'Order To Kitchen', sortable: true, hidden: false, filterable: true },
+                { field: 'TotalOrdQty', width: 80, title: 'Total Qty', sortable: true, hidden: false, filterable: true },
+                { field: 'Status', width: 120, title: 'Status', sortable: true, hidden: false, filterable: true },
+                { field: 'Remark', width: 120, title: 'Remark', sortable: true, hidden: true, filterable: true },
+            ],
+            pager: { limit: 50, sizes: [15, 20, 35, 50, 65, 80, 95, 100] },
 
-                ],
-                pager: { limit: 50, sizes: [15, 20, 35, 50, 65, 80, 95, 100] },
-                
-            });
+        });
 
         $(".loader").hide();
     }
@@ -503,7 +525,10 @@
     function GetDetail(e) {
         var BillNoToDelete = e.data.record.OrderId;
         $("#TransNo").html("Order No :-" + e.data.record.OrderId);
-        
+        $("#TransDate").html("Order Date :-" + e.data.record.OrderDate);
+        $("#OrderTo").html("Order From :-" + e.data.record.OrderBy);
+        $("#OrderBy").html("Order To :-" + e.data.record.OrderToKitchen);
+
         $.ajax({
             url: '/Report/GetOrderProductList',
             dataType: "json",
@@ -530,53 +555,50 @@
         $("#Detaildialog").dialog("open");
     }
 
-    function GetStockDetails(startDate,endDate) {
-
-
-
-            $.ajax({
-                url: '@Url.Action("GetOrderStatusReport", "Report")',
-                type: 'POST',
-                data: {"FromDate": startDate, "ToDate": endDate},
-                dataType: "json",
-                success: function (objResult) {
-                    StockGrid = [{}];
-                    if (objResult.length > 0) {
-                        StockGrid = StockGrid.splice(1);
-                        for (var i = 0; i < objResult.length; i++) {
-                            var dateObj = new Date(objResult[i].OrderDate.match(/\d+/)[0] * 1);
-                            var myDate = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
-                            StockGrid.push({
-                                "SNo": i + 1,
-                                "OrderId" : objResult[i].OrderId,
-                                "OrderBy" :  objResult[i].OrderBy,
-                                "OrderDate": myDate,
-                                "OrderToKitchen" :  objResult[i].OrderToKitchen,
-                                "TotalOrdQty" :  objResult[i].TotalOrdQty,
-                                "Status" :  objResult[i].Status,
-                                "Remarks" :  objResult[i].Remarks,
-                                "NetPayable" :  objResult[i].NetPayable,
-                                "TotalAmount" :  objResult[i].TotalAmount,
-                                "TotalTaxAmt": objResult[i].TotalTaxAmt
-                            });                           
-                        }
-                        tableStockGrid = StockGrid;
-                        $("#noRecord").hide();
+    function GetStockDetails(startDate, endDate, Stall, Kitchen, Status) {
+        $.ajax({
+            url: '@Url.Action("GetOrderStatusReport", "Report")',
+            type: 'POST',
+            data: { "FromDate": startDate, "ToDate": endDate, "Stall": Stall, "Kitchen": Kitchen, "Status": Status },
+            dataType: "json",
+            success: function (objResult) {
+                StockGrid = [{}];
+                if (objResult.length > 0) {
+                    StockGrid = StockGrid.splice(1);
+                    for (var i = 0; i < objResult.length; i++) {
+                        var dateObj = new Date(objResult[i].OrderDate.match(/\d+/)[0] * 1);
+                        var myDate = (dateObj.getDate()) + "/" + (dateObj.getMonth() + 1) + "/" + dateObj.getFullYear();
+                        StockGrid.push({
+                            "SNo": i + 1,
+                            "OrderId": objResult[i].OrderId,
+                            "OrderBy": objResult[i].OrderBy,
+                            "OrderDate": myDate,
+                            "OrderToKitchen": objResult[i].OrderToKitchen,
+                            "TotalOrdQty": objResult[i].TotalOrdQty,
+                            "Status": objResult[i].Status,
+                            "Remarks": objResult[i].Remarks,
+                            "NetPayable": objResult[i].NetPayable,
+                            "TotalAmount": objResult[i].TotalAmount,
+                            "TotalTaxAmt": objResult[i].TotalTaxAmt
+                        });
                     }
-                    else {
-
-                        $("#noRecord").show();
-                    }
-                    fillGrid();
-                    $(".preloader").hide();
-
-                },
-                error: function (xhr, data) {
-                    //  return false;
-                    console.log(xhr);
-                    console.log("Error:", data);
+                    tableStockGrid = StockGrid;
+                    $("#noRecord").hide();
                 }
-            });
+                else {
+
+                    $("#noRecord").show();
+                }
+                fillGrid();
+                $(".preloader").hide();
+
+            },
+            error: function (xhr, data) {
+                //  return false;
+                console.log(xhr);
+                console.log("Error:", data);
+            }
+        });
 
 
 
@@ -602,13 +624,14 @@
                 <div class="x_content">
                     <br />
                     <form id="distributorForm" method="post" name="distributorForm" onsubmit="false" data-parsley-validate class="validateForm form-horizontal form-label-left">
-                        
+
                         <div class="col-lg-12">
                             <div class="col-lg-8">
-
+                                @Html.HiddenFor(m => m.KitchenCode, new { id = "KitchenCode", name = "KitchenCode" })
+                                @Html.HiddenFor(m => m.StallCode, new { id = "StallCode", name = "StallCode" })
                                 <div class="form-group" style="margin-bottom:0px">
                                     <label class="control-label col-lg-2 col-md-2 col-sm-4 col-xs-12" for="category-name">
-                                        Issue Date @*<span class="required">*</span>*@
+                                        Select Date @*<span class="required">*</span>*@
                                     </label>
                                     <div class="col-lg-4 col-md-4 col-sm-8 col-xs-12" style="padding-left: 0.5%;">
                                         <div class="form-group">
@@ -631,6 +654,96 @@
                                 </div>
                             </div>
 
+                        </div>
+                                    <div class="col-lg-12">
+                                        <div class="col-lg-8">
+                                            <div class="form-group">
+                                                <label class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-3" for="category-name">
+                                                    Select Kitchen
+                                                </label>
+                                                <div class="col-lg-10 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                                    @Html.TextBoxFor(m => m.Kitchen, new { name = "Kitchen", id = "Kitchen", tabindex = "5", @class = "form-control col-lg-12" })
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="form-group">
+                                                <div id="IsPartyDiv">
+                                                    <label>
+                                                        <input type="checkbox" id="IsParty" name="IsParty" class="flat" tabindex="6" />
+
+
+                                                    </label>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                   
+                            
+
+                        </div>
+
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-3" for="category-name">
+                                        Select Stall
+                                    </label>
+                                    <div class="col-lg-10 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+
+                                        @Html.TextBoxFor(m => m.Stall, new { name = "Stall", id = "Stall", tabindex = "5", @class = "form-control col-lg-12" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-group">
+                                    <div id="IsPartyDiv">
+                                        <label>
+                                            <input type="checkbox" id="IsStall" name="IsStall" class="flat" tabindex="6" />
+
+
+                                        </label>
+
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            
+
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="col-lg-8">
+                                <div class="form-group">
+                                    <label class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-3" for="category-name">
+                                        Status
+                                    </label>
+                                    <div class="col-lg-10 col-md-6 col-sm-6 col-xs-12" style="padding-left: 0.5%;">
+                                         <select id="OrderStatus" class = "form-control col-lg-12">
+                                            <option value="All">All</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Cooked">Cooked</option>
+                                            <option value="Packed">Packed</option>
+                                            <option value="Delivered">Delivered</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-group">
+                                    <div id="IsPartyDiv">
+                                        <label>
+                                            <input type="checkbox" id="IsStall" name="IsStall" class="flat" tabindex="6" />
+
+
+                                        </label>
+
+                                    </div>
+                                </div>
+                            </div>
+
+
                             <div class="col-lg-4">
                                 <div class="form-group">
                                     <input type="button" id="CurrentStock" name="CurrentStock" value="Get Report" />
@@ -639,30 +752,6 @@
                             </div>
 
                         </div>
-
-                        <div class="col-lg-12">
-                            @*@if (IsSoldByHo)
-                                {
-                                    <div class="col-lg-8">
-                                        <div class="form-group">
-                                            <label class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-12" for="category-name">
-                                                Enter Party
-                                            </label>
-                                            <div class="col-lg-9 col-md-9 col-sm-8 col-xs-9" style="padding-left: 0.5%;">
-                                                @Html.TextBoxFor(m => m.partyName, new { name = "PartyName", id = "PartyName", tabindex = "5", @class = "form-control col-md-7 col-xs-12" })
-                                            </div>
-                                            <div id="IsPartyDiv" class="col-lg-1 col-md-1 col-sm-1 col-xs-3" style="padding-left: 0.5%;">
-                                                <label>
-                                                    <input type="checkbox" id="IsParty" name="IsParty" class="flat" tabindex="6" />
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                }*@
-
-                        </div>
-
                         <table id="gridExport" style="display:none"></table>
 
                     </form>
@@ -681,7 +770,7 @@
                 </div>
                 <div class="col-lg-12">
                     <div class="col-lg-5">&nbsp;</div>
-                    
+
                     @*<div class="col-lg-4">Total Net Amount :- <span id="totalNetAmount"></span></div>*@
                 </div>
             </div>
@@ -692,8 +781,8 @@
     </div>
     <div id="Detaildialog" style="display: none;" title="Sample product detail">
         @*<div class="col-lg-12">
-            <input style="float:right;" type="button" id="PrintProduct" name="PrintProduct" value="Print" />
-        </div>*@
+                <input style="float:right;" type="button" id="PrintProduct" name="PrintProduct" value="Print" />
+            </div>*@
         <div class="col-lg-12">
             &nbsp;
         </div>
@@ -703,10 +792,11 @@
                     <tr>
                         <td id='TransNo'></td>
                         <td id='TransDate'></td>
-                        <td id='IssueDate'></td>
-                    </tr>                    
+                        <td id='OrderBy'></td>
+                        <td id='OrderTo'></td>
+                    </tr>
                     <tr>
-                        <td colspan="3" id='Remark'></td>
+                        <td colspan="4" id='Remark'></td>
                     </tr>
                 </table>
             </div>

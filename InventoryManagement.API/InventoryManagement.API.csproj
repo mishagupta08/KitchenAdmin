@@ -222,6 +222,9 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\Agent.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\BankBranch.cs">
       <DependentUpon>BKDH.tt</DependentUpon>
     </Compile>
@@ -241,6 +244,9 @@
       <DependentUpon>BKDH.edmx</DependentUpon>
     </Compile>
     <Compile Include="Models\ChildProductRegistration.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Customer.cs">
       <DependentUpon>BKDH.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DeletedBillDetail.cs">
@@ -608,6 +614,9 @@
       <DependentUpon>BKDH.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\RepurchIncome.cs">
+      <DependentUpon>BKDH.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\StockDetail_Result.cs">
       <DependentUpon>BKDH.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\TargetDetail.cs">

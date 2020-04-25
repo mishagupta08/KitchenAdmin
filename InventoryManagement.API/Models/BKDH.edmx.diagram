@@ -5,202 +5,204 @@
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
       <Diagram DiagramId="d7ca1604443649c6965782eb03c56c8f" Name="Diagram1" ZoomLevel="78">
-        <EntityTypeShape EntityType="BKDHModel.ChildProductRegistration" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedChallanDetail" Width="1.5" PointX="2.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedChallanMain" Width="1.5" PointX="4.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedCustomerMaster" Width="1.5" PointX="6.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedPartyOrderDetail" Width="1.5" PointX="6.75" PointY="6.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedPartyOrderMain" Width="1.5" PointX="8.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedProductDispatchDetail" Width="1.5" PointX="0.75" PointY="8.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedPurchaseOrderDetail" Width="1.5" PointX="2.75" PointY="8.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedPurchaseOrderMain" Width="1.5" PointX="10.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedSalesReturnDetail" Width="1.5" PointX="10.75" PointY="9.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedSalesReturnMain" Width="1.5" PointX="12.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Im_CurrentStock" Width="1.5" PointX="12.75" PointY="9.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Inv_M_ConfigMaster" Width="1.5" PointX="14.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Inv_M_SearchTypeMaster" Width="1.5" PointX="14.75" PointY="5.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Inv_M_UserMaster" Width="1.5" PointX="14.75" PointY="9.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Inv_M_UserPermissionMaster" Width="1.5" PointX="14.75" PointY="15.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_BankMaster" Width="1.5" PointX="16.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_BarCodeMaster" Width="1.5" PointX="2.75" PointY="16.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_BatchMaster" Width="1.5" PointX="16.75" PointY="5.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_BillTypeMaster" Width="1.5" PointX="16.75" PointY="12.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_BlockProductMaster" Width="1.5" PointX="16.75" PointY="15.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_BrandMaster" Width="1.5" PointX="18.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_CardIssue" Width="1.5" PointX="18.75" PointY="3.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_CatMaster" Width="1.5" PointX="18.75" PointY="7.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_CityStateMaster" Width="1.5" PointX="18.75" PointY="12.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_CompanyMaster" Width="1.5" PointX="12.75" PointY="18.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_CompBankersMaster" Width="1.5" PointX="18.75" PointY="17.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_CountryMaster" Width="1.5" PointX="8.75" PointY="19.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_CouponSalesDetail" Width="1.5" PointX="14.75" PointY="19.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_CourierDetails" Width="1.5" PointX="20.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_CourierMaster" Width="1.5" PointX="20.75" PointY="4.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_CustomerMaster" Width="1.5" PointX="20.75" PointY="8.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_DeleteTransaction" Width="1.5" PointX="20.75" PointY="14.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_DispatchMaster" Width="1.5" PointX="20.75" PointY="17.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_DispatchTypeMaster" Width="1.5" PointX="4.75" PointY="21.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_DistrictMaster" Width="1.5" PointX="16.75" PointY="21.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_DivisionMaster" Width="1.5" PointX="22.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_ExtraDiscount" Width="1.5" PointX="22.75" PointY="3.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_FiscalMaster" Width="1.5" PointX="22.75" PointY="6.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_FormGeneration" Width="1.5" PointX="22.75" PointY="11.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_GroupMaster" Width="1.5" PointX="22.75" PointY="18.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_InsuranceCompMaster" Width="1.5" PointX="18.75" PointY="22.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_InwardData" Width="1.5" PointX="6.75" PointY="23.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_InwardMain" Width="1.5" PointX="8.75" PointY="23.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_JType" Width="1.5" PointX="20.75" PointY="23.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_KitProductMaster" Width="1.5" PointX="22.75" PointY="23.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_KitUnitMaster" Width="1.5" PointX="24.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_LeaderWiseOffer" Width="1.5" PointX="2.75" PointY="24.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_LedgerMaster" Width="1.5" PointX="24.75" PointY="5.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_LogMaster" Width="1.5" PointX="24.75" PointY="16.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_MenuMaster" Width="1.5" PointX="24.75" PointY="20.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_NewsSeminarMaster" Width="1.5" PointX="14.75" PointY="25.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_OccupationMaster" Width="1.5" PointX="24.75" PointY="25.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_OfferType" Width="1.5" PointX="26.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_PackageProductMaster" Width="1.5" PointX="26.75" PointY="4.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_PartyDiscount" Width="1.5" PointX="26.75" PointY="8.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_PayModeMaster" Width="1.5" PointX="26.75" PointY="11.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_PlanMaster" Width="1.5" PointX="26.75" PointY="15.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_ProductMaster" Width="1.5" PointX="16.75" PointY="26.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_QualifyTypeMaster" Width="1.5" PointX="18.75" PointY="26.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_SearchTypeMaster" Width="1.5" PointX="26.75" PointY="19.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_SpecialOfferMaster" Width="1.5" PointX="26.75" PointY="23.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_StateDivMaster" Width="1.5" PointX="10.75" PointY="27.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_SubCatMaster" Width="1.5" PointX="28.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_TaxBaseMaster" Width="1.5" PointX="0.75" PointY="28.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_TaxCatMaster" Width="1.5" PointX="2.75" PointY="28.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_TaxMaster" Width="1.5" PointX="28.75" PointY="5.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_TaxTypeMaster" Width="1.5" PointX="28.75" PointY="11.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_ThemeMaster" Width="1.5" PointX="28.75" PointY="14.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_UserGroupMaster" Width="1.5" PointX="28.75" PointY="17.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_UserMaster" Width="1.5" PointX="28.75" PointY="21.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_UserPermissionMaster" Width="1.5" PointX="28.75" PointY="27.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.MakeKit" Width="1.5" PointX="18.75" PointY="29.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.OLDBillDetail" Width="1.5" PointX="24.75" PointY="29.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.OLDBillMain" Width="1.5" PointX="30.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TargetDetail" Width="1.5" PointX="30.75" PointY="5.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TargetMaster" Width="1.5" PointX="30.75" PointY="8.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempBillMain" Width="1.5" PointX="30.75" PointY="12.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempCourierMaster" Width="1.5" PointX="12.75" PointY="30.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempLeaderWiseOffer" Width="1.5" PointX="30.75" PointY="17.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempTaxMaster" Width="1.5" PointX="30.75" PointY="22.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnBillData" Width="1.5" PointX="26.75" PointY="30.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnBillDetail" Width="1.5" PointX="30.75" PointY="28.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnBillMain" Width="1.5" PointX="32.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnCancelOrder" Width="1.5" PointX="0.75" PointY="32.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnCancelOrderDetail" Width="1.5" PointX="2.75" PointY="32.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnChallanDetail" Width="1.5" PointX="20.75" PointY="32.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnChallanMain" Width="1.5" PointX="32.75" PointY="24.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.trnFoodCart" Width="1.5" PointX="32.75" PointY="31.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.trnFoodOrderDetail" Width="1.5" PointX="34.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.trnFoodOrderMain" Width="1.5" PointX="34.75" PointY="5.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnFormGeneration" Width="1.5" PointX="10.75" PointY="34.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnLedger" Width="1.5" PointX="34.75" PointY="11.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPartyOrderDetail" Width="1.5" PointX="12.75" PointY="34.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPartyOrderMain" Width="1.5" PointX="34.75" PointY="17.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPaymentConfirmation" Width="1.5" PointX="22.75" PointY="34.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPaymentHoldDetail" Width="1.5" PointX="34.75" PointY="27.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPayModeDetail" Width="1.5" PointX="34.75" PointY="32.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnProductDispatchDetail" Width="1.5" PointX="36.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnProductMain" Width="1.5" PointX="36.75" PointY="19.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseOrderDetail" Width="1.5" PointX="36.75" PointY="32.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseOrderMain" Width="1.5" PointX="38.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseReturnDetail" Width="1.5" PointX="8.75" PointY="38.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseReturnMain" Width="1.5" PointX="38.75" PointY="9.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnReceipt" Width="1.5" PointX="38.75" PointY="17.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnReceiptDetail" Width="1.5" PointX="38.75" PointY="29.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnSalesReturnDetail" Width="1.5" PointX="38.75" PointY="35.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnSalesReturnMain" Width="1.5" PointX="18.75" PointY="39.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnStockAdjustment" Width="1.5" PointX="32.75" PointY="39.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnStockJv" Width="1.5" PointX="34.75" PointY="39.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnUpdateBillDetail" Width="1.5" PointX="40.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.VisionOfferProduct" Width="1.5" PointX="40.75" PointY="4.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.VisionOffer" Width="1.5" PointX="40.75" PointY="9.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.WalletReq" Width="1.5" PointX="40.75" PointY="15.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Web_M_MenuMaster" Width="1.5" PointX="20.75" PointY="40.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Web_M_UserPermissionMaster" Width="1.5" PointX="40.75" PointY="21.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.BankBranch" Width="1.5" PointX="22.75" PointY="40.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.D_sessnmaster" Width="1.5" PointX="40.75" PointY="24.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedBillDetail" Width="1.5" PointX="40.75" PointY="27.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedBillMain" Width="1.5" PointX="2.75" PointY="41.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedCurrentStock" Width="1.5" PointX="42.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedInwardDetail" Width="1.5" PointX="42.75" PointY="8.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedInwardMain" Width="1.5" PointX="42.75" PointY="20.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedMaxDiscount" Width="1.5" PointX="42.75" PointY="35.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedReceipt" Width="1.5" PointX="42.75" PointY="39.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedStockJv" Width="1.5" PointX="14.75" PointY="43.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.DeletedVoucher" Width="1.5" PointX="22.75" PointY="43.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Inv_M_MenuMaster" Width="1.5" PointX="28.75" PointY="43.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Inv_M_ThemeMaster" Width="1.5" PointX="30.75" PointY="43.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Inv_TempUserMaster" Width="1.5" PointX="44.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.Inv_TempUserPermissionMaster" Width="1.5" PointX="4.75" PointY="44.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.KitOffer" Width="1.5" PointX="44.75" PointY="7.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_BillCondition" Width="1.5" PointX="44.75" PointY="11.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_BloodGroupMaster" Width="1.5" PointX="44.75" PointY="14.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_ChargesMaster" Width="1.5" PointX="44.75" PointY="18.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_ConfigMaster" Width="1.5" PointX="44.75" PointY="21.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_FlashMaster" Width="1.5" PointX="44.75" PointY="27.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_GrpPermissionMaster" Width="1.5" PointX="44.75" PointY="31.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_Initials" Width="1.5" PointX="44.75" PointY="34.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_InvoiceTypeMaster" Width="1.5" PointX="44.75" PointY="37.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_InwardDetail" Width="1.5" PointX="44.75" PointY="40.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_IsCardIssue" Width="1.5" PointX="32.75" PointY="45.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_MaxDiscount" Width="1.5" PointX="34.75" PointY="45.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_MemberMaster" Width="1.5" PointX="36.75" PointY="45.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_MonthSessnMaster" Width="1.5" PointX="38.75" PointY="45.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_NewCustomer" Width="1.5" PointX="46.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_NewHOVersionInfo" Width="1.5" PointX="46.75" PointY="6.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_NewOfferMaster" Width="1.5" PointX="46.75" PointY="10.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_OfferProductType" Width="1.5" PointX="46.75" PointY="16.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_PartyWiseBillCondition" Width="1.5" PointX="46.75" PointY="19.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_PKGForCustBilling" Width="1.5" PointX="46.75" PointY="22.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_ProductKitUnitMaster" Width="1.5" PointX="46.75" PointY="26.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_ProfessionMaster" Width="1.5" PointX="46.75" PointY="32.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_ReportType" Width="1.5" PointX="46.75" PointY="35.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_Reward" Width="1.5" PointX="46.75" PointY="38.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_RewardMaster" Width="1.5" PointX="46.75" PointY="41.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_SearchMethodMaster" Width="1.5" PointX="46.75" PointY="46.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_SessnMaster" Width="1.5" PointX="16.75" PointY="47.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_SpecialProductMaster" Width="1.5" PointX="18.75" PointY="47.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_StockReportType" Width="1.5" PointX="48.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_SubCategory" Width="1.5" PointX="48.75" PointY="4.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.M_UserDataHistory" Width="1.5" PointX="4.75" PointY="48.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.OfferAchvdMem" Width="1.5" PointX="6.75" PointY="48.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.ProdVoucher" Width="1.5" PointX="48.75" PointY="7.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.RepurchIncome" Width="1.5" PointX="8.75" PointY="48.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempBankMaster" Width="1.5" PointX="10.75" PointY="48.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempBarCodeMaster" Width="1.5" PointX="48.75" PointY="12.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempBatchMaster" Width="1.5" PointX="48.75" PointY="20.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempCatMaster" Width="1.5" PointX="48.75" PointY="27.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempChildProductRegistration" Width="1.5" PointX="28.75" PointY="48.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempCityStateMaster" Width="1.5" PointX="30.75" PointY="48.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempCompBankersMaster" Width="1.5" PointX="48.75" PointY="33.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempDispatchMaster" Width="1.5" PointX="48.75" PointY="38.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempDistrictMaster" Width="1.5" PointX="48.75" PointY="43.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempLedger" Width="1.5" PointX="48.75" PointY="48.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempLedgerMaster" Width="1.5" PointX="32.75" PointY="49.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempNewHOVersionInfo" Width="1.5" PointX="38.75" PointY="49.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempNewOfferMaster" Width="1.5" PointX="50.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempPartyWiseBillCondition" Width="1.5" PointX="50.75" PointY="6.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempProductBookingMaster" Width="1.5" PointX="50.75" PointY="9.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempProductMaster" Width="1.5" PointX="12.75" PointY="50.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempSalesReturnDetail" Width="1.5" PointX="50.75" PointY="13.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempSalesReturnMain" Width="1.5" PointX="50.75" PointY="23.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempStateDivMaster" Width="1.5" PointX="50.75" PointY="32.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempSubCatMaster" Width="1.5" PointX="50.75" PointY="37.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempTaxCatMaster" Width="1.5" PointX="50.75" PointY="42.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TempVoucher" Width="1.5" PointX="50.75" PointY="47.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TmpBillDate" Width="1.5" PointX="18.75" PointY="51.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TransMaster" Width="1.5" PointX="52.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnOrderDeliveryDetail" Width="1.5" PointX="52.75" PointY="3.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPartyOrderMainOLD" Width="1.5" PointX="4.75" PointY="52.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPayModeMaster" Width="1.5" PointX="52.75" PointY="10.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPickListDetail" Width="1.5" PointX="52.75" PointY="13.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseReqDetail" Width="1.5" PointX="14.75" PointY="52.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseReqMain" Width="1.5" PointX="20.75" PointY="52.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="BKDHModel.TrnVoucher" Width="1.5" PointX="52.75" PointY="21.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BKDHModel.ChildProductRegistration" Width="1.5" PointX="0.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedChallanDetail" Width="1.5" PointX="2.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedChallanMain" Width="1.5" PointX="4.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedCustomerMaster" Width="1.5" PointX="6.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedPartyOrderDetail" Width="1.5" PointX="6.75" PointY="6.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedPartyOrderMain" Width="1.5" PointX="8.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedProductDispatchDetail" Width="1.5" PointX="0.75" PointY="8.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedPurchaseOrderDetail" Width="1.5" PointX="2.75" PointY="8.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedPurchaseOrderMain" Width="1.5" PointX="10.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedSalesReturnDetail" Width="1.5" PointX="10.75" PointY="9.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedSalesReturnMain" Width="1.5" PointX="12.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.Im_CurrentStock" Width="1.5" PointX="12.75" PointY="9.75" />
+        <EntityTypeShape EntityType="BKDHModel.Inv_M_ConfigMaster" Width="1.5" PointX="14.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.Inv_M_SearchTypeMaster" Width="1.5" PointX="14.75" PointY="5.75" />
+        <EntityTypeShape EntityType="BKDHModel.Inv_M_UserMaster" Width="1.5" PointX="14.75" PointY="9.75" />
+        <EntityTypeShape EntityType="BKDHModel.Inv_M_UserPermissionMaster" Width="1.5" PointX="16.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_BankMaster" Width="1.5" PointX="2.75" PointY="16.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_BarCodeMaster" Width="1.5" PointX="16.75" PointY="3.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_BatchMaster" Width="1.5" PointX="16.75" PointY="10.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_BillTypeMaster" Width="1.5" PointX="12.75" PointY="16.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_BlockProductMaster" Width="1.5" PointX="14.75" PointY="17.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_BrandMaster" Width="1.5" PointX="16.75" PointY="17.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_CardIssue" Width="1.5" PointX="18.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_CatMaster" Width="1.5" PointX="18.75" PointY="4.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_CityStateMaster" Width="1.5" PointX="18.75" PointY="9.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_CompanyMaster" Width="1.5" PointX="18.75" PointY="14.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_CompBankersMaster" Width="1.5" PointX="8.75" PointY="19.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_CountryMaster" Width="1.5" PointX="10.75" PointY="19.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_CouponSalesDetail" Width="1.5" PointX="20.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_CourierDetails" Width="1.5" PointX="20.75" PointY="5.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_CourierMaster" Width="1.5" PointX="20.75" PointY="9.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_CustomerMaster" Width="1.5" PointX="20.75" PointY="13.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_DeleteTransaction" Width="1.5" PointX="20.75" PointY="19.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_DispatchMaster" Width="1.5" PointX="2.75" PointY="21.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_DispatchTypeMaster" Width="1.5" PointX="4.75" PointY="21.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_DistrictMaster" Width="1.5" PointX="12.75" PointY="21.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_DivisionMaster" Width="1.5" PointX="14.75" PointY="21.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_ExtraDiscount" Width="1.5" PointX="22.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_FiscalMaster" Width="1.5" PointX="22.75" PointY="3.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_FormGeneration" Width="1.5" PointX="22.75" PointY="8.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_GroupMaster" Width="1.5" PointX="22.75" PointY="15.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_InsuranceCompMaster" Width="1.5" PointX="22.75" PointY="20.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_InwardData" Width="1.5" PointX="6.75" PointY="23.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_InwardMain" Width="1.5" PointX="8.75" PointY="23.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_JType" Width="1.5" PointX="16.75" PointY="23.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_KitProductMaster" Width="1.5" PointX="18.75" PointY="23.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_KitUnitMaster" Width="1.5" PointX="24.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_LeaderWiseOffer" Width="1.5" PointX="24.75" PointY="5.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_LedgerMaster" Width="1.5" PointX="24.75" PointY="9.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_LogMaster" Width="1.5" PointX="24.75" PointY="20.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_MenuMaster" Width="1.5" PointX="20.75" PointY="24.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_NewsSeminarMaster" Width="1.5" PointX="22.75" PointY="24.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_OccupationMaster" Width="1.5" PointX="24.75" PointY="24.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_OfferType" Width="1.5" PointX="10.75" PointY="25.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_PackageProductMaster" Width="1.5" PointX="12.75" PointY="25.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_PartyDiscount" Width="1.5" PointX="26.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_PayModeMaster" Width="1.5" PointX="2.75" PointY="26.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_PlanMaster" Width="1.5" PointX="26.75" PointY="3.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_ProductMaster" Width="1.5" PointX="26.75" PointY="7.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_QualifyTypeMaster" Width="1.5" PointX="14.75" PointY="26.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_SearchTypeMaster" Width="1.5" PointX="26.75" PointY="24.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_SpecialOfferMaster" Width="1.5" PointX="28.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_StateDivMaster" Width="1.5" PointX="28.75" PointY="6.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_SubCatMaster" Width="1.5" PointX="28.75" PointY="10.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_TaxBaseMaster" Width="1.5" PointX="28.75" PointY="15.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_TaxCatMaster" Width="1.5" PointX="28.75" PointY="19.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_TaxMaster" Width="1.5" PointX="28.75" PointY="23.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_TaxTypeMaster" Width="1.5" PointX="24.75" PointY="28.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_ThemeMaster" Width="1.5" PointX="10.75" PointY="29.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_UserGroupMaster" Width="1.5" PointX="12.75" PointY="29.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_UserMaster" Width="1.5" PointX="14.75" PointY="29.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_UserPermissionMaster" Width="1.5" PointX="20.75" PointY="29.75" />
+        <EntityTypeShape EntityType="BKDHModel.MakeKit" Width="1.5" PointX="26.75" PointY="29.75" />
+        <EntityTypeShape EntityType="BKDHModel.OLDBillDetail" Width="1.5" PointX="28.75" PointY="29.75" />
+        <EntityTypeShape EntityType="BKDHModel.OLDBillMain" Width="1.5" PointX="30.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.TargetDetail" Width="1.5" PointX="0.75" PointY="30.75" />
+        <EntityTypeShape EntityType="BKDHModel.TargetMaster" Width="1.5" PointX="2.75" PointY="30.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempBillMain" Width="1.5" PointX="30.75" PointY="15.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempCourierMaster" Width="1.5" PointX="30.75" PointY="20.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempLeaderWiseOffer" Width="1.5" PointX="30.75" PointY="24.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempTaxMaster" Width="1.5" PointX="30.75" PointY="29.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnBillData" Width="1.5" PointX="22.75" PointY="31.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnBillDetail" Width="1.5" PointX="32.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnBillMain" Width="1.5" PointX="32.75" PointY="15.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnCancelOrder" Width="1.5" PointX="16.75" PointY="32.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnCancelOrderDetail" Width="1.5" PointX="18.75" PointY="32.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnChallanDetail" Width="1.5" PointX="10.75" PointY="33.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnChallanMain" Width="1.5" PointX="24.75" PointY="33.75" />
+        <EntityTypeShape EntityType="BKDHModel.trnFoodCart" Width="1.5" PointX="34.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.trnFoodOrderDetail" Width="1.5" PointX="0.75" PointY="34.75" />
+        <EntityTypeShape EntityType="BKDHModel.trnFoodOrderMain" Width="1.5" PointX="2.75" PointY="34.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnFormGeneration" Width="1.5" PointX="34.75" PointY="5.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnLedger" Width="1.5" PointX="34.75" PointY="9.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPartyOrderDetail" Width="1.5" PointX="34.75" PointY="15.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPartyOrderMain" Width="1.5" PointX="26.75" PointY="34.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPaymentConfirmation" Width="1.5" PointX="34.75" PointY="29.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPaymentHoldDetail" Width="1.5" PointX="12.75" PointY="35.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPayModeDetail" Width="1.5" PointX="28.75" PointY="35.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnProductDispatchDetail" Width="1.5" PointX="34.75" PointY="35.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnProductMain" Width="1.5" PointX="36.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseOrderDetail" Width="1.5" PointX="36.75" PointY="13.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseOrderMain" Width="1.5" PointX="36.75" PointY="20.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseReturnDetail" Width="1.5" PointX="36.75" PointY="29.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseReturnMain" Width="1.5" PointX="38.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnReceipt" Width="1.5" PointX="38.75" PointY="8.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnReceiptDetail" Width="1.5" PointX="38.75" PointY="20.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnSalesReturnDetail" Width="1.5" PointX="38.75" PointY="26.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnSalesReturnMain" Width="1.5" PointX="38.75" PointY="36.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnStockAdjustment" Width="1.5" PointX="30.75" PointY="39.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnStockJv" Width="1.5" PointX="40.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnUpdateBillDetail" Width="1.5" PointX="0.75" PointY="40.75" />
+        <EntityTypeShape EntityType="BKDHModel.VisionOfferProduct" Width="1.5" PointX="2.75" PointY="40.75" />
+        <EntityTypeShape EntityType="BKDHModel.VisionOffer" Width="1.5" PointX="40.75" PointY="6.75" />
+        <EntityTypeShape EntityType="BKDHModel.WalletReq" Width="1.5" PointX="8.75" PointY="40.75" />
+        <EntityTypeShape EntityType="BKDHModel.Web_M_MenuMaster" Width="1.5" PointX="10.75" PointY="40.75" />
+        <EntityTypeShape EntityType="BKDHModel.Web_M_UserPermissionMaster" Width="1.5" PointX="40.75" PointY="12.75" />
+        <EntityTypeShape EntityType="BKDHModel.Agent" Width="1.5" PointX="12.75" PointY="40.75" />
+        <EntityTypeShape EntityType="BKDHModel.BankBranch" Width="1.5" PointX="40.75" PointY="15.75" />
+        <EntityTypeShape EntityType="BKDHModel.Customer" Width="1.5" PointX="40.75" PointY="18.75" />
+        <EntityTypeShape EntityType="BKDHModel.D_sessnmaster" Width="1.5" PointX="40.75" PointY="24.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedBillDetail" Width="1.5" PointX="40.75" PointY="27.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedBillMain" Width="1.5" PointX="18.75" PointY="41.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedCurrentStock" Width="1.5" PointX="42.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedInwardDetail" Width="1.5" PointX="42.75" PointY="8.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedInwardMain" Width="1.5" PointX="42.75" PointY="20.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedMaxDiscount" Width="1.5" PointX="42.75" PointY="35.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedReceipt" Width="1.5" PointX="42.75" PointY="39.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedStockJv" Width="1.5" PointX="28.75" PointY="43.75" />
+        <EntityTypeShape EntityType="BKDHModel.DeletedVoucher" Width="1.5" PointX="30.75" PointY="43.75" />
+        <EntityTypeShape EntityType="BKDHModel.Inv_M_MenuMaster" Width="1.5" PointX="44.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.Inv_M_ThemeMaster" Width="1.5" PointX="4.75" PointY="44.75" />
+        <EntityTypeShape EntityType="BKDHModel.Inv_TempUserMaster" Width="1.5" PointX="44.75" PointY="5.75" />
+        <EntityTypeShape EntityType="BKDHModel.Inv_TempUserPermissionMaster" Width="1.5" PointX="44.75" PointY="12.75" />
+        <EntityTypeShape EntityType="BKDHModel.KitOffer" Width="1.5" PointX="44.75" PointY="16.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_BillCondition" Width="1.5" PointX="44.75" PointY="20.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_BloodGroupMaster" Width="1.5" PointX="44.75" PointY="23.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_ChargesMaster" Width="1.5" PointX="24.75" PointY="44.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_ConfigMaster" Width="1.5" PointX="44.75" PointY="27.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_FlashMaster" Width="1.5" PointX="44.75" PointY="33.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_GrpPermissionMaster" Width="1.5" PointX="36.75" PointY="44.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_Initials" Width="1.5" PointX="44.75" PointY="37.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_InvoiceTypeMaster" Width="1.5" PointX="38.75" PointY="44.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_InwardDetail" Width="1.5" PointX="44.75" PointY="40.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_IsCardIssue" Width="1.5" PointX="0.75" PointY="45.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_MaxDiscount" Width="1.5" PointX="46.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_MemberMaster" Width="1.5" PointX="46.75" PointY="4.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_MonthSessnMaster" Width="1.5" PointX="6.75" PointY="46.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_NewCustomer" Width="1.5" PointX="8.75" PointY="46.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_NewHOVersionInfo" Width="1.5" PointX="10.75" PointY="46.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_NewOfferMaster" Width="1.5" PointX="12.75" PointY="46.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_OfferProductType" Width="1.5" PointX="46.75" PointY="35.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_PartyWiseBillCondition" Width="1.5" PointX="46.75" PointY="38.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_PKGForCustBilling" Width="1.5" PointX="46.75" PointY="41.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_ProductKitUnitMaster" Width="1.5" PointX="46.75" PointY="45.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_ProfessionMaster" Width="1.5" PointX="24.75" PointY="47.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_ReportType" Width="1.5" PointX="36.75" PointY="47.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_Reward" Width="1.5" PointX="38.75" PointY="47.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_RewardMaster" Width="1.5" PointX="48.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_SearchMethodMaster" Width="1.5" PointX="0.75" PointY="48.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_SessnMaster" Width="1.5" PointX="2.75" PointY="48.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_SpecialProductMaster" Width="1.5" PointX="48.75" PointY="5.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_StockReportType" Width="1.5" PointX="48.75" PointY="9.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_SubCategory" Width="1.5" PointX="48.75" PointY="13.75" />
+        <EntityTypeShape EntityType="BKDHModel.M_UserDataHistory" Width="1.5" PointX="14.75" PointY="48.75" />
+        <EntityTypeShape EntityType="BKDHModel.OfferAchvdMem" Width="1.5" PointX="48.75" PointY="16.75" />
+        <EntityTypeShape EntityType="BKDHModel.ProdVoucher" Width="1.5" PointX="48.75" PointY="19.75" />
+        <EntityTypeShape EntityType="BKDHModel.RepurchIncome" Width="1.5" PointX="48.75" PointY="24.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempBankMaster" Width="1.5" PointX="48.75" PointY="34.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempBarCodeMaster" Width="1.5" PointX="48.75" PointY="39.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempBatchMaster" Width="1.5" PointX="48.75" PointY="47.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempCatMaster" Width="1.5" PointX="50.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempChildProductRegistration" Width="1.5" PointX="4.75" PointY="50.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempCityStateMaster" Width="1.5" PointX="50.75" PointY="6.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempCompBankersMaster" Width="1.5" PointX="50.75" PointY="11.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempDispatchMaster" Width="1.5" PointX="50.75" PointY="16.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempDistrictMaster" Width="1.5" PointX="50.75" PointY="21.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempLedger" Width="1.5" PointX="24.75" PointY="50.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempLedgerMaster" Width="1.5" PointX="50.75" PointY="26.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempNewHOVersionInfo" Width="1.5" PointX="26.75" PointY="50.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempNewOfferMaster" Width="1.5" PointX="36.75" PointY="50.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempPartyWiseBillCondition" Width="1.5" PointX="50.75" PointY="37.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempProductBookingMaster" Width="1.5" PointX="38.75" PointY="50.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempProductMaster" Width="1.5" PointX="50.75" PointY="40.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempSalesReturnDetail" Width="1.5" PointX="52.75" PointY="0.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempSalesReturnMain" Width="1.5" PointX="6.75" PointY="52.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempStateDivMaster" Width="1.5" PointX="8.75" PointY="52.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempSubCatMaster" Width="1.5" PointX="52.75" PointY="10.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempTaxCatMaster" Width="1.5" PointX="10.75" PointY="52.75" />
+        <EntityTypeShape EntityType="BKDHModel.TempVoucher" Width="1.5" PointX="12.75" PointY="52.75" />
+        <EntityTypeShape EntityType="BKDHModel.TmpBillDate" Width="1.5" PointX="14.75" PointY="52.75" />
+        <EntityTypeShape EntityType="BKDHModel.TransMaster" Width="1.5" PointX="52.75" PointY="15.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnOrderDeliveryDetail" Width="1.5" PointX="52.75" PointY="18.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPartyOrderMainOLD" Width="1.5" PointX="28.75" PointY="52.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPayModeMaster" Width="1.5" PointX="30.75" PointY="52.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPickListDetail" Width="1.5" PointX="52.75" PointY="31.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseReqDetail" Width="1.5" PointX="52.75" PointY="39.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnPurchaseReqMain" Width="1.5" PointX="40.75" PointY="52.75" />
+        <EntityTypeShape EntityType="BKDHModel.TrnVoucher" Width="1.5" PointX="42.75" PointY="52.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

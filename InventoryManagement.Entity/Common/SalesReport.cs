@@ -22,8 +22,10 @@ namespace InventoryManagement.Entity.Common
         public DateTime? BillDate { get; set; }
         public string StrBillDate { get; set; }
         public string SoldBy { get; set; }
-        public string PartyName { get; set; }
-        public string PartyCode { get; set; }
+        public string Kitchen { get; set; }
+        public string KitchenCode { get; set; }
+        public string Stall { get; set; }
+        public string StallCode { get; set; }
         public string CustCode { get; set; }
         public string CustName { get; set; }
         public string Amount { get; set; }
@@ -31,7 +33,8 @@ namespace InventoryManagement.Entity.Common
         public string TaxAmount { get; set; }
         public string FType { get; set; }
         //Date Wise Summary
-
+        public string PartyName { get; set; }
+        public string PartyCode { get; set; }
         public DateTime RecordDate { get; set; }
         public string NoOfBills { get; set; }
         public string TotalBV { get; set; }

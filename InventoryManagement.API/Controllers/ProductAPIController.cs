@@ -8,6 +8,8 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using System.Data.SqlClient;
+using System.Globalization;
+
 namespace InventoryManagement.API.Controllers
 {
     public class ProductAPIController : ApiController
@@ -641,16 +643,16 @@ namespace InventoryManagement.API.Controllers
                         DateTime ExpDate = DateTime.Now;
                         if (!string.IsNullOrEmpty(model.ProductBarcodeDetails.MfgDateStr))
                         {
-                            var SplitDate = model.ProductBarcodeDetails.MfgDateStr.Split('-');
-                            string NewDate = SplitDate[1] + "/" + SplitDate[0] + "/" + SplitDate[2];
-                            MfgDate = Convert.ToDateTime(NewDate);
+                            var SplitFromDate = model.ProductBarcodeDetails.MfgDateStr.Split('-');
+                            var FromDate = (SplitFromDate[1].Length == 1 ? "0" + SplitFromDate[1] : SplitFromDate[1]) + "/" + (SplitFromDate[0].Length == 1 ? "0" + SplitFromDate[0] : SplitFromDate[0]) + "/" + SplitFromDate[2];
+                            MfgDate = Convert.ToDateTime(DateTime.ParseExact(FromDate, "MM/dd/yyyy", CultureInfo.InvariantCulture));
                             MfgDate = MfgDate.Date;
                         }
                         if (!string.IsNullOrEmpty(model.ProductBarcodeDetails.ExpDateStr))
                         {
-                            var SplitDate = model.ProductBarcodeDetails.ExpDateStr.Split('-');
-                            string NewDate = SplitDate[1] + "/" + SplitDate[0] + "/" + SplitDate[2];
-                            ExpDate = Convert.ToDateTime(NewDate);
+                            var SplitFromDate = model.ProductBarcodeDetails.ExpDateStr.Split('-');
+                            var FromDate = (SplitFromDate[1].Length == 1 ? "0" + SplitFromDate[1] : SplitFromDate[1]) + "/" + (SplitFromDate[0].Length == 1 ? "0" + SplitFromDate[0] : SplitFromDate[0]) + "/" + SplitFromDate[2];
+                            ExpDate = Convert.ToDateTime(DateTime.ParseExact(FromDate, "MM/dd/yyyy", CultureInfo.InvariantCulture));
                             ExpDate = ExpDate.Date;
                         }
                         objDTProduct.MfgDate = MfgDate.Date;
@@ -1007,16 +1009,16 @@ namespace InventoryManagement.API.Controllers
                             DateTime ExpDate = DateTime.Now;
                             if (!string.IsNullOrEmpty(model.ProductBarcodeDetails.MfgDateStr))
                             {
-                                var SplitDate = model.ProductBarcodeDetails.MfgDateStr.Split('-');
-                                string NewDate = SplitDate[1] + "/" + SplitDate[0] + "/" + SplitDate[2];
-                                MfgDate = Convert.ToDateTime(NewDate);
+                                var SplitFromDate = model.ProductBarcodeDetails.MfgDateStr.Split('-');
+                                var FromDate = (SplitFromDate[1].Length == 1 ? "0" + SplitFromDate[1] : SplitFromDate[1]) + "/" + (SplitFromDate[0].Length == 1 ? "0" + SplitFromDate[0] : SplitFromDate[0]) + "/" + SplitFromDate[2];
+                                MfgDate = Convert.ToDateTime(DateTime.ParseExact(FromDate, "MM/dd/yyyy", CultureInfo.InvariantCulture));
                                 MfgDate = MfgDate.Date;
                             }
                             if (!string.IsNullOrEmpty(model.ProductBarcodeDetails.ExpDateStr))
                             {
-                                var SplitDate = model.ProductBarcodeDetails.ExpDateStr.Split('-');
-                                string NewDate = SplitDate[1] + "/" + SplitDate[0] + "/" + SplitDate[2];
-                                ExpDate = Convert.ToDateTime(NewDate);
+                                var SplitFromDate = model.ProductBarcodeDetails.ExpDateStr.Split('-');
+                                var FromDate = (SplitFromDate[1].Length == 1 ? "0" + SplitFromDate[1] : SplitFromDate[1]) + "/" + (SplitFromDate[0].Length == 1 ? "0" + SplitFromDate[0] : SplitFromDate[0]) + "/" + SplitFromDate[2];
+                                ExpDate = Convert.ToDateTime(DateTime.ParseExact(FromDate, "MM/dd/yyyy", CultureInfo.InvariantCulture));
                                 ExpDate = ExpDate.Date;
                             }
                             objDTProduct.MfgDate = MfgDate.Date;

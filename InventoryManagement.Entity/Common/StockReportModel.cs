@@ -10,6 +10,8 @@ namespace InventoryManagement.Entity.Common
         public int SNo { get; set; }
         public string PartyCode { get; set; }
         public string PartyName { get; set; }
+        public string StallCode { get; set; }
+        public string Stall { get; set; }
         public string Category { get; set; }
         public string CategoryCode { get; set; }
         public decimal CatCode { get; set; }
@@ -65,5 +67,18 @@ namespace InventoryManagement.Entity.Common
         public decimal? InStock { get; set; }
         public decimal? OutStock { get; set; }
 
+    }
+
+
+    public class StockDetailList
+    {
+        public string ProductCode { get; set; }
+        public string ProductName { get; set; }
+        public string StockDate { get; set; }
+        public decimal OpStock { get; set; }
+        public decimal InStock { get; set; }
+        public decimal StockOut { get; set; }
+        public decimal StockWaste { get; set; }
+        public decimal ClsStock { get; set; }
     }
 }

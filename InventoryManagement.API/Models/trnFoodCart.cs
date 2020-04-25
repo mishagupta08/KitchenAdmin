@@ -25,5 +25,7 @@ namespace InventoryManagement.API.Models
         public Nullable<decimal> TotalPrice { get; set; }
         public Nullable<decimal> TotalTax { get; set; }
         public Nullable<decimal> TotalAmount { get; set; }
+        public string KitchenCode { get; set; }
+        public string StallCode { get; set; }
     }
 }

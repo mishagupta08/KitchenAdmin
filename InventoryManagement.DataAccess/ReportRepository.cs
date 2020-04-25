@@ -1,4 +1,5 @@
 ﻿using InventoryManagement.API.Controllers;
+using InventoryManagement.API.Models;
 using InventoryManagement.DataAccess.Contract;
 using InventoryManagement.Entity.Common;
 using System;
@@ -20,10 +21,12 @@ namespace InventoryManagement.DataAccess
         {
             return (objReportAPI.GetAllParty());
         }
-        public List<StockReportModel> GetStockReport(string CategoryCode, string ProductCode, string PartyCode, bool IsBatchWise, string StockType)
+
+        public List<StockDetailList> GetStockReport(string FromDate, string ToDate, string ProductCode, string PartyCode)
         {
-            return (objReportAPI.GetStockReport(CategoryCode,ProductCode,PartyCode,IsBatchWise,StockType));
+            return (objReportAPI.GetStockReport(FromDate, ToDate, ProductCode, PartyCode));
         }
+
         public List<SalesReport> GetSalesReport(string FromDate, string ToDate, string CustomerId, string ProductCode, string CategoryCode, string PartyCode, string BType, string SalesType, string InvoiceType , string BillNo, string FType)
         {
             return (objReportAPI.GetSalesReport(FromDate, ToDate, CustomerId, ProductCode, CategoryCode, PartyCode, BType, SalesType,InvoiceType, BillNo, FType));
@@ -99,9 +102,9 @@ namespace InventoryManagement.DataAccess
             return (objReportAPI.GetOrderProductList(OrderId));
         }
 
-        public List<FoodOrderMain> GetOrderReport(string FromDate, string ToDate)
+        public List<FoodOrderMain> GetOrderReport(string FromDate, string ToDate, string Stall, string Kitchen, string Status)
         {
-            return (objReportAPI.GetOrderReport(FromDate,ToDate));
+            return (objReportAPI.GetOrderReport(FromDate,ToDate,Stall,Kitchen,Status));
         }
     }
 }

@@ -183,7 +183,7 @@ namespace InventoryManagement.Controllers
             PartyModel objModel = new PartyModel();
             objModel.GroupList = objRegistrationManager.GetGroupList();
             objModel.GroupList = objModel.GroupList.Where(r => r.GroupId == 105).ToList();
-            objModel.IsSupplier = false;
+            objModel.IsSupplier = true;
             List<SelectListItem> GroupList = new List<SelectListItem>();
             foreach (var obj in objModel.GroupList)
             {                

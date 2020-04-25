@@ -241,7 +241,7 @@ namespace InventoryManagement.API.Controllers
                 using (var entity = new BKDHEntities11())
                 {
                     objUserList = (from r in entity.Inv_M_UserMaster
-                                   where r.GroupId != 5 && r.GroupId != 6 && r.GroupId != 21
+                                   where r.GroupId != 0 && r.GroupId != 105 && r.GroupId != 101
                                    join p in entity.M_LedgerMaster on r.BranchCode equals p.PartyCode
                                    select new User
                                    {
@@ -411,7 +411,7 @@ namespace InventoryManagement.API.Controllers
                                  select r.UserId
                                ).DefaultIfEmpty(0).Max();
                     maxUserId = maxUserId + 1;
-                     DTUser = (from r in entity.Inv_M_UserMaster where r.UserId == objModel.UserId && r.ActiveStatus == "Y" select r).FirstOrDefault();
+                     DTUser = (from r in entity.Inv_M_UserMaster where r.UserId == objModel.UserId  select r).FirstOrDefault();
                     if (DTUser == null)
                     {
                         DTUser = new Inv_M_UserMaster();
@@ -447,11 +447,11 @@ namespace InventoryManagement.API.Controllers
                         string AppConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings["BKDHServices"].ConnectionString;
                         SqlConnection SC = new SqlConnection(AppConnectionString);
 
-                        string query = "INSERT Inv_TempUserMaster Select *,'"+ LoggedUser.UserId +"',Getdate() FROM Inv_M_UserMaster WHERE UserID='"+ DTUser.UserId + "'";
-                        SC.Open();
-                        SqlCommand cmd = new SqlCommand(query,SC);
-                        cmd.ExecuteNonQuery();
-                        SC.Close();
+                        //string query = "INSERT Inv_TempUserMaster Select *,'"+ LoggedUser.UserId +"',Getdate() FROM Inv_M_UserMaster WHERE UserID='"+ DTUser.UserId + "'";
+                        //SC.Open();
+                        //SqlCommand cmd = new SqlCommand(query,SC);
+                        //cmd.ExecuteNonQuery();
+                        //SC.Close();
                     }
                         //updating values
                         if (objModel.IsActionName == "Delete")
@@ -465,8 +465,8 @@ namespace InventoryManagement.API.Controllers
                            
                             
                             DTUser.LastModified = DateTime.Now.Date.ToString();
-
-                            DTUser.GroupId = objModel.GroupId;
+                        
+                        
                             DTUser.IsAdmin = "N";
                             DTUser.LastIP = "0";
                             DTUser.LastLoginTime = DateTime.Now.Date;
@@ -483,7 +483,8 @@ namespace InventoryManagement.API.Controllers
                             if (objModel.IsActionName == "Add")
                             {
                                 DTUser.ActiveStatus = "Y";
-                                DTUser.CreateBy = LoggedUser.UserId.ToString();
+                            DTUser.GroupId = objModel.GroupId;
+                            DTUser.CreateBy = LoggedUser.UserId.ToString();
                                 DTUser.CreateDate = DateTime.Now.Date;
                                 DTUser.UserId = maxUserId;
                                 entity.Inv_M_UserMaster.Add(DTUser);

@@ -1,13 +1,10 @@
 ﻿using InventoryManagement.App_Start;
 using InventoryManagement.Business;
-using InventoryManagement.Common;
 using InventoryManagement.Entity.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
-using System.Web.Script.Serialization;
 
 namespace InventoryManagement.Controllers
 {
@@ -41,20 +38,16 @@ namespace InventoryManagement.Controllers
         }
 
         [HttpPost]
-        public ActionResult GetStockReport(string CategoryCode, string ProductCode, string PartyCode, bool IsBatchWise, string StockType)
+        public ActionResult GetStockReport(string FromDate, string ToDate, string ProductCode, string PartyCode)
         {
-            //**Added on 21Nov18
             string CurrentPartyCode = "";
             if (Session["LoginUser"] != null)
                 CurrentPartyCode = (Session["LoginUser"] as User).PartyCode;
 
             if (PartyCode == "" || CurrentPartyCode != System.Web.Configuration.WebConfigurationManager.AppSettings["WRPartyCode"])
                 PartyCode = CurrentPartyCode;
-            //**            
-
-            List<StockReportModel> objStockReportModel = new List<StockReportModel>();
-            objStockReportModel = objReportManager.GetStockReport(CategoryCode, ProductCode, PartyCode, IsBatchWise, StockType);
-            return Json(objStockReportModel, JsonRequestBehavior.AllowGet);
+                      
+            return Json(objReportManager.GetStockReport(FromDate, ToDate, ProductCode, PartyCode), JsonRequestBehavior.AllowGet);
         }
 
         //BillWise Sales Report
@@ -582,10 +575,10 @@ namespace InventoryManagement.Controllers
         }
 
         [HttpPost]
-        public ActionResult GetOrderStatusReport(string FromDate, string ToDate)
+        public ActionResult GetOrderStatusReport(string FromDate, string ToDate,string Stall,string Kitchen,string Status)
         {
             List<FoodOrderMain> objWalletDetails = new List<FoodOrderMain>();
-            objWalletDetails = objReportManager.GetOrderReport(FromDate, ToDate);
+            objWalletDetails = objReportManager.GetOrderReport(FromDate, ToDate,Stall, Kitchen, Status);
             var jsonProduct = Json(objWalletDetails, JsonRequestBehavior.AllowGet);
             jsonProduct.MaxJsonLength = int.MaxValue;
             return jsonProduct;

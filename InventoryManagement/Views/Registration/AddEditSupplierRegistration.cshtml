@@ -70,7 +70,7 @@
             //GetCity(SelectedVal);
         });
         $("#CityCode").change(function () {
-            var SelectedVal = $("#CityCode").val(); CheckDuplicateUserPartyCode
+            var SelectedVal = $("#CityCode").val(); 
             $("#hiddenCityCode").val(SelectedVal);
             var SelectedText = $("#CityCode option:selected").text();
             $("#hiddenCityName").val(SelectedText);
@@ -221,30 +221,39 @@
         var UserPartyCode = $("#UserPartyCode").val();
         var PartyCodeStr = $("#PartyCode").val();
         var IsActionType = ActionType;
-        if (UserPartyCode != '') {
-            $.ajax({
-                url: '/Registration/IsDuplicatePartyUserPartycode',
-                dataType: 'JSON',
-                method: 'GET',
-                data: { 'IsActionType': IsActionType, 'PartyCode': PartyCodeStr, 'UserPartycode': UserPartyCode },
-                success: function (objResult) {
-                    console.log("data:", objResult);
-                    //response(data);
-                    if (objResult.length != 0) {
+        $.ajax({
+            url: '/Registration/IsDuplicatePartyUserPartycode',
+            dataType: 'JSON',
+            method: 'GET',
+            data: { 'IsActionType': IsActionType, 'PartyCode': PartyCodeStr, 'UserPartycode': UserPartyCode },
+            success: function (objResult) {
+                if (objResult.GroupName == "Used") {
                         DuplicateUserPartyCode = true;
                         console.log(DuplicateUserPartyCode);
+                        OpenDialog("dialogMessage", "This ID No. is already exist!", "false");
                         $("#UserPartyCode").val('');
-                        OpenDialog("dialogMessage", "This code is already exist!", "false");
                     }
-                    else {
+                    else if (objResult.GroupName == "Invalid") {
+                        DuplicateUserPartyCode = true;                        
+                        OpenDialog("dialogMessage", "This ID No. is Invalid!", "false");
+                        $("#UserPartyCode").val('');
+                    }
+                    else if (objResult.GroupName != "OK") {
+                            $("#PartyName").val(objResult.PartyName);
+                            $("#Address1").val(objResult.Address1);
+                            $("#CityName").val(objResult.CityName);
+                            $("#MobileNo").val(objResult.MobileNo);
+                            $("#PinCode").val(objResult.PinCode);
+                            $("#UserName").val(objResult.GroupName);
+                            $("#Password").val(objResult.CstNo);
+                        }
                         DuplicateUserPartyCode = false;
-                    }
-                },
-                error: function (error) {
-                    console.log("error:", error);
-                }
-            });
-        }
+                                   
+            },
+            error: function (error) {
+                console.log("error:", error);
+            }
+        });
     }
     function GetAllCity() {
         $.ajax({
@@ -417,11 +426,14 @@
                                     &nbsp;
                                 </div>
                                 <div class="row" style="margin-top:1%;">
-                                    <label class="col-lg-3"> Code<span style="color:red">*</span></label>
+                                    <label class="col-lg-3">ID No.<span style="color:red">*</span></label>
                                     <div class="col-lg-6">
-
-                                        @Html.TextBoxFor(m => m.UserPartyCode, new { id = "UserPartyCode", name = "UserPartyCode", @required = "required", tabindex = "0", maxlength = "3", @class = "form-control" })
-
+                                        @if (IsActionName__ == "Edit")
+                                        {
+                                            @Html.TextBoxFor(m => m.UserPartyCode, new { id = "UserPartyCode", name = "UserPartyCode", @required = "required", tabindex = "0", maxlength = "50", @class = "form-control", @readonly = "readonly" })
+                                        }
+                                        else
+                                        {  @Html.TextBoxFor(m => m.UserPartyCode, new { id = "UserPartyCode", name = "UserPartyCode", @required = "required", tabindex = "0", maxlength = "50", @class = "form-control" })}
                                     </div>
                                 </div>
                                 <div class="row" style="margin-top:1%">
